@@ -1,0 +1,217 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { GoogleGenAI } from "https://esm.sh/@google/generative-ai";
+
+const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+// --- Vector Math Helpers ---
+const dotProduct = (a: number[], b: number[]) => a.reduce((sum, val, i) => sum + val * b[i], 0);
+const magnitude = (v: number[]) => Math.sqrt(v.reduce((sum, val) => sum + val * val, 0));
+const cosineSimilarity = (a: number[], b: number[]) => {
+    if (!a || !b || a.length !== b.length) return 0;
+    return dotProduct(a, b) / (magnitude(a) * magnitude(b));
+};
+
+serve(async (req) => {
+    if (req.method === "OPTIONS") {
+        return new Response("ok", { headers: corsHeaders });
+    }
+
+    try {
+        const { action, payload } = await req.json();
+
+        // 1. Authorization
+        const authHeader = req.headers.get("Authorization");
+        if (!authHeader) throw new Error("Missing Authorization header");
+
+        const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+        const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+        const supabase = createClient(supabaseUrl, anonKey, {
+            global: { headers: { Authorization: authHeader } },
+        });
+
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError || !user) throw new Error("Unauthorized");
+
+        // 2. Organization & Credits Check (Business Logic)
+        const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+        const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+
+        // Fetch User's Org
+        const { data: userData } = await supabaseAdmin
+            .from('users')
+            .select('organization_id')
+            .eq('id', user.id)
+            .single();
+
+        if (!userData?.organization_id) throw new Error("User has no organization");
+        const orgId = userData.organization_id;
+
+        // Check Credits
+        const { data: orgData } = await supabaseAdmin
+            .from('organizations')
+            .select('audit_credits_remaining, rewrite_credits_remaining')
+            .eq('id', orgId)
+            .single();
+
+        if (action === 'ANALYZE' && (orgData?.audit_credits_remaining || 0) < 1) {
+            throw new Error("Insufficient audit credits. Please upgrade.");
+        }
+        if (action === 'REWRITE' && (orgData?.rewrite_credits_remaining || 0) < 1) {
+            throw new Error("Insufficient rewrite credits. Please upgrade.");
+        }
+
+        // Deduct Credits (Optimistic)
+        if (action === 'ANALYZE') {
+            await supabaseAdmin.from('organizations').decrement('audit_credits_remaining', 1).eq('id', orgId);
+        } else if (action === 'REWRITE') {
+            await supabaseAdmin.from('organizations').decrement('rewrite_credits_remaining', 1).eq('id', orgId);
+        }
+
+        // 3. Init AI
+        const apiKey = Deno.env.get("GEMINI_API_KEY");
+
+        if (!apiKey) throw new Error("Server Misconfiguration: Missing GEMINI_API_KEY");
+
+        const genAI = new GoogleGenAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+        const embeddingModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
+
+        let result;
+
+        switch (action) {
+            case "DISCOVER":
+                result = await handleDiscovery(model, payload.url);
+                break;
+            case "ANALYZE":
+                result = await handleAnalysis(model, payload);
+                break;
+            case "REWRITE":
+                result = await handleRewrite(model, embeddingModel, payload);
+                break;
+            default:
+                throw new Error(`Unknown action: ${action}`);
+        }
+
+        return new Response(JSON.stringify(result), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+        });
+
+    } catch (error: any) {
+        console.error("Error:", error);
+        return new Response(JSON.stringify({ error: error.message }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 500,
+        });
+    }
+});
+
+async function handleDiscovery(model: any, url: string) {
+    const prompt = `
+    Act as a sophisticated web crawler (simulated) for: ${url}
+    List 5-8 critical URL paths that define this website's structure.
+    Return ONLY a JSON array of objects with keys: "url" (full url), "type" (HOMEPAGE, PRICING, ABOUT, BLOG, OTHER).
+    `;
+    const result = await model.generateContent({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: { responseMimeType: "application/json" }
+    });
+    return JSON.parse(result.response.text());
+}
+
+async function handleAnalysis(model: any, payload: any) {
+    const { websiteUrl, otherAssets, mainContent } = payload;
+    const prompt = `
+    Analyze this brand presence.
+    Domain: ${websiteUrl}
+    Assets: ${otherAssets}
+    Content Snippet: ${mainContent?.slice(0, 15000) || "No content"}
+
+    Return a JSON object with:
+    - overallScore (0-100)
+    - platformScores (array of {platform, score, reasoning})
+    - pages (array of page analysis)
+    - topicalDominance (array of strings)
+    - brandConsistnecyScore (0-100)
+    - consistencyAnalysis (string)
+    - keywords (array of strings)
+    - searchQueries (array of {platform, query, intent})
+    - seoAudit ({implemented: [], missing: [], technicalHealth: number})
+
+    Ensure strict JSON format.
+    `;
+    const result = await model.generateContent({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: { responseMimeType: "application/json" }
+    });
+    return JSON.parse(result.response.text());
+}
+
+async function handleRewrite(model: any, embeddingModel: any, payload: any) {
+    const { original, context, rewrite: userRewrite } = payload;
+
+    let targetRewrite = userRewrite;
+    let reasoning = "Analysis of provided rewrite.";
+
+    // 1. Generate Rewrite only if not provided
+    if (!targetRewrite) {
+        const prompt = `
+        Context/Goal: "${context}"
+        Original: "${original}"
+        Task: Rewrite to be more authoritative and optimized for AI citation (Answer Engine Optimization).
+        Return strict JSON: { "rewrite": "string", "reasoning": "string" }
+        `;
+
+        const genResult = await model.generateContent({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: "application/json" }
+        });
+        const genData = JSON.parse(genResult.response.text());
+        targetRewrite = genData.rewrite;
+        reasoning = genData.reasoning;
+    } else {
+        // If user provided rewrite, just get reasoning
+        const prompt = `
+        Context/Goal: "${context}"
+        Original: "${original}"
+        Rewrite: "${targetRewrite}"
+        Task: Explain why the rewrite is better (or worse). Keep it under 15 words.
+        Return strict JSON: { "reasoning": "string" }
+        `;
+        const genResult = await model.generateContent({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: "application/json" }
+        });
+        reasoning = JSON.parse(genResult.response.text()).reasoning;
+    }
+
+    // 2. Calculate Vector Shift
+    const [contextEmb, originalEmb, rewriteEmb] = await Promise.all([
+        embeddingModel.embedContent(context),
+        embeddingModel.embedContent(original),
+        embeddingModel.embedContent(targetRewrite)
+    ]);
+
+    const vContext = contextEmb.embedding.values;
+    const vOriginal = originalEmb.embedding.values;
+    const vRewrite = rewriteEmb.embedding.values;
+
+    const simOriginal = cosineSimilarity(vContext, vOriginal);
+    const simRewrite = cosineSimilarity(vContext, vRewrite);
+
+    const scoreOriginal = Math.max(0, simOriginal * 100);
+    const scoreRewrite = Math.max(0, simRewrite * 100);
+    const scoreDelta = Math.round(scoreRewrite - scoreOriginal);
+    const vectorShift = Math.abs(simRewrite - simOriginal);
+
+    return {
+        rewrite: targetRewrite,
+        reasoning,
+        scoreDelta,
+        vectorShift: parseFloat(vectorShift.toFixed(4))
+    };
+}
