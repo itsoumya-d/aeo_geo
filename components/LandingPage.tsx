@@ -107,12 +107,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                         <Zap className="w-3 h-3" />
                         <span>Now with Real-Time Crawling</span>
                     </div>
-                    <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight leading-tight">
-                        Is Your Brand <br className="hidden md:block" />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">Invisible to AI?</span>
+                    <h1 className="text-6xl md:text-8xl font-bold mb-8 tracking-tight leading-[1.1] font-display">
+                        The AI Visibility <br className="hidden md:block" />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400">Command Center.</span>
                     </h1>
-                    <p className="text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-                        Traditional SEO is dead. We <strong>crawl</strong> your actual site, <strong>embed</strong> your content, and <strong>reverse-engineer</strong> how ChatGPT, Gemini, and Claude actually see you.
+                    <p className="text-xl md:text-2xl text-slate-400 max-w-3xl mx-auto mb-12 leading-relaxed font-light">
+                        Stop guessing how LLMs see your brand. <strong>Cognition</strong> reverse-engineers the vector space of ChatGPT, Gemini, and Claude to ensure your business is cited, not hallucinated.
                     </p>
 
                     {/* Input Layer embedded as the primary CTA */}
