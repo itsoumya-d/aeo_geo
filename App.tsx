@@ -1,5 +1,5 @@
 import React, { useEffect, Suspense } from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { Loader2 } from 'lucide-react';
 import { Asset, Report, DiscoveredPage, AssetType, AnalysisStatus } from './types';
@@ -14,6 +14,7 @@ import { OnboardingWizard } from './components/OnboardingWizard';
 import { useKeyboardShortcuts, APP_SHORTCUTS } from './hooks/useKeyboardShortcuts';
 import { useAuth } from './contexts/AuthContext';
 import { useAuditStore, useUIStore } from './stores';
+import { AuthPage } from './components/auth/AuthPage';
 
 // Lazy Load Pages
 const Dashboard = React.lazy(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
@@ -32,15 +33,29 @@ const PageLoading = () => (
   </div>
 );
 
+// Protected Route Wrapper
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { session, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !session) {
+      navigate('/login');
+    }
+  }, [session, loading, navigate]);
+
+  if (loading) return <PageLoading />;
+  return session ? <>{children}</> : null;
+};
+
 const App: React.FC = () => {
-  const { session, organization, onboarding, signInWithGoogle, loading, refreshOrganization } = useAuth();
+  const { session, organization, onboarding, signInWithGoogle, loading } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const location = useLocation();
 
   // Zustand stores
   const {
-    assets,
     discoveredPages,
     report,
     isAnalyzing,
@@ -181,13 +196,6 @@ const App: React.FC = () => {
     }
   };
 
-  // Redirect to home if accessing dashboard without report
-  useEffect(() => {
-    if (location.pathname === '/dashboard' && !report && !loading) {
-      navigate('/', { replace: true });
-    }
-  }, [location.pathname, report, loading, navigate]);
-
   // Main content wrapper
   const MainLayout = ({ children }: { children: React.ReactNode }) => (
     <HelmetProvider>
@@ -217,40 +225,61 @@ const App: React.FC = () => {
           <Route
             path="/"
             element={
-              <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
-                {/* Background Gradients */}
-                <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-                  <div className="absolute top-[-20%] left-[-20%] w-[60%] h-[60%] bg-primary/10 rounded-full blur-[150px]"></div>
-                  <div className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[60%] bg-purple-600/10 rounded-full blur-[150px]"></div>
+              session ? (
+                <Navigate to="/dashboard" replace />
+              ) : (
+                <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+                  {/* Background Gradients */}
+                  <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+                    <div className="absolute top-[-20%] left-[-20%] w-[60%] h-[60%] bg-primary/10 rounded-full blur-[150px]"></div>
+                    <div className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[60%] bg-purple-600/10 rounded-full blur-[150px]"></div>
+                  </div>
+                  <LandingPage />
                 </div>
-                <LandingPage
-                  onStartAnalysis={handleStartAnalysis}
-                  isAnalyzing={isAnalyzing}
-                  statusMessage={statusMessage}
-                  discoveredCount={discoveredPages.length}
-                  credits={organization?.audit_credits_remaining}
-                  session={session}
-                />
-              </div>
+              )
             }
           />
+          <Route path="/login" element={<AuthPage />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+
           <Route
             path="/dashboard"
             element={
-              report ? (
+              <ProtectedRoute>
                 <ErrorBoundary>
-                  <Dashboard report={report} onReset={handleReset} />
+                  <Dashboard
+                    report={report}
+                    onReset={handleReset}
+                    onStartAnalysis={handleStartAnalysis}
+                    isAnalyzing={isAnalyzing}
+                    statusMessage={statusMessage}
+                    discoveredCount={discoveredPages.length}
+                    initialTab="overview"
+                  />
                 </ErrorBoundary>
-              ) : null
+              </ProtectedRoute>
             }
           />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/history" element={<HistoryPage onSelectAudit={handleLoadAudit} />} />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <SettingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/history"
+            element={
+              <ProtectedRoute>
+                <HistoryPage />
+              </ProtectedRoute>
+            }
+          />
+
           <Route path="/help" element={<HelpCenter />} />
           <Route path="/docs/api" element={<APIDocs />} />
           <Route path="/reports/builder" element={<ReportBuilder />} />
-          {/* Auth callback route for OAuth */}
-          <Route path="/auth/callback" element={<AuthCallback />} />
         </Routes>
       </Suspense>
     </MainLayout>

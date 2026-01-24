@@ -11,12 +11,7 @@ import { Badge } from './ui/Badge';
 import { SlideUp, FadeIn, StaggerContainer } from './ui/Motion';
 
 interface LandingPageProps {
-    onStartAnalysis: (assets: Asset[], options?: { llmProvider: 'gemini' | 'claude' | 'openai' }) => void;
-    isAnalyzing: boolean;
-    statusMessage?: string;
-    discoveredCount?: number;
-    credits?: number | null;
-    session?: any;
+    // No props needed for pure marketing page
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({
@@ -131,12 +126,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-20 relative z-20">
-                        <Button
-                            onClick={() => document.getElementById('audit-section')?.scrollIntoView({ behavior: 'smooth' })}
-                            className="w-full sm:w-auto px-10 py-6 text-lg font-bold rounded-2xl bg-white text-black hover:bg-slate-100 hover:text-black shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_-15px_rgba(255,255,255,0.5)] hover:scale-105 transition-all duration-300"
-                        >
-                            See How AI Sees You — Free
-                        </Button>
+                        <a href="/login">
+                            <Button
+                                className="w-full sm:w-auto px-10 py-6 text-lg font-bold rounded-2xl bg-white text-black hover:bg-slate-100 hover:text-black shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_-15px_rgba(255,255,255,0.5)] hover:scale-105 transition-all duration-300"
+                            >
+                                Get Started — Free
+                            </Button>
+                        </a>
                         <Button
                             onClick={() => setShowVideo(true)}
                             variant="secondary"
@@ -146,28 +142,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                             Watch 90s Demo
                         </Button>
                     </div>
-
-                    <div id="audit-section" className="scroll-mt-32 transform hover:scale-[1.005] transition-transform duration-500">
-                        <InputLayer
-                            onStartAnalysis={onStartAnalysis}
-                            isAnalyzing={isAnalyzing}
-                            statusMessage={statusMessage}
-                            discoveredCount={discoveredCount}
-                            embedded={true}
-                        />
-                    </div>
                 </SlideUp>
 
                 {/* Social Proof */}
-                <div className="mt-20 pt-10 border-t border-white/5 max-w-5xl mx-auto">
-                    <p className="text-sm text-text-muted font-bold tracking-widest uppercase mb-10 opacity-70">Powered By Next-Gen Infrastructure</p>
-                    <div className="flex flex-wrap justify-center items-center gap-16 text-text-secondary grayscale hover:grayscale-0 transition-all duration-500">
-                        <span className="flex items-center gap-2.5 font-bold text-lg opacity-60 hover:opacity-100 hover:text-white transition-opacity"><Globe className="w-5 h-5 text-blue-400" /> Google Gemini</span>
-                        <span className="flex items-center gap-2.5 font-bold text-lg opacity-60 hover:opacity-100 hover:text-white transition-opacity"><Shield className="w-5 h-5 text-emerald-400" /> Supabase</span>
-                        <span className="flex items-center gap-2.5 font-bold text-lg opacity-60 hover:opacity-100 hover:text-white transition-opacity"><Zap className="w-5 h-5 text-amber-400" /> Firecrawl</span>
-                        <span className="flex items-center gap-2.5 font-bold text-lg opacity-60 hover:opacity-100 hover:text-white transition-opacity"><Cpu className="w-5 h-5 text-purple-400" /> NVIDIA A100</span>
-                    </div>
-                </div>
+
             </main>
 
             {/* Video Modal */}

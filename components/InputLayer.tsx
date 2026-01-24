@@ -19,7 +19,7 @@ interface InputLayerProps {
 export const InputLayer: React.FC<InputLayerProps> = ({ onStartAnalysis, isAnalyzing, statusMessage, discoveredCount, embedded = false }) => {
   const [inputValue, setInputValue] = useState('');
   const [batchInput, setBatchInput] = useState('');
-  const [selectedModel, setSelectedModel] = useState<'gemini' | 'claude' | 'openai'>('gemini');
+  // Model selection moved to backend defaults
   const [mode, setMode] = useState<'SINGLE' | 'BATCH'>('SINGLE');
   const [selectedType, setSelectedType] = useState<AssetType>(AssetType.WEBSITE);
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -96,27 +96,12 @@ export const InputLayer: React.FC<InputLayerProps> = ({ onStartAnalysis, isAnaly
 
   return (
     <div className="w-full max-w-5xl mx-auto p-4 sm:p-6">
-      <div className="text-center mb-10">
-        {!embedded && (
-          <>
-            <div className="inline-flex items-center justify-center p-1.5 px-3 bg-primary/10 rounded-full mb-4 border border-primary/20">
-              <span className="text-xs font-semibold text-primary uppercase tracking-wider">Production Build v2.0</span>
-            </div>
-            <h1 className="text-4xl md:text-6xl font-display font-bold text-text-primary mb-6 tracking-tight">
-              AI Visibility <span className="text-gradient">Audit</span>
-            </h1>
-            <p className="text-text-secondary text-lg max-w-3xl mx-auto leading-relaxed">
-              Reverse-engineer how LLMs perceive your brand.
-            </p>
-          </>
-        )}
-      </div>
 
       <Card variant="glass" className="relative overflow-hidden p-8 shadow-2xl">
         {/* Decorative Grid */}
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
 
-        {/* Input Toggle & Model Selector */}
+        {/* Input Toggle */}
         <div className="flex justify-between items-center mb-6 relative z-10">
           <div className="flex gap-2">
             <Button
@@ -133,19 +118,6 @@ export const InputLayer: React.FC<InputLayerProps> = ({ onStartAnalysis, isAnaly
             >
               Batch Import (CSV)
             </Button>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-text-muted uppercase tracking-wider hidden sm:block">AI Model:</span>
-            <select
-              value={selectedModel}
-              onChange={(e) => setSelectedModel(e.target.value as any)}
-              className="bg-surfaceHighlight border border-white/10 rounded-lg px-3 py-1.5 text-xs font-medium text-white focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
-            >
-              <option value="gemini">Google Gemini 1.5 Pro</option>
-              <option value="claude">Anthropic Claude 3.5 Sonnet</option>
-              <option value="openai">OpenAI GPT-4o</option>
-            </select>
           </div>
         </div>
 
@@ -272,7 +244,7 @@ export const InputLayer: React.FC<InputLayerProps> = ({ onStartAnalysis, isAnaly
           )}
 
           <Button
-            onClick={() => onStartAnalysis(assets, { llmProvider: selectedModel })}
+            onClick={() => onStartAnalysis(assets, { llmProvider: 'gemini' })}
             disabled={assets.length === 0 || isAnalyzing}
             size="lg"
             className={`
@@ -288,12 +260,6 @@ export const InputLayer: React.FC<InputLayerProps> = ({ onStartAnalysis, isAnaly
               </>
             )}
           </Button>
-
-          {!isAnalyzing && (
-            <p className="mt-4 text-xs text-text-muted font-medium">
-              Uses {selectedModel === 'claude' ? 'Claude 3.5 Sonnet' : selectedModel === 'openai' ? 'GPT-4o' : 'Gemini 1.5 Pro'} • Deep Crawl Simulation • ~30s Runtime
-            </p>
-          )}
         </div>
       </Card>
     </div>

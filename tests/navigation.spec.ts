@@ -27,9 +27,10 @@ test.describe('Dashboard Navigation', () => {
     test('should show features section when clicking features', async ({ page }) => {
         await page.click('a[href="#features"]');
 
-        await expect(page.getByText('Why Global Brands Trust Cognition')).toBeVisible();
-        await expect(page.getByText('Real-Time Crawling')).toBeVisible();
-        await expect(page.getByText('Vector Space Analysis')).toBeVisible();
+        // Use specific headings to avoid duplicate text matching
+        await expect(page.getByRole('heading', { name: 'Why Global Brands' })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Real-Time Crawling' })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Vector Space Analysis' })).toBeVisible();
     });
 });
 

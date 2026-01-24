@@ -36,3 +36,4 @@ This release transforms the Cognition AI Visibility Engine into a market-ready E
 
 ## Known Issues
 - OAuth login in E2E tests is mocked; manual verification of Google Sign-In is recommended before deployment.
+- "Skip to Content" accessibility test may fail on WebKit (Safari) due to default OS focus settings, but functions correctly in production.

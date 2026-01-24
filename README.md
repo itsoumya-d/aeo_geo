@@ -92,6 +92,13 @@ VITE_STRIPE_AGENCY_PRICE_ID=price_...    # $399/mo plan
 
 ## Deployment
 
+For a step-by-step guide on deploying both the backend (Supabase) and frontend (Vercel), please verify the [Deployment Guide](./DEPLOYMENT.md).
+
 This app is configured for **Vercel** deployment (see `vercel.json`).
  Simply import the repository into Vercel and it should auto-detect Vite.
  Remember to add the `VITE_` environment variables in Vercel.
+
+## Documentation
+- [Project Walkthrough & Architecture](./walkthrough.md)
+- [Deployment Guide](./DEPLOYMENT.md)
+- [Implementation Task List](./task.md)

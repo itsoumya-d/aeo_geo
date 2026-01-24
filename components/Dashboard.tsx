@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Suspense } from 'react';
-import { Report } from '../types';
+import { Report, Asset, AssetType } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 
@@ -7,6 +7,7 @@ import { supabase } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from './Toast';
 import { TopUpModal } from './TopUpModal';
+import { InputLayer } from './InputLayer';
 
 // Components
 import { DashboardHeader } from './dashboard/DashboardHeader';
@@ -26,25 +27,47 @@ const OptimizationTab = React.lazy(() => import('./dashboard/OptimizationTab').t
 const BenchmarkTab = React.lazy(() => import('./dashboard/BenchmarkTab').then(m => ({ default: m.BenchmarkTab })));
 const ReportTab = React.lazy(() => import('./dashboard/ReportTab').then(m => ({ default: m.ReportTab })));
 const IntegrationsTab = React.lazy(() => import('./dashboard/IntegrationsTab').then(m => ({ default: m.IntegrationsTab })));
-const HistoryTab = React.lazy(() => import('./dashboard/HistoryTab').then(m => ({ default: m.HistoryTab })));
 const SandboxTab = React.lazy(() => import('./dashboard/SandboxTab').then(m => ({ default: m.SandboxTab })));
-const SettingsTab = React.lazy(() => import('./dashboard/SettingsTab').then(m => ({ default: m.SettingsTab })));
 const CorrelationTab = React.lazy(() => import('./dashboard/CorrelationTab').then(m => ({ default: m.CorrelationTab })));
 const CitationLab = React.lazy(() => import('./dashboard/CitationLab').then(m => ({ default: m.CitationLab })));
 const WinPredictor = React.lazy(() => import('./dashboard/WinPredictor').then(m => ({ default: m.WinPredictor })));
 
 interface DashboardProps {
-    report: Report;
+    report: Report | null;
     onReset: () => void;
+    onStartAnalysis: (assets: Asset[], options?: { llmProvider: 'gemini' | 'claude' | 'openai' }) => void;
+    isAnalyzing: boolean;
+    statusMessage?: string;
+    discoveredCount?: number;
+    initialTab?: TabType;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ report, onReset }) => {
+export const Dashboard: React.FC<DashboardProps> = ({
+    report,
+    onReset,
+    onStartAnalysis,
+    isAnalyzing,
+    statusMessage,
+    discoveredCount,
+    initialTab = 'overview'
+}) => {
     const { organization, refreshOrganization } = useAuth();
     const toast = useToast();
-    const [activeTab, setActiveTab] = useState<TabType>('overview');
+    const [activeTab, setActiveTab] = useState<TabType>(initialTab);
     const [branding, setBranding] = useState<Branding | null>(null);
     const [isExporting, setIsExporting] = useState(false);
     const [showTopUp, setShowTopUp] = useState(false);
+
+    // Sync URL with Active Tab (SPA Behavior)
+    useEffect(() => {
+        const url = new URL(window.location.href);
+        const currentTabParam = url.searchParams.get('tab');
+
+        if (currentTabParam !== activeTab) {
+            url.searchParams.set('tab', activeTab);
+            window.history.pushState({}, '', url);
+        }
+    }, [activeTab]);
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -72,6 +95,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ report, onReset }) => {
     };
 
     const handleExportCSV = () => {
+        if (!report) return;
         const rows = [['Page', 'Issue', 'Action', 'Impact', 'Effort', 'AI Reasoning', 'Location']];
         report.pages.forEach(page => {
             page.recommendations.forEach(rec => {
@@ -98,6 +122,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ report, onReset }) => {
     };
 
     const handleExportPDF = async () => {
+        if (!report) return;
         setIsExporting(true);
         // Wait for rendering to settle and for "isExporting" state to remove non-print elements
         await new Promise(r => setTimeout(r, 600));
@@ -144,75 +169,91 @@ export const Dashboard: React.FC<DashboardProps> = ({ report, onReset }) => {
 
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col min-w-0">
-                <DashboardHeader
-                    activeTab={activeTab}
-                    setActiveTab={setActiveTab}
-                    auditCredits={organization?.audit_credits_remaining ?? 0}
-                    onReset={onReset}
-                    onExportPDF={handleExportPDF}
-                    onExportCSV={handleExportCSV}
-                    onTopUp={() => setShowTopUp(true)}
-                    isExporting={isExporting}
-                />
-
-// ... imports
-                import {PDFReportGenerator} from './reports/PDFReportGenerator';
-
-                // ... inside Dashboard component render ...
-
-                <main
-                    id="dashboard-content"
-                    className={`flex-1 p-4 sm:p-6 lg:ml-64 lg:mt-0 transition-all duration-300 ${isExporting ? 'bg-white !m-0 !p-0' : ''}`}
-                >
-                    {isExporting ? (
-                        <PDFReportGenerator
-                            report={report}
-                            branding={branding}
-                            organizationName={organization?.name}
+                {/* No Report State -> Input Layer */}
+                {!report && activeTab === 'overview' ? (
+                    <div className="flex-1 p-6 flex flex-col items-center justify-center">
+                        <InputLayer
+                            onStartAnalysis={onStartAnalysis}
+                            isAnalyzing={isAnalyzing}
+                            statusMessage={statusMessage}
+                            discoveredCount={discoveredCount}
                         />
-                    ) : (
-                        <div className="max-w-7xl mx-auto">
-                            <TopUpModal isOpen={showTopUp} onClose={() => setShowTopUp(false)} />
-                            {/* Mobile Bottom Nav */}
-                            <div className="lg:hidden">
-                                <MobileBottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
-                            </div>
+                    </div>
+                ) : (
+                    <>
+                        <DashboardHeader
+                            activeTab={activeTab}
+                            setActiveTab={setActiveTab}
+                            auditCredits={organization?.audit_credits_remaining ?? 0}
+                            onReset={onReset}
+                            onExportPDF={handleExportPDF}
+                            onExportCSV={handleExportCSV}
+                            onTopUp={() => setShowTopUp(true)}
+                            isExporting={isExporting}
+                        />
 
-                            <DashboardPrintHeader
-                                branding={branding}
-                                organizationName={organization?.name}
-                                overallScore={report.overallScore}
-                            />
+                        <main
+                            id="dashboard-content"
+                            className={`flex-1 p-4 sm:p-6 lg:ml-64 lg:mt-0 transition-all duration-300 ${isExporting ? 'bg-white !m-0 !p-0' : ''}`}
+                        >
+                            {isExporting && report ? (
+                                <PDFReportGenerator
+                                    report={report}
+                                    branding={branding}
+                                    organizationName={organization?.name}
+                                />
+                            ) : (
+                                <div className="max-w-7xl mx-auto">
+                                    <TopUpModal isOpen={showTopUp} onClose={() => setShowTopUp(false)} />
+                                    <div className="lg:hidden">
+                                        <MobileBottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
+                                    </div>
 
-                            <AnimatePresence mode="wait">
-                                <motion.div
-                                    key={activeTab}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    transition={{ duration: 0.3 }}
-                                >
-                                    <Suspense fallback={<OverviewSkeleton />}>
-                                        {activeTab === 'overview' && <OverviewTab report={report} setActiveTab={setActiveTab} />}
-                                        {activeTab === 'pages' && <PagesTab report={report} />}
-                                        {activeTab === 'search' && <SearchTab report={report} />}
-                                        {activeTab === 'benchmark' && <BenchmarkTab report={report} />}
-                                        {activeTab === 'reports' && <ReportTab report={report} />}
-                                        {activeTab === 'integrations' && <IntegrationsTab />}
-                                        {activeTab === 'history' && <HistoryTab currentReport={report} />}
-                                        {activeTab === 'sandbox' && <SandboxTab />}
-                                        {activeTab === 'settings' && <SettingsTab />}
-                                        {activeTab === 'consistency' && <ConsistencyTab report={report} />}
-                                        {activeTab === 'optimization' && <OptimizationTab />}
-                                        {activeTab === 'correlation' && <CorrelationTab report={report} />}
-                                        {activeTab === 'citation-lab' && <CitationLab report={report} />}
-                                        {activeTab === 'win-predictor' && <WinPredictor report={report} />}
-                                    </Suspense>
-                                </motion.div>
-                            </AnimatePresence>
-                        </div>
-                    )}
-                </main>
+                                    {report && (
+                                        <DashboardPrintHeader
+                                            branding={branding}
+                                            organizationName={organization?.name}
+                                            overallScore={report.overallScore}
+                                        />
+                                    )}
+
+                                    <AnimatePresence mode="wait">
+                                        <motion.div
+                                            key={activeTab}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                            transition={{ duration: 0.3 }}
+                                        >
+                                            <Suspense fallback={<OverviewSkeleton />}>
+                                                {activeTab === 'overview' && report && <OverviewTab report={report} setActiveTab={setActiveTab} />}
+                                                {activeTab === 'pages' && report && <PagesTab report={report} />}
+                                                {activeTab === 'search' && report && <SearchTab report={report} />}
+                                                {activeTab === 'benchmark' && report && <BenchmarkTab report={report} />}
+                                                {activeTab === 'reports' && report && <ReportTab report={report} />}
+                                                {activeTab === 'integrations' && <IntegrationsTab />}
+                                                {activeTab === 'sandbox' && <SandboxTab />}
+                                                {activeTab === 'consistency' && report && <ConsistencyTab report={report} />}
+                                                {activeTab === 'optimization' && <OptimizationTab />}
+                                                {activeTab === 'correlation' && report && <CorrelationTab report={report} />}
+                                                {activeTab === 'citation-lab' && report && <CitationLab report={report} />}
+                                                {activeTab === 'win-predictor' && report && <WinPredictor report={report} />}
+
+                                                {/* Handle Empty State for Tabs requiring report */}
+                                                {(!report && activeTab !== 'integrations' && activeTab !== 'sandbox') && (
+                                                    <div className="text-center py-20 opacity-50">
+                                                        <p>Please run an analysis to view this tab.</p>
+                                                    </div>
+                                                )}
+                                            </Suspense>
+                                        </motion.div>
+                                    </AnimatePresence>
+                                </div>
+                            )}
+                        </main>
+                    </>
+                )
+                }
             </div>
         </div>
     );
