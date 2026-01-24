@@ -13,6 +13,7 @@ export default defineConfig({
         alias: {
             '@': path.resolve(__dirname, './'),
         },
+        exclude: ['**/node_modules/**', '**/tests/**', '**/playwright/**']
     },
     resolve: {
         alias: {

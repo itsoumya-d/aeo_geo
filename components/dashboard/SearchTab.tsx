@@ -1,6 +1,6 @@
 import React from 'react';
 import { Report } from '../../types';
-import { SearchVisibility } from '../SearchVisibility';
+import { SentinelDashboard } from '../SentinelDashboard';
 
 interface SearchTabProps {
     report: Report;
@@ -9,7 +9,7 @@ interface SearchTabProps {
 export const SearchTab: React.FC<SearchTabProps> = ({ report }) => {
     return (
         <div className="animate-in fade-in">
-            <SearchVisibility report={report} auditId={report.id} />
+            <SentinelDashboard />
         </div>
     );
 };

@@ -43,7 +43,7 @@
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
-  <!-- JSON-LD Structured Data -->
+  <!-- JSON-LD Structured Data: SoftwareApplication -->
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -75,6 +75,62 @@
       ]
     }
     </script>
+
+  <!-- JSON-LD Structured Data: Organization -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Cognition AI",
+      "url": "https://cognition.ai",
+      "logo": "https://cognition.ai/logo.png",
+      "description": "The market-leading AI Visibility Engine for Generative Engine Optimization (GEO). Analyze how ChatGPT, Gemini, Claude, and Perplexity perceive your brand.",
+      "sameAs": [
+        "https://twitter.com/cognition_ai",
+        "https://linkedin.com/company/cognition-ai",
+        "https://github.com/cognition-ai"
+      ],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer service",
+        "email": "support@cognition.ai"
+      }
+    }
+  </script>
+
+  <!-- JSON-LD Structured Data: FAQPage -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is Generative Engine Optimization (GEO)?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "GEO is the practice of optimizing your content to be cited and recommended by AI search engines like ChatGPT, Gemini, Claude, and Perplexity. Unlike traditional SEO which focuses on Google rankings, GEO focuses on how LLMs perceive and reference your brand."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How does Cognition AI analyze my website?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Cognition uses real-time crawling to fetch your site content, then analyzes it using vector embeddings to understand how AI models perceive your brand compared to competitors. You get scores across multiple AI platforms and actionable recommendations."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is Vector Shift Analysis?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Vector Shift Analysis is Cognition's unique technology that shows how content changes affect your position in the AI's semantic space. When you simulate a rewrite, you can see exactly how it moves your content closer or further from your target keywords and competitors."
+          }
+        }
+      ]
+    }
+  </script>
   <script type="importmap">
 {
   "imports": {

@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { BillingDashboard } from '../components/BillingDashboard';
 import { TeamSettings } from '../components/TeamSettings';
 import { APIKeyManager } from '../components/APIKeyManager';
+import { DomainManagement } from '../components/DomainManagement';
 import { ReportBranding } from '../components/ReportBranding';
 import { IntegrationHub } from '../components/IntegrationHub';
 import {
@@ -254,10 +255,7 @@ export const SettingsPage: React.FC = () => {
                                 {activeTab === 'domains' && (
                                     <div className="animate-in fade-in duration-300">
                                         <h2 className="text-xl font-bold text-white mb-6 font-display">Domain Management</h2>
-                                        <div className="p-8 text-center text-text-muted bg-background/30 rounded-xl border border-border border-dashed">
-                                            <Globe className="w-10 h-10 mx-auto mb-4 text-slate-600" />
-                                            <p>Domain management component placeholder</p>
-                                        </div>
+                                        <DomainManagement />
                                     </div>
                                 )}
 

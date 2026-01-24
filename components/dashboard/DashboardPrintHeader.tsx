@@ -20,7 +20,7 @@ export const DashboardPrintHeader: React.FC<DashboardPrintHeaderProps> = ({
                     {branding?.logo_url ? (
                         <img src={branding.logo_url} alt="Logo" className="h-12 w-auto" />
                     ) : (
-                        <Brain className="w-8 h-8 text-primary" />
+                        !branding?.hide_cognition_branding && <Brain className="w-8 h-8 text-primary" />
                     )}
                     <div className="text-left">
                         <h1 className="text-2xl font-bold text-slate-900">

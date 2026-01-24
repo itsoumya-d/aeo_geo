@@ -6,7 +6,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { getVisibilityTrends, VisibilityDataPoint, Timeframe } from '../services/analyticsService';
 import { useAuth } from '../contexts/AuthContext';
-import { Skeleton } from './Skeleton';
+import { Skeleton } from './ui/Skeleton';
 import { RefreshCw, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { Card } from './ui/Card';
 import { Button } from './ui/Button';

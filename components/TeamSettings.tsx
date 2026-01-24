@@ -6,6 +6,7 @@ import {
     Users, Mail, Shield, Trash2, Send, Loader2, Crown,
     UserPlus, Check, X, Clock, AlertTriangle, FileText, Activity, History
 } from 'lucide-react';
+import { SSOConfig } from './SSOConfig';
 
 interface TeamMember extends UserProfile {
     isCurrentUser: boolean;
@@ -52,20 +53,21 @@ const RoleBadge: React.FC<{ role: string }> = ({ role }) => {
 };
 
 export const TeamSettings: React.FC = () => {
-    const { user, profile, organization, refreshOrganization } = useAuth();
+    const { user, profile, organization } = useAuth();
     const toast = useToast();
 
     const [members, setMembers] = useState<TeamMember[]>([]);
     const [invitations, setInvitations] = useState<Invitation[]>([]);
     const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'members' | 'activity'>('members');
+    const [activeTab, setActiveTab] = useState<'members' | 'activity' | 'security'>('members');
     const [inviteEmail, setInviteEmail] = useState('');
     const [inviteRole, setInviteRole] = useState<'admin' | 'member' | 'viewer'>('member');
     const [sending, setSending] = useState(false);
 
     const isOwnerOrAdmin = profile?.role === 'owner' || profile?.role === 'admin';
     const isOwner = profile?.role === 'owner';
+    const isTeamEnabled = organization?.plan === 'agency' || organization?.plan === 'enterprise';
 
     useEffect(() => {
         if (organization?.id) {
@@ -133,7 +135,6 @@ export const TeamSettings: React.FC = () => {
 
         setSending(true);
         try {
-            // Check if user already exists
             const { data: existingUser } = await supabase
                 .from('users')
                 .select('id')
@@ -147,7 +148,6 @@ export const TeamSettings: React.FC = () => {
                 return;
             }
 
-            // Check for existing pending invite
             const { data: existingInvite } = await supabase
                 .from('invitations')
                 .select('id')
@@ -162,7 +162,6 @@ export const TeamSettings: React.FC = () => {
                 return;
             }
 
-            // Create invitation
             const { error } = await supabase
                 .from('invitations')
                 .insert({
@@ -194,7 +193,6 @@ export const TeamSettings: React.FC = () => {
                 .eq('id', inviteId);
 
             if (error) throw error;
-
             toast.success('Invitation cancelled');
             loadTeamData();
         } catch (error: any) {
@@ -206,14 +204,12 @@ export const TeamSettings: React.FC = () => {
         if (!confirm(`Remove ${memberEmail} from your team?`)) return;
 
         try {
-            // Set organization_id to null to remove from team
             const { error } = await supabase
                 .from('users')
                 .update({ organization_id: null, role: 'member' })
                 .eq('id', memberId);
 
             if (error) throw error;
-
             toast.success('Member removed', `${memberEmail} has been removed from the team.`);
             loadTeamData();
         } catch (error: any) {
@@ -229,12 +225,32 @@ export const TeamSettings: React.FC = () => {
                 .eq('id', memberId);
 
             if (error) throw error;
-
             toast.success('Role updated');
             loadTeamData();
         } catch (error: any) {
             toast.error('Failed to update role', error.message);
         }
+    };
+
+    const handleExportCSV = () => {
+        if (!activityLogs.length) return;
+
+        const headers = ['User', 'Action', 'Target', 'Date'];
+        const rows = activityLogs.map(log => [
+            log.user_email || 'System',
+            log.action,
+            log.details?.target || '-',
+            new Date(log.created_at).toISOString()
+        ]);
+
+        const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].map(e => e.join(",")).join("\n");
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `audit_log_${new Date().toISOString().slice(0, 10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     if (loading) {
@@ -247,7 +263,6 @@ export const TeamSettings: React.FC = () => {
 
     return (
         <div className="space-y-8">
-            {/* Team Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <div className="bg-primary/20 p-3 rounded-xl">
@@ -260,7 +275,6 @@ export const TeamSettings: React.FC = () => {
                 </div>
             </div>
 
-            {/* Tab Swicher */}
             <div className="flex border-b border-slate-800">
                 <button
                     onClick={() => setActiveTab('members')}
@@ -274,12 +288,38 @@ export const TeamSettings: React.FC = () => {
                 >
                     Activity Log
                 </button>
+                <button
+                    onClick={() => setActiveTab('security')}
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'security' ? 'border-primary text-primary' : 'border-transparent text-slate-400 hover:text-white'}`}
+                >
+                    <Shield className="w-3.5 h-3.5" />
+                    Security
+                </button>
             </div>
 
-            {activeTab === 'members' ? (
+            {activeTab === 'members' && (
                 <div className="space-y-8 animate-in fade-in duration-300">
-                    {/* Invite Form */}
-                    {isOwnerOrAdmin && (
+                    {isOwnerOrAdmin && !isTeamEnabled && (
+                        <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                                <div className="bg-purple-500/20 p-3 rounded-xl">
+                                    <Users className="w-6 h-6 text-purple-400" />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-white text-lg">Unlock Team Management</h4>
+                                    <p className="text-sm text-slate-400">Upgrade to the Agency plan to invite members and manage roles.</p>
+                                </div>
+                            </div>
+                            <a
+                                href="/settings?tab=billing"
+                                className="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-lg font-bold text-sm transition-colors whitespace-nowrap"
+                            >
+                                Upgrade Now
+                            </a>
+                        </div>
+                    )}
+
+                    {isOwnerOrAdmin && isTeamEnabled && (
                         <form onSubmit={handleSendInvite} className="bg-slate-900/50 rounded-xl p-4 border border-slate-800">
                             <div className="flex flex-col sm:flex-row gap-3">
                                 <div className="flex-1">
@@ -306,18 +346,13 @@ export const TeamSettings: React.FC = () => {
                                     disabled={sending || !inviteEmail.trim()}
                                     className="bg-primary hover:bg-primary/90 text-white px-6 py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
                                 >
-                                    {sending ? (
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                    ) : (
-                                        <Send className="w-4 h-4" />
-                                    )}
+                                    {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                                     Invite
                                 </button>
                             </div>
                         </form>
                     )}
 
-                    {/* Pending Invitations */}
                     {invitations.length > 0 && (
                         <div>
                             <h4 className="text-sm font-medium text-slate-400 mb-3 flex items-center gap-2">
@@ -341,7 +376,6 @@ export const TeamSettings: React.FC = () => {
                                             <button
                                                 onClick={() => handleCancelInvite(invite.id)}
                                                 className="text-slate-400 hover:text-rose-400 transition-colors p-2"
-                                                title="Cancel invitation"
                                             >
                                                 <X className="w-4 h-4" />
                                             </button>
@@ -352,7 +386,6 @@ export const TeamSettings: React.FC = () => {
                         </div>
                     )}
 
-                    {/* Members List */}
                     <div className="space-y-2">
                         {members.map(member => (
                             <div
@@ -383,7 +416,7 @@ export const TeamSettings: React.FC = () => {
                                         <select
                                             value={member.role}
                                             onChange={(e) => handleChangeRole(member.id, e.target.value as any)}
-                                            className="bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-primary outline-none"
+                                            className="bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-1.5 text-sm outline-none"
                                         >
                                             <option value="member">Member</option>
                                             <option value="admin">Admin</option>
@@ -392,7 +425,6 @@ export const TeamSettings: React.FC = () => {
                                         <button
                                             onClick={() => handleRemoveMember(member.id, member.email)}
                                             className="text-slate-400 hover:text-rose-400 transition-colors p-2"
-                                            title="Remove member"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>
@@ -402,7 +434,6 @@ export const TeamSettings: React.FC = () => {
                         ))}
                     </div>
 
-                    {/* Permission Notice */}
                     {!isOwnerOrAdmin && (
                         <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-4 flex items-start gap-3">
                             <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0" />
@@ -412,8 +443,19 @@ export const TeamSettings: React.FC = () => {
                         </div>
                     )}
                 </div>
-            ) : (
+            )}
+
+            {activeTab === 'activity' && (
                 <div className="space-y-4 animate-in fade-in duration-300">
+                    <div className="flex justify-end">
+                        <button
+                            onClick={handleExportCSV}
+                            className="text-xs font-bold uppercase text-slate-400 hover:text-white flex items-center gap-2 transition-colors border border-slate-700 hover:border-slate-500 rounded-lg px-3 py-2"
+                        >
+                            <FileText className="w-3.5 h-3.5" />
+                            Export Audit Log
+                        </button>
+                    </div>
                     <div className="bg-slate-900/50 border border-slate-800 rounded-xl overflow-hidden">
                         <table className="w-full text-left text-sm">
                             <thead className="bg-slate-800/50 text-slate-400">
@@ -433,9 +475,6 @@ export const TeamSettings: React.FC = () => {
                                             <div className="flex items-center gap-2 text-slate-300">
                                                 <Activity className="w-3.5 h-3.5 text-primary" />
                                                 <span>{log.action.replace(/_/g, ' ')}</span>
-                                                {log.details?.target && (
-                                                    <span className="text-slate-500 italic">({log.details.target})</span>
-                                                )}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-slate-500">
@@ -455,6 +494,8 @@ export const TeamSettings: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            {activeTab === 'security' && <SSOConfig />}
         </div>
     );
 };

@@ -38,8 +38,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
     return (
         <div className="min-h-screen bg-background text-text-primary overflow-hidden selection:bg-primary/30 font-sans">
+            {/* Skip to main content - WCAG 2.1 AA */}
+            <a href="#audit-section" className="skip-to-content">
+                Skip to main content
+            </a>
+
             {/* Background Gradients */}
-            <div className="fixed inset-0 z-0 pointer-events-none">
+            <div className="fixed inset-0 z-0 pointer-events-none" aria-hidden="true">
                 <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/20 rounded-full blur-[120px] animate-pulse" style={{ animationDuration: '4s' }} />
                 <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-600/10 rounded-full blur-[120px]" />
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10" />

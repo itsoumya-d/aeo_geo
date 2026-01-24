@@ -26,6 +26,17 @@ export default defineConfig(({ mode }) => {
       commonjsOptions: {
         transformMixedEsModules: true,
       },
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+            'vendor-ui': ['framer-motion', 'lucide-react'],
+            'vendor-charts': ['recharts'],
+            'vendor-utils': ['html2canvas', 'jspdf'],
+            'vendor-supabase': ['@supabase/supabase-js'],
+          }
+        }
+      }
     }
   };
 });

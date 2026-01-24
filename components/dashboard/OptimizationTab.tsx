@@ -1,10 +1,10 @@
 import React from 'react';
-import { OptimizationDashboard } from '../OptimizationDashboard';
+import { VectorLab } from '../VectorLab';
 
 export const OptimizationTab: React.FC = () => {
     return (
         <div className="animate-in fade-in">
-            <OptimizationDashboard />
+            <VectorLab />
         </div>
     );
 };

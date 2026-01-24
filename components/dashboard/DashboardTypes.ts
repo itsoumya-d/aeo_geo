@@ -1,4 +1,4 @@
-export type TabType = 'overview' | 'pages' | 'consistency' | 'search' | 'optimization' | 'benchmark' | 'reports' | 'integrations' | 'history' | 'sandbox' | 'settings' | 'correlation';
+export type TabType = 'overview' | 'pages' | 'consistency' | 'search' | 'optimization' | 'benchmark' | 'reports' | 'integrations' | 'history' | 'sandbox' | 'settings' | 'correlation' | 'citation-lab' | 'win-predictor';
 
 export interface Branding {
     logo_url: string | null;

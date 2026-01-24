@@ -6,8 +6,8 @@ import { Report } from '../../types';
 import { useToast } from '../Toast';
 import { supabase } from '../../services/supabase';
 import { useAuth } from '../../contexts/AuthContext';
-// @ts-ignore
-import html2pdf from 'html2pdf.js';
+
+// html2pdf is lazy-loaded on demand to reduce initial bundle size (984KB)
 
 interface ReportTabProps {
     report: Report;
@@ -152,17 +152,20 @@ export const ReportTab: React.FC<ReportTabProps> = ({ report }) => {
         setGenerating(true);
         toast.info("Generating Report", "Synthesizing executive PDF...");
 
-        const element = printableRef.current;
-        const opt = {
-            margin: 0,
-            filename: `Cognition_Visibility_Report_${new Date().toISOString().split('T')[0]}.pdf`,
-            image: { type: 'jpeg' as const, quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, backgroundColor: '#0f172a', scrollY: 0 },
-            jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
-            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-        };
-
         try {
+            // Lazy load html2pdf.js to reduce initial bundle size (984KB → 0KB initial)
+            const html2pdf = (await import('html2pdf.js')).default;
+
+            const element = printableRef.current;
+            const opt = {
+                margin: 0,
+                filename: `Cognition_Visibility_Report_${new Date().toISOString().split('T')[0]}.pdf`,
+                image: { type: 'jpeg' as const, quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, backgroundColor: '#0f172a', scrollY: 0 },
+                jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+
             await html2pdf().set(opt).from(element).save();
             toast.success("Export Complete", "Branded report downloaded.");
         } catch (error) {

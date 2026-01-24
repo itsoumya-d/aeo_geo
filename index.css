@@ -84,3 +84,62 @@
 ::-webkit-scrollbar-thumb {
   @apply bg-surfaceHighlight rounded-full hover:bg-primary/50 transition-colors;
 }
+
+/* ===== WCAG 2.1 AA Accessibility ===== */
+
+/* Skip to main content link */
+.skip-to-content {
+  @apply absolute -top-10 left-0 bg-primary text-white px-4 py-2 z-[9999] font-bold;
+  @apply focus:top-0 transition-all;
+}
+
+/* Enhanced focus indicators for all interactive elements */
+*:focus-visible {
+  @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+
+  .glass-panel,
+  .glass-card {
+    @apply border-2 border-white;
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-cta {
+    @apply border-2;
+  }
+}
+
+/* Screen reader only utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Focus trap for modals */
+.focus-trap:focus {
+  @apply outline-none;
+}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Skeleton } from '../Skeleton';
+import { Skeleton } from '../ui/Skeleton';
 
 /**
  * Generic Card Skeleton for consistent loading states in dashboard cards

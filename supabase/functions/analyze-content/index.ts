@@ -407,11 +407,16 @@ async function handleAnalysis(model: GenerativeModel, payload: AnalyzePayload): 
     const { websiteUrl, otherAssets, mainContent, competitors } = payload;
 
     const prompt = `
-    Analyze this brand presence.
+    Analyze this brand presence for Generative Engine Optimization (GEO).
     Domain: ${websiteUrl}
     Competitors: ${competitors ? competitors.join(', ') : 'None provided'}
     Assets: ${otherAssets || 'None'}
     Content Snippet: ${mainContent?.slice(0, 15000) || "No content"}
+
+    Special GEO Instructions:
+    1. Identify if content uses the "According to [Source]" pattern or specific statistics (Statistical Authority).
+    2. Check for modularity and LLM summarizability (Quotability).
+    3. Evaluate Entity Linking: Does it provide JSON-LD ready entities like sameAs/mentions?
 
     Return a JSON object with:
     - overallScore (0-100)
@@ -424,6 +429,17 @@ async function handleAnalysis(model: GenerativeModel, payload: AnalyzePayload): 
     - searchQueries (array of {platform, query, intent})
     - seoAudit ({implemented: [], missing: [], technicalHealth: number})
     - vectorMap (array of {x, y, label, type: 'brand'|'competitor'|'keyword'})
+    - keywordRankings (array of {keyword, platform, rank, citationFound, sentiment})
+    
+    - citationProbability (0-100): likelihood of being cited by an LLM.
+    - entityLinkingDensity (0-100): density of semantic identifiers.
+    - quotabilityScore (0-100): how easy it is for an LLM to quote this content.
+    - missingEntities (array): industry entities or data points that should be cited/linked.
+    - citationGap (string): specific reasoning on why competitors might be cited over this brand.
+
+    - winProbability (0-100): likelihood of winning a conversion vs competitors in an AI-first search.
+    - projectedRevenueLift (0-100): estimated % increase in revenue if citations move to #1 (Benchmark: cited sources see 40% higher CTR than non-cited).
+    - marketShareCapture (0-100): predicted % of industry AI-search traffic captured.
 
     Ensure strict JSON format.
     `;
@@ -716,6 +732,27 @@ async function handleAutoAudit(
         .single();
 
     if (auditError) throw auditError;
+
+    // 4.1 Save Keyword Rankings (Sentinel Data)
+    if (report.keywordRankings && Array.isArray(report.keywordRankings)) {
+        try {
+            const rankingInserts = report.keywordRankings.map((k: any) => ({
+                audit_id: audit.id,
+                keyword: k.keyword,
+                platform: k.platform,
+                rank: k.rank,
+                citation_found: k.citationFound,
+                sentiment_score: k.sentiment,
+                created_at: new Date().toISOString()
+            }));
+
+            if (rankingInserts.length > 0) {
+                await supabaseAdmin.from('keyword_rankings').insert(rankingInserts);
+            }
+        } catch (e) {
+            console.error("Failed to save keyword rankings:", e);
+        }
+    }
 
     // 5. Compare with Previous Audit for Delta
     const { data: previousAudit } = await supabaseAdmin

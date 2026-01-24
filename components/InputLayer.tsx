@@ -139,7 +139,10 @@ export const InputLayer: React.FC<InputLayerProps> = ({ onStartAnalysis, isAnaly
             {mode === 'SINGLE' ? (
               <>
                 <div className="flex-shrink-0 w-full md:w-48">
+                  <label htmlFor="asset-type" className="sr-only">Asset Type</label>
                   <select
+                    id="asset-type"
+                    aria-label="Select asset type"
                     className="h-10 w-full bg-background border border-border text-text-primary rounded-lg px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all cursor-pointer text-sm"
                     value={selectedType}
                     onChange={(e) => setSelectedType(e.target.value as AssetType)}
@@ -175,7 +178,10 @@ export const InputLayer: React.FC<InputLayerProps> = ({ onStartAnalysis, isAnaly
               </>
             ) : (
               <div className="w-full">
+                <label htmlFor="batch-urls" className="sr-only">Paste URLs for batch import</label>
                 <textarea
+                  id="batch-urls"
+                  aria-label="Paste URLs, one per line"
                   className="w-full h-32 bg-background border border-border text-text-primary rounded-lg p-4 focus:ring-2 focus:ring-primary outline-none font-mono text-sm resize-none"
                   placeholder="Paste URLs, one per line..."
                   value={batchInput}
@@ -209,8 +215,13 @@ export const InputLayer: React.FC<InputLayerProps> = ({ onStartAnalysis, isAnaly
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => removeAsset(asset.id)} disabled={isAnalyzing} className="text-text-muted hover:text-red-500 transition-colors disabled:opacity-30 p-1">
-                    <Trash2 className="w-4 h-4" />
+                  <button
+                    onClick={() => removeAsset(asset.id)}
+                    disabled={isAnalyzing}
+                    aria-label={`Remove ${asset.url} from queue`}
+                    className="text-text-muted hover:text-red-500 transition-colors disabled:opacity-30 p-1"
+                  >
+                    <Trash2 className="w-4 h-4" aria-hidden="true" />
                   </button>
                 </div>
               </div>

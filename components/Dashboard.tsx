@@ -14,6 +14,7 @@ import { Sidebar } from './dashboard/Sidebar';
 import { DashboardPrintHeader } from './dashboard/DashboardPrintHeader';
 import { TabType, Branding } from './dashboard/DashboardTypes';
 import { MobileBottomNav } from './dashboard/MobileBottomNav';
+import { OverviewSkeleton } from './ui/Skeleton';
 
 // Lazy Load Tabs
 const OverviewTab = React.lazy(() => import('./dashboard/OverviewTab').then(m => ({ default: m.OverviewTab })));
@@ -28,17 +29,13 @@ const HistoryTab = React.lazy(() => import('./dashboard/HistoryTab').then(m => (
 const SandboxTab = React.lazy(() => import('./dashboard/SandboxTab').then(m => ({ default: m.SandboxTab })));
 const SettingsTab = React.lazy(() => import('./dashboard/SettingsTab').then(m => ({ default: m.SettingsTab })));
 const CorrelationTab = React.lazy(() => import('./dashboard/CorrelationTab').then(m => ({ default: m.CorrelationTab })));
+const CitationLab = React.lazy(() => import('./dashboard/CitationLab').then(m => ({ default: m.CitationLab })));
+const WinPredictor = React.lazy(() => import('./dashboard/WinPredictor').then(m => ({ default: m.WinPredictor })));
 
 interface DashboardProps {
     report: Report;
     onReset: () => void;
 }
-
-const TabLoading = () => (
-    <div className="flex h-96 w-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-    </div>
-);
 
 export const Dashboard: React.FC<DashboardProps> = ({ report, onReset }) => {
     const { organization, refreshOrganization } = useAuth();
@@ -184,7 +181,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ report, onReset }) => {
                                 exit={{ opacity: 0, y: -10 }}
                                 transition={{ duration: 0.3 }}
                             >
-                                <Suspense fallback={<TabLoading />}>
+                                <Suspense fallback={<OverviewSkeleton />}>
                                     {activeTab === 'overview' && <OverviewTab report={report} setActiveTab={setActiveTab} />}
                                     {activeTab === 'pages' && <PagesTab report={report} />}
                                     {activeTab === 'search' && <SearchTab report={report} />}
@@ -197,6 +194,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ report, onReset }) => {
                                     {activeTab === 'consistency' && <ConsistencyTab report={report} />}
                                     {activeTab === 'optimization' && <OptimizationTab />}
                                     {activeTab === 'correlation' && <CorrelationTab report={report} />}
+                                    {activeTab === 'citation-lab' && <CitationLab report={report} />}
+                                    {activeTab === 'win-predictor' && <WinPredictor report={report} />}
                                 </Suspense>
                             </motion.div>
                         </AnimatePresence>

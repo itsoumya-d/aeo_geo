@@ -121,6 +121,50 @@ export const ReportBranding: React.FC = () => {
         }
     };
 
+    const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !organization?.id) return;
+
+        // Validate file type
+        const allowedTypes = ['image/png', 'image/jpeg', 'image/svg+xml', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            toast.error('Invalid file type', 'Please upload PNG, JPG, SVG, or WebP');
+            return;
+        }
+
+        // Validate file size (max 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            toast.error('File too large', 'Maximum file size is 2MB');
+            return;
+        }
+
+        setSaving(true);
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${organization.id}/logo.${fileExt}`;
+
+            // Upload to Supabase Storage
+            const { error: uploadError } = await supabase.storage
+                .from('branding')
+                .upload(fileName, file, { upsert: true });
+
+            if (uploadError) throw uploadError;
+
+            // Get public URL
+            const { data: urlData } = supabase.storage
+                .from('branding')
+                .getPublicUrl(fileName);
+
+            updateBranding({ logo_url: urlData.publicUrl });
+            toast.success('Logo uploaded', 'Your logo has been saved');
+        } catch (error: any) {
+            console.error('Upload error:', error);
+            toast.error('Upload failed', error.message || 'Could not upload logo');
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const updateBranding = (updates: Partial<BrandingSettings>) => {
         setBranding(prev => ({ ...prev, ...updates }));
         setHasChanges(true);
@@ -193,17 +237,29 @@ export const ReportBranding: React.FC = () => {
                         />
                     </div>
 
-                    {/* Logo URL */}
+                    {/* Logo Upload/URL */}
                     <div>
-                        <label className="block text-sm text-slate-400 mb-2">Logo URL</label>
-                        <input
-                            type="url"
-                            value={branding.logo_url || ''}
-                            onChange={(e) => updateBranding({ logo_url: e.target.value || null })}
-                            placeholder="https://example.com/logo.png"
-                            className="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none placeholder:text-slate-500"
-                        />
-                        <p className="text-xs text-slate-500 mt-1">Use a URL to your company logo (PNG or SVG recommended)</p>
+                        <label className="block text-sm text-slate-400 mb-2">Company Logo</label>
+                        <div className="flex gap-3">
+                            <input
+                                type="url"
+                                value={branding.logo_url || ''}
+                                onChange={(e) => updateBranding({ logo_url: e.target.value || null })}
+                                placeholder="https://example.com/logo.png"
+                                className="flex-1 bg-slate-800 border border-slate-700 text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none placeholder:text-slate-500"
+                            />
+                            <label className="flex items-center gap-2 bg-primary/20 hover:bg-primary/30 text-primary px-4 py-2.5 rounded-lg cursor-pointer transition-colors">
+                                <Upload className="w-4 h-4" />
+                                <span className="text-sm font-medium">Upload</span>
+                                <input
+                                    type="file"
+                                    accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                                    onChange={handleLogoUpload}
+                                    className="hidden"
+                                />
+                            </label>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">PNG, JPG, SVG, or WebP (max 2MB)</p>
                     </div>
 
                     {/* Colors */}

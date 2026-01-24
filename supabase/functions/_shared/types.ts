@@ -2,6 +2,9 @@
  * Shared types for Supabase Edge Functions
  */
 
+// LLM Provider types for multi-model support
+export type LLMProvider = 'gemini' | 'claude' | 'openai';
+
 // Action types for the analyze-content function
 export type ActionType = 'DISCOVER' | 'ANALYZE' | 'REWRITE' | 'CHECK_VISIBILITY' | 'SANDBOX_COMPARE' | 'AUTO_AUDIT';
 
@@ -15,6 +18,7 @@ export interface AnalyzePayload {
     competitors?: string[];
     otherAssets?: string;
     mainContent?: string;
+    llmProvider?: LLMProvider;  // Optional: defaults to 'gemini'
 }
 
 export interface RewritePayload {
@@ -23,6 +27,7 @@ export interface RewritePayload {
     rewrite?: string;
     goal?: 'SNIPPET' | 'AUTHORITY' | 'CLARITY' | 'CONVERSION';
     tone?: 'PROFESSIONAL' | 'AUTHORITATIVE' | 'CONVERSATIONAL' | 'TECHNICAL';
+    llmProvider?: LLMProvider;  // Optional: defaults to 'gemini'
 }
 
 export interface SandboxComparePayload {
@@ -117,6 +122,16 @@ export interface AnalysisReport {
     seoAudit: SeoAudit;
     keywords: string[];
     vectorMap?: VectorMapPoint[];
+    // GEO Metrics
+    citationProbability?: number; // 0-100
+    entityLinkingDensity?: number; // 0-100
+    quotabilityScore?: number; // 0-100
+    missingEntities?: string[];
+    citationGap?: string;
+    // Win Probability Metrics (Phase 3.5)
+    winProbability?: number; // 0-100
+    projectedRevenueLift?: number; // 0-100 (percentage)
+    marketShareCapture?: number; // 0-100
 }
 
 export interface RewriteResult {

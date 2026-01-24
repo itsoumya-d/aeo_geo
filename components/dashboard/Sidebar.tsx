@@ -1,7 +1,8 @@
-import React from 'react';
-import { LayoutDashboard, FileText, Search, Users, ShieldCheck, Zap, History, Sparkles, TrendingUp, Settings, Brain } from 'lucide-react';
+import React, { useState } from 'react';
+import { LayoutDashboard, FileText, Search, Users, ShieldCheck, Zap, History, Sparkles, TrendingUp, Settings, Brain, Upload } from 'lucide-react';
 import { TabType } from './DashboardTypes';
 import { cn } from '../ui/Button';
+import { BulkImportModal } from './BulkImportModal';
 
 interface SidebarProps {
     activeTab: TabType;
@@ -10,13 +11,15 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onReset }) => {
+    const [showBulkImport, setShowBulkImport] = useState(false);
+
     const tabs = [
         { id: 'overview' as const, label: 'Overview', icon: LayoutDashboard },
         { id: 'pages' as const, label: 'Page Audit', icon: FileText },
         { id: 'search' as const, label: 'Search & SEO', icon: Search },
         { id: 'benchmark' as const, label: 'Benchmark', icon: Users },
         { id: 'consistency' as const, label: 'Alignment', icon: ShieldCheck },
-        { id: 'optimization' as const, label: 'Optimization', icon: Zap },
+        { id: 'optimization' as const, label: 'Vector Lab', icon: Zap },
         { id: 'correlation' as const, label: 'Correlation', icon: TrendingUp },
         { id: 'sandbox' as const, label: 'Sandbox', icon: Sparkles },
         { id: 'reports' as const, label: 'Reports', icon: FileText },
@@ -68,6 +71,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onRes
                     );
                 })}
             </nav>
+
+            <div className="px-3 pb-2">
+                <button
+                    onClick={() => setShowBulkImport(true)}
+                    className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider bg-white/5 hover:bg-white/10 text-text-secondary hover:text-white border border-white/5 transition-colors mb-2"
+                >
+                    <Upload className="w-3 h-3" />
+                    Bulk Import
+                </button>
+            </div>
+
+            <BulkImportModal isOpen={showBulkImport} onClose={() => setShowBulkImport(false)} />
 
             {/* Footer / Version */}
             <div className="p-4 border-t border-border">

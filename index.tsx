@@ -6,6 +6,7 @@ import './index.css';
 
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './components/Toast';
+import { AppErrorBoundary } from './components/AppErrorBoundary';
 import { initSentry } from './services/sentry';
 import { analytics } from './services/analytics';
 
@@ -24,7 +25,9 @@ root.render(
     <BrowserRouter>
       <AuthProvider>
         <ToastProvider>
-          <App />
+          <AppErrorBoundary>
+            <App />
+          </AppErrorBoundary>
         </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
