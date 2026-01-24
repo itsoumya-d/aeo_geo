@@ -1,4 +1,6 @@
 import { supabase } from './supabase';
+import { auditLog, getCurrentActor } from './auditService';
+import { sendSlackNotification } from './slackService';
 
 /**
  * Competitor Tracking Service
@@ -91,6 +93,28 @@ export async function addCompetitor(domain: string, name?: string): Promise<Comp
         return null;
     }
 
+    // Log the event
+    const actor = await getCurrentActor();
+    if (actor) {
+        await auditLog({
+            actor,
+            action: 'competitor.tracked',
+            target: { id: data.id, type: 'competitor', display_name: cleanDomain },
+            metadata: { domain: cleanDomain, name }
+        });
+    }
+
+    // Dispatch Slack Notification
+    if (orgData?.organization_id) {
+        await sendSlackNotification(orgData.organization_id, {
+            title: '🎯 New Competitor Tracked',
+            message: `*${name || cleanDomain}* has been added to the visibility benchmark pool.`,
+            level: 'info',
+            cta_url: `${window.location.origin}/dashboard?tab=benchmark`,
+            cta_text: 'View Benchmarks'
+        });
+    }
+
     return data;
 }
 
@@ -106,6 +130,16 @@ export async function removeCompetitor(competitorId: string): Promise<boolean> {
     if (error) {
         console.error('Error removing competitor:', error);
         return false;
+    }
+
+    // Log the event
+    const actor = await getCurrentActor();
+    if (actor) {
+        await auditLog({
+            actor,
+            action: 'competitor.untracked',
+            target: { id: competitorId, type: 'competitor' }
+        });
     }
 
     return true;

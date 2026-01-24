@@ -8,13 +8,27 @@ import { IntegrationHub } from '../components/IntegrationHub';
 import {
     User, Building2, Shield, CreditCard, Bell, Key, Palette,
     LogOut, Loader2, Check, ChevronRight, Moon, Sun,
-    Mail, Trash2, AlertTriangle, Globe
+    Mail, Trash2, AlertTriangle, Globe, Zap
 } from 'lucide-react';
+import { Sidebar } from '../components/dashboard/Sidebar';
+import { TabType } from '../components/dashboard/DashboardTypes';
+import { Card } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
+import { Badge } from '../components/ui/Badge';
 
 type SettingsTab = 'profile' | 'organization' | 'domains' | 'security' | 'billing' | 'api' | 'branding' | 'notifications' | 'integrations';
 
 export const SettingsPage: React.FC = () => {
     const { user, profile, organization, signOut, loading } = useAuth();
+
+    // Mapping for Sidebar navigation
+    const [dashboardTab, setDashboardTab] = useState<TabType>('settings');
+    const handleDashboardTabChange = (tab: TabType) => {
+        if (tab !== 'settings') {
+            window.location.href = `/dashboard?tab=${tab}`;
+        }
+    };
 
     const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
     const [isSaving, setIsSaving] = useState(false);
@@ -22,7 +36,7 @@ export const SettingsPage: React.FC = () => {
 
     // Profile state
     const [fullName, setFullName] = useState(profile?.full_name || '');
-    const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || '');
+    // const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || '');
 
     // Organization state
     const [orgName, setOrgName] = useState(organization?.name || '');
@@ -50,15 +64,15 @@ export const SettingsPage: React.FC = () => {
     };
 
     const tabs: { id: SettingsTab; label: string; icon: React.ReactNode }[] = [
-        { id: 'profile', label: 'Profile', icon: <User className="w-5 h-5" /> },
-        { id: 'organization', label: 'Organization', icon: <Building2 className="w-5 h-5" /> },
-        { id: 'domains', label: 'Domains', icon: <Globe className="w-5 h-5" /> },
-        { id: 'security', label: 'Security', icon: <Shield className="w-5 h-5" /> },
-        { id: 'billing', label: 'Billing', icon: <CreditCard className="w-5 h-5" /> },
-        { id: 'api', label: 'API', icon: <Key className="w-5 h-5" /> },
-        { id: 'branding', label: 'Branding', icon: <Palette className="w-5 h-5" /> },
-        { id: 'integrations', label: 'Integrations', icon: <Zap className="w-5 h-5" /> },
-        { id: 'notifications', label: 'Notifications', icon: <Bell className="w-5 h-5" /> },
+        { id: 'profile', label: 'Profile', icon: <User className="w-4 h-4" /> },
+        { id: 'organization', label: 'Organization', icon: <Building2 className="w-4 h-4" /> },
+        { id: 'domains', label: 'Domains', icon: <Globe className="w-4 h-4" /> },
+        { id: 'security', label: 'Security', icon: <Shield className="w-4 h-4" /> },
+        { id: 'billing', label: 'Billing', icon: <CreditCard className="w-4 h-4" /> },
+        { id: 'api', label: 'API Keys', icon: <Key className="w-4 h-4" /> },
+        { id: 'branding', label: 'Branding', icon: <Palette className="w-4 h-4" /> },
+        { id: 'integrations', label: 'Integrations', icon: <Zap className="w-4 h-4" /> },
+        { id: 'notifications', label: 'Notifications', icon: <Bell className="w-4 h-4" /> },
     ];
 
     if (loading) {
@@ -70,340 +84,344 @@ export const SettingsPage: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-background">
-            <div className="max-w-6xl mx-auto px-4 py-8">
-                <h1 className="text-3xl font-bold text-white mb-8">Settings</h1>
+        <div className="min-h-screen bg-background text-text-primary flex">
+            {/* Sidebar Navigation */}
+            <Sidebar activeTab={dashboardTab} setActiveTab={handleDashboardTabChange} />
 
-                <div className="flex flex-col lg:flex-row gap-8">
-                    {/* Sidebar */}
-                    <nav className="lg:w-64 flex-shrink-0">
-                        <div className="bg-surface border border-slate-700 rounded-xl p-2">
-                            {tabs.map(tab => (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => setActiveTab(tab.id)}
-                                    className={`
-                    w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors
-                    ${activeTab === tab.id
-                                            ? 'bg-primary/10 text-primary'
-                                            : 'text-slate-400 hover:text-white hover:bg-slate-800'
-                                        }
-                  `}
-                                >
-                                    {tab.icon}
-                                    <span className="font-medium">{tab.label}</span>
-                                    {activeTab === tab.id && (
-                                        <ChevronRight className="w-4 h-4 ml-auto" />
-                                    )}
-                                </button>
-                            ))}
+            <div className="flex-1 flex flex-col min-w-0 lg:ml-64 transition-all duration-300">
+                <div className="max-w-5xl mx-auto w-full px-6 py-12">
+                    <header className="mb-10">
+                        <h1 className="text-3xl font-display font-bold text-white mb-2">Settings</h1>
+                        <p className="text-text-secondary">Manage your account, organization, and preferences.</p>
+                    </header>
 
-                            <hr className="my-2 border-slate-700" />
+                    <div className="flex flex-col lg:flex-row gap-8">
+                        {/* Settings Nav */}
+                        <nav className="lg:w-64 flex-shrink-0">
+                            <div className="sticky top-6">
+                                <Card className="p-2 border-border bg-surface/50">
+                                    {tabs.map(tab => (
+                                        <button
+                                            key={tab.id}
+                                            onClick={() => setActiveTab(tab.id)}
+                                            className={`
+                        w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-left transition-colors
+                        ${activeTab === tab.id
+                                                    ? 'bg-primary/10 text-primary'
+                                                    : 'text-text-secondary hover:text-white hover:bg-white/5'
+                                                }
+                      `}
+                                        >
+                                            {tab.icon}
+                                            <span>{tab.label}</span>
+                                            {activeTab === tab.id && (
+                                                <ChevronRight className="w-3 h-3 ml-auto opacity-50" />
+                                            )}
+                                        </button>
+                                    ))}
 
-                            <button
-                                onClick={handleSignOut}
-                                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-rose-400 hover:bg-rose-500/10 transition-colors"
-                            >
-                                <LogOut className="w-5 h-5" />
-                                <span className="font-medium">Sign Out</span>
-                            </button>
-                        </div>
-                    </nav>
+                                    <hr className="my-2 border-border" />
 
-                    {/* Content */}
-                    <div className="flex-1">
-                        <div className="bg-surface border border-slate-700 rounded-xl p-6">
-                            {/* Profile Tab */}
-                            {activeTab === 'profile' && (
-                                <div className="animate-in fade-in duration-300">
-                                    <h2 className="text-xl font-semibold text-white mb-6">Profile Settings</h2>
+                                    <button
+                                        onClick={handleSignOut}
+                                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-left text-red-400 hover:bg-red-500/10 transition-colors"
+                                    >
+                                        <LogOut className="w-4 h-4" />
+                                        <span>Sign Out</span>
+                                    </button>
+                                </Card>
+                            </div>
+                        </nav>
 
-                                    <div className="space-y-6">
-                                        {/* Avatar */}
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-20 h-20 rounded-full bg-slate-800 flex items-center justify-center text-2xl font-bold text-primary">
-                                                {fullName?.charAt(0) || user?.email?.charAt(0) || '?'}
-                                            </div>
-                                            <div>
-                                                <button className="text-sm text-primary hover:underline">
-                                                    Change avatar
-                                                </button>
-                                                <p className="text-xs text-slate-500 mt-1">JPG, PNG or GIF. Max 2MB.</p>
-                                            </div>
-                                        </div>
+                        {/* Content Area */}
+                        <div className="flex-1 min-w-0">
+                            <Card className="p-8 border-border bg-surface">
+                                {/* Profile Tab */}
+                                {activeTab === 'profile' && (
+                                    <div className="animate-in fade-in duration-300">
+                                        <h2 className="text-xl font-bold text-white mb-6 font-display">Profile Settings</h2>
 
-                                        {/* Name */}
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-300 mb-2">
-                                                Full Name
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={fullName}
-                                                onChange={(e) => setFullName(e.target.value)}
-                                                className="w-full max-w-md bg-slate-900 border border-slate-700 text-white rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none"
-                                            />
-                                        </div>
-
-                                        {/* Email (read-only) */}
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-300 mb-2">
-                                                Email Address
-                                            </label>
-                                            <div className="flex items-center gap-2">
-                                                <Mail className="w-5 h-5 text-slate-500" />
-                                                <span className="text-white">{user?.email}</span>
-                                                <span className="text-xs bg-slate-800 text-slate-400 px-2 py-1 rounded">
-                                                    Primary
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        {/* Theme Toggle */}
-                                        <div className="flex items-center justify-between max-w-md">
-                                            <div>
-                                                <p className="text-sm font-medium text-slate-300">Dark Mode</p>
-                                                <p className="text-xs text-slate-500">Toggle between light and dark themes</p>
-                                            </div>
-                                            <button
-                                                onClick={() => setIsDarkMode(!isDarkMode)}
-                                                className={`
-                          w-14 h-8 rounded-full p-1 transition-colors
-                          ${isDarkMode ? 'bg-primary' : 'bg-slate-700'}
-                        `}
-                                            >
-                                                <div className={`
-                          w-6 h-6 rounded-full bg-white flex items-center justify-center transition-transform
-                          ${isDarkMode ? 'translate-x-6' : 'translate-x-0'}
-                        `}>
-                                                    {isDarkMode ? (
-                                                        <Moon className="w-4 h-4 text-slate-800" />
-                                                    ) : (
-                                                        <Sun className="w-4 h-4 text-yellow-500" />
-                                                    )}
+                                        <div className="space-y-8">
+                                            {/* Avatar */}
+                                            <div className="flex items-center gap-6">
+                                                <div className="w-20 h-20 rounded-full bg-surface border border-border flex items-center justify-center text-3xl font-display font-bold text-primary shadow-inner">
+                                                    {fullName?.charAt(0) || user?.email?.charAt(0) || '?'}
                                                 </div>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Organization Tab */}
-                            {activeTab === 'organization' && (
-                                <div className="animate-in fade-in duration-300">
-                                    <h2 className="text-xl font-semibold text-white mb-6">Organization Settings</h2>
-
-                                    <div className="space-y-6">
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-300 mb-2">
-                                                Organization Name
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={orgName}
-                                                onChange={(e) => setOrgName(e.target.value)}
-                                                className="w-full max-w-md bg-slate-900 border border-slate-700 text-white rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none"
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-300 mb-2">
-                                                Organization ID
-                                            </label>
-                                            <code className="text-sm text-slate-400 bg-slate-900 px-3 py-2 rounded-lg">
-                                                {organization?.id || 'N/A'}
-                                            </code>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-300 mb-2">
-                                                Your Role
-                                            </label>
-                                            <span className="inline-flex items-center gap-2 text-sm bg-primary/10 text-primary px-3 py-1.5 rounded-lg">
-                                                <Shield className="w-4 h-4" />
-                                                {profile?.role || 'Member'}
-                                            </span>
-                                        </div>
-
-                                        <hr className="border-slate-700" />
-
-                                        {/* Team Members Section */}
-                                        <TeamSettings />
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Domains Tab */}
-                            {activeTab === 'domains' && (
-                                <div className="animate-in fade-in duration-300">
-                                    <DomainManagement />
-                                </div>
-                            )}
-
-                            {/* Security Tab */}
-                            {activeTab === 'security' && (
-                                <div className="animate-in fade-in duration-300">
-                                    <h2 className="text-xl font-semibold text-white mb-6">Security Settings</h2>
-
-                                    <div className="space-y-6">
-                                        <div className="bg-slate-900 rounded-xl p-4 flex items-center justify-between">
-                                            <div className="flex items-center gap-4">
-                                                <Key className="w-8 h-8 text-slate-400" />
                                                 <div>
-                                                    <p className="font-medium text-white">Password</p>
-                                                    <p className="text-sm text-slate-400">Last changed: Never</p>
+                                                    <Button variant="outline" size="sm">
+                                                        Change avatar
+                                                    </Button>
+                                                    <p className="text-xs text-text-muted mt-2">JPG, PNG or GIF. Max 2MB.</p>
                                                 </div>
                                             </div>
-                                            <button className="text-primary hover:underline text-sm">
-                                                Change Password
-                                            </button>
-                                        </div>
 
-                                        <div className="bg-slate-900 rounded-xl p-4 flex items-center justify-between">
-                                            <div className="flex items-center gap-4">
-                                                <Shield className="w-8 h-8 text-slate-400" />
-                                                <div>
-                                                    <p className="font-medium text-white">Two-Factor Authentication</p>
-                                                    <p className="text-sm text-slate-400">Add an extra layer of security</p>
-                                                </div>
+                                            {/* Name */}
+                                            <div className="max-w-md">
+                                                <Input
+                                                    label="Full Name"
+                                                    value={fullName}
+                                                    onChange={(e) => setFullName(e.target.value)}
+                                                />
                                             </div>
-                                            <button className="bg-primary/10 text-primary hover:bg-primary/20 px-4 py-2 rounded-lg text-sm transition-colors">
-                                                Enable 2FA
-                                            </button>
-                                        </div>
 
-                                        <hr className="border-slate-700" />
-
-                                        <div className="bg-rose-500/10 border border-rose-500/20 rounded-xl p-4">
-                                            <div className="flex items-start gap-4">
-                                                <AlertTriangle className="w-6 h-6 text-rose-400 flex-shrink-0" />
-                                                <div>
-                                                    <h3 className="font-medium text-rose-400 mb-1">Danger Zone</h3>
-                                                    <p className="text-sm text-slate-400 mb-4">
-                                                        Permanently delete your account and all associated data.
-                                                    </p>
-                                                    <button className="flex items-center gap-2 text-rose-400 hover:text-rose-300 text-sm">
-                                                        <Trash2 className="w-4 h-4" />
-                                                        Delete Account
-                                                    </button>
-                                                </div>
+                                            {/* Email (read-only) */}
+                                            <div className="max-w-md">
+                                                <Input
+                                                    label="Email Address"
+                                                    value={user?.email || ''}
+                                                    readOnly
+                                                    disabled
+                                                    icon={<Mail className="w-4 h-4" />}
+                                                />
+                                                <p className="mt-2 text-xs text-text-muted flex items-center gap-2">
+                                                    <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">Primary</Badge>
+                                                    Used for account recovery and notifications.
+                                                </p>
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
 
-                            {/* Billing Tab */}
-                            {activeTab === 'billing' && (
-                                <div className="animate-in fade-in duration-300">
-                                    <h2 className="text-xl font-semibold text-white mb-6">Billing & Subscription</h2>
-                                    <BillingDashboard />
-                                </div>
-                            )}
-
-                            {/* API Tab */}
-                            {activeTab === 'api' && (
-                                <div className="animate-in fade-in duration-300">
-                                    <h2 className="text-xl font-semibold text-white mb-6">API Access</h2>
-                                    <APIKeyManager />
-                                </div>
-                            )}
-
-                            {/* Branding Tab */}
-                            {activeTab === 'branding' && (
-                                <div className="animate-in fade-in duration-300">
-                                    <h2 className="text-xl font-semibold text-white mb-6">Report Branding</h2>
-                                    <ReportBranding />
-                                </div>
-                            )}
-
-                            {/* Integrations Tab */}
-                            {activeTab === 'integrations' && (
-                                <div className="animate-in fade-in duration-300">
-                                    <IntegrationHub />
-                                </div>
-                            )}
-
-                            {/* Notifications Tab */}
-                            {activeTab === 'notifications' && (
-                                <div className="animate-in fade-in duration-300">
-                                    <h2 className="text-xl font-semibold text-white mb-6">Notification Preferences</h2>
-
-                                    <div className="space-y-4">
-                                        {[
-                                            {
-                                                id: 'email',
-                                                label: 'Email Notifications',
-                                                desc: 'Receive audit completion and report emails',
-                                                value: emailNotifications,
-                                                onChange: setEmailNotifications
-                                            },
-                                            {
-                                                id: 'digest',
-                                                label: 'Weekly Digest',
-                                                desc: 'Get a weekly summary of your AI visibility trends',
-                                                value: weeklyDigest,
-                                                onChange: setWeeklyDigest
-                                            },
-                                            {
-                                                id: 'usage',
-                                                label: 'Usage Alerts',
-                                                desc: 'Get notified when approaching plan limits (80%, 100%)',
-                                                value: usageAlerts,
-                                                onChange: setUsageAlerts
-                                            },
-                                        ].map(pref => (
-                                            <div
-                                                key={pref.id}
-                                                className="flex items-center justify-between bg-slate-900 rounded-xl p-4"
-                                            >
+                                            {/* Theme Toggle */}
+                                            <div className="flex items-center justify-between max-w-md p-4 rounded-xl bg-background/50 border border-border">
                                                 <div>
-                                                    <p className="font-medium text-white">{pref.label}</p>
-                                                    <p className="text-sm text-slate-400">{pref.desc}</p>
+                                                    <p className="text-sm font-medium text-white">Dark Mode</p>
+                                                    <p className="text-xs text-text-secondary">Toggle between light and dark themes</p>
                                                 </div>
                                                 <button
-                                                    onClick={() => pref.onChange(!pref.value)}
+                                                    onClick={() => setIsDarkMode(!isDarkMode)}
                                                     className={`
-                            w-12 h-7 rounded-full p-1 transition-colors
-                            ${pref.value ? 'bg-primary' : 'bg-slate-700'}
+                            relative w-12 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background
+                            ${isDarkMode ? 'bg-primary' : 'bg-slate-600'}
                           `}
                                                 >
-                                                    <div className={`
-                            w-5 h-5 rounded-full bg-white transition-transform
-                            ${pref.value ? 'translate-x-5' : 'translate-x-0'}
-                          `} />
+                                                    <span className={`
+                            absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform flex items-center justify-center
+                            ${isDarkMode ? 'translate-x-6' : 'translate-x-0'}
+                          `}>
+                                                        {isDarkMode ? (
+                                                            <Moon className="w-2.5 h-2.5 text-slate-800" />
+                                                        ) : (
+                                                            <Sun className="w-2.5 h-2.5 text-yellow-500" />
+                                                        )}
+                                                    </span>
                                                 </button>
                                             </div>
-                                        ))}
+                                        </div>
                                     </div>
-                                </div>
-                            )}
-
-                            {/* Save Button */}
-                            <div className="mt-8 flex items-center gap-4">
-                                <button
-                                    onClick={handleSave}
-                                    disabled={isSaving}
-                                    className="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-xl font-medium transition-colors disabled:opacity-50 flex items-center gap-2"
-                                >
-                                    {isSaving ? (
-                                        <>
-                                            <Loader2 className="w-5 h-5 animate-spin" />
-                                            Saving...
-                                        </>
-                                    ) : saveSuccess ? (
-                                        <>
-                                            <Check className="w-5 h-5" />
-                                            Saved!
-                                        </>
-                                    ) : (
-                                        'Save Changes'
-                                    )}
-                                </button>
-                                {saveSuccess && (
-                                    <span className="text-sm text-emerald-400">Changes saved successfully</span>
                                 )}
-                            </div>
+
+                                {/* Organization Tab */}
+                                {activeTab === 'organization' && (
+                                    <div className="animate-in fade-in duration-300">
+                                        <h2 className="text-xl font-bold text-white mb-6 font-display">Organization Settings</h2>
+
+                                        <div className="space-y-6">
+                                            <div className="max-w-md">
+                                                <Input
+                                                    label="Organization Name"
+                                                    value={orgName}
+                                                    onChange={(e) => setOrgName(e.target.value)}
+                                                />
+                                            </div>
+
+                                            <div className="max-w-md">
+                                                <label className="block text-sm font-medium text-text-secondary mb-1.5 ml-1">
+                                                    Organization ID
+                                                </label>
+                                                <code className="flex items-center justify-between text-sm text-text-primary bg-background border border-border px-3 py-2 rounded-lg font-mono">
+                                                    {organization?.id || 'N/A'}
+                                                    {organization?.id && <Button variant="ghost" size="sm" className="h-6 w-6 p-0"><Check className="w-3 h-3" /></Button>}
+                                                </code>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-text-secondary mb-2 ml-1">
+                                                    Your Role
+                                                </label>
+                                                <Badge variant="secondary" className="px-3 py-1 text-sm font-medium">
+                                                    <Shield className="w-3.5 h-3.5 mr-2" />
+                                                    {profile?.role || 'Member'}
+                                                </Badge>
+                                            </div>
+
+                                            <hr className="border-border" />
+
+                                            {/* Team Members Section */}
+                                            <TeamSettings />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Domains Tab */}
+                                {activeTab === 'domains' && (
+                                    <div className="animate-in fade-in duration-300">
+                                        <h2 className="text-xl font-bold text-white mb-6 font-display">Domain Management</h2>
+                                        <div className="p-8 text-center text-text-muted bg-background/30 rounded-xl border border-border border-dashed">
+                                            <Globe className="w-10 h-10 mx-auto mb-4 text-slate-600" />
+                                            <p>Domain management component placeholder</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Security Tab */}
+                                {activeTab === 'security' && (
+                                    <div className="animate-in fade-in duration-300">
+                                        <h2 className="text-xl font-bold text-white mb-6 font-display">Security Settings</h2>
+
+                                        <div className="space-y-6">
+                                            <div className="bg-background/50 border border-border rounded-xl p-5 flex items-center justify-between">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="p-3 bg-surface rounded-lg border border-border">
+                                                        <Key className="w-6 h-6 text-text-secondary" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-bold text-white">Password</p>
+                                                        <p className="text-sm text-text-muted">Last changed: Never</p>
+                                                    </div>
+                                                </div>
+                                                <Button variant="outline" size="sm">
+                                                    Change Password
+                                                </Button>
+                                            </div>
+
+                                            <div className="bg-background/50 border border-border rounded-xl p-5 flex items-center justify-between">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="p-3 bg-surface rounded-lg border border-border">
+                                                        <Shield className="w-6 h-6 text-text-secondary" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-bold text-white">Two-Factor Authentication</p>
+                                                        <p className="text-sm text-text-muted">Add an extra layer of security</p>
+                                                    </div>
+                                                </div>
+                                                <Button variant="secondary" size="sm">
+                                                    Enable 2FA
+                                                </Button>
+                                            </div>
+
+                                            <hr className="border-border" />
+
+                                            <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-5">
+                                                <div className="flex items-start gap-4">
+                                                    <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                                                    <div>
+                                                        <h3 className="font-bold text-red-400 mb-1">Danger Zone</h3>
+                                                        <p className="text-sm text-red-400/70 mb-4">
+                                                            Permanently delete your account and all associated data.
+                                                        </p>
+                                                        <Button variant="destructive" size="sm">
+                                                            <Trash2 className="w-4 h-4 mr-2" />
+                                                            Delete Account
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Billing Tab */}
+                                {activeTab === 'billing' && (
+                                    <div className="animate-in fade-in duration-300">
+                                        <h2 className="text-xl font-bold text-white mb-6 font-display">Billing & Subscription</h2>
+                                        <BillingDashboard />
+                                    </div>
+                                )}
+
+                                {/* API Tab */}
+                                {activeTab === 'api' && (
+                                    <div className="animate-in fade-in duration-300">
+                                        <h2 className="text-xl font-bold text-white mb-6 font-display">API Access</h2>
+                                        <APIKeyManager />
+                                    </div>
+                                )}
+
+                                {/* Branding Tab */}
+                                {activeTab === 'branding' && (
+                                    <div className="animate-in fade-in duration-300">
+                                        <h2 className="text-xl font-bold text-white mb-6 font-display">Report Branding</h2>
+                                        <ReportBranding />
+                                    </div>
+                                )}
+
+                                {/* Integrations Tab */}
+                                {activeTab === 'integrations' && (
+                                    <div className="animate-in fade-in duration-300">
+                                        <IntegrationHub />
+                                    </div>
+                                )}
+
+                                {/* Notifications Tab */}
+                                {activeTab === 'notifications' && (
+                                    <div className="animate-in fade-in duration-300">
+                                        <h2 className="text-xl font-bold text-white mb-6 font-display">Notification Preferences</h2>
+
+                                        <div className="space-y-4 max-w-2xl">
+                                            {[
+                                                {
+                                                    id: 'email',
+                                                    label: 'Email Notifications',
+                                                    desc: 'Receive audit completion and report emails',
+                                                    value: emailNotifications,
+                                                    onChange: setEmailNotifications
+                                                },
+                                                {
+                                                    id: 'digest',
+                                                    label: 'Weekly Digest',
+                                                    desc: 'Get a weekly summary of your AI visibility trends',
+                                                    value: weeklyDigest,
+                                                    onChange: setWeeklyDigest
+                                                },
+                                                {
+                                                    id: 'usage',
+                                                    label: 'Usage Alerts',
+                                                    desc: 'Get notified when approaching plan limits (80%, 100%)',
+                                                    value: usageAlerts,
+                                                    onChange: setUsageAlerts
+                                                },
+                                            ].map(pref => (
+                                                <div
+                                                    key={pref.id}
+                                                    className="flex items-center justify-between bg-background/50 border border-border rounded-xl p-4"
+                                                >
+                                                    <div>
+                                                        <p className="font-bold text-white">{pref.label}</p>
+                                                        <p className="text-sm text-text-muted">{pref.desc}</p>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => pref.onChange(!pref.value)}
+                                                        className={`
+                            relative w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background
+                            ${pref.value ? 'bg-primary' : 'bg-slate-600'}
+                          `}
+                                                    >
+                                                        <span className={`
+                            absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform
+                            ${pref.value ? 'translate-x-5' : 'translate-x-0'}
+                          `} />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Save Button */}
+                                <div className="mt-10 pt-6 border-t border-border flex items-center justify-end gap-4">
+                                    {saveSuccess && (
+                                        <span className="text-sm text-emerald-400 flex items-center gap-1 animate-in fade-in slide-in-from-right-2">
+                                            <Check className="w-4 h-4" /> Changes saved
+                                        </span>
+                                    )}
+                                    <Button
+                                        onClick={handleSave}
+                                        disabled={isSaving}
+                                        isLoading={isSaving}
+                                        size="lg"
+                                        className="min-w-[140px]"
+                                    >
+                                        Save Changes
+                                    </Button>
+                                </div>
+                            </Card>
                         </div>
                     </div>
                 </div>

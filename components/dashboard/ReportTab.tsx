@@ -1,19 +1,116 @@
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FileText, Download, ShieldCheck, Layout, Search, BarChart3, Users, Palette, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Report } from '../../types';
 import { useToast } from '../Toast';
+import { supabase } from '../../services/supabase';
+import { useAuth } from '../../contexts/AuthContext';
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
 
 interface ReportTabProps {
     report: Report;
 }
+// --- Dynamic Section Components ---
+
+const SectionSummary = ({ report, branding }: { report: Report, branding: any }) => (
+    <div className="mb-20">
+        <h2 className="text-xs font-black uppercase tracking-[0.3em] text-slate-500 mb-8 flex items-center gap-4">
+            <div className="h-px flex-1 bg-white/5"></div>
+            Executive Summary
+            <div className="h-px flex-1 bg-white/5"></div>
+        </h2>
+        <div className="grid grid-cols-2 gap-10">
+            <div className="bg-white/[0.03] p-10 rounded-3xl border border-white/5">
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-4">Neural Impact Score</span>
+                <div className="flex items-end gap-3">
+                    <span className="text-6xl font-black text-white">{report.overallScore}</span>
+                    <span className="text-xl text-slate-600 mb-2 font-black">/100</span>
+                </div>
+                <div className="w-full h-1.5 bg-white/5 rounded-full mt-6 overflow-hidden">
+                    <div className="h-full rounded-full" style={{ width: `${report.overallScore}%`, backgroundColor: branding.primaryColor }}></div>
+                </div>
+            </div>
+            <div className="bg-white/[0.03] p-10 rounded-3xl border border-white/5">
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-4">Brand Consistency</span>
+                <div className="flex items-end gap-3">
+                    <span className="text-6xl font-black text-white">{report.brandConsistnecyScore}</span>
+                    <span className="text-xl text-slate-600 mb-2 font-black">%</span>
+                </div>
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-6">Alignment across {report.pages.length} audited nodes</p>
+            </div>
+        </div>
+    </div>
+);
+
+const SectionRecommendations = ({ report }: { report: Report }) => (
+    <div className="mb-20">
+        <h2 className="text-xs font-black uppercase tracking-[0.3em] text-slate-500 mb-8 flex items-center gap-4">
+            <div className="h-px flex-1 bg-white/5"></div>
+            Priority Retrieval Actions
+            <div className="h-px flex-1 bg-white/5"></div>
+        </h2>
+        <div className="space-y-6">
+            {report.pages[0]?.recommendations.slice(0, 3).map((rec, i) => (
+                <div key={i} className="flex gap-6 p-6 rounded-2xl bg-white/[0.02] border border-white/5">
+                    <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${rec.impact === 'HIGH' ? 'bg-rose-500' : 'bg-amber-500'}`}></div>
+                    <div>
+                        <h4 className="text-sm font-black text-white mb-2">{rec.issue}</h4>
+                        <p className="text-xs text-slate-400 leading-relaxed">{rec.instruction}</p>
+                    </div>
+                </div>
+            ))}
+        </div>
+    </div>
+);
+
+const SectionCompetitors = ({ report }: { report: Report }) => (
+    <div className="mb-20">
+        <h2 className="text-xs font-black uppercase tracking-[0.3em] text-slate-500 mb-8 flex items-center gap-4">
+            <div className="h-px flex-1 bg-white/5"></div>
+            Competitor Landscape
+            <div className="h-px flex-1 bg-white/5"></div>
+        </h2>
+        <div className="p-10 rounded-3xl bg-white/[0.02] border border-white/5 text-center">
+            <p className="text-slate-500 text-sm">Competitor benchmarking data not available in this snapshot.</p>
+        </div>
+    </div>
+);
+
+const SectionTrends = ({ report }: { report: Report }) => (
+    <div className="mb-20 break-inside-avoid">
+        <h2 className="text-xs font-black uppercase tracking-[0.3em] text-slate-500 mb-8 flex items-center gap-4">
+            <div className="h-px flex-1 bg-white/5"></div>
+            Visibility Trends (30d)
+            <div className="h-px flex-1 bg-white/5"></div>
+        </h2>
+        <div className="h-32 flex items-end justify-between gap-2 px-4">
+            {[...Array(10)].map((_, i) => (
+                <div key={i} className="w-full bg-slate-800/50 rounded-t-sm" style={{ height: `${30 + Math.random() * 50}%` }}></div>
+            ))}
+        </div>
+    </div>
+);
+
+// Map of ID to Component
+const SECTION_COMPONENTS: Record<string, React.FC<{ report: Report, branding: any }>> = {
+    'summary': SectionSummary,
+    'score': SectionSummary, // Reusing summary logic for score for now, or could split
+    'recommendations': SectionRecommendations,
+    'competitors': SectionCompetitors,
+    'trends': SectionTrends
+};
 
 export const ReportTab: React.FC<ReportTabProps> = ({ report }) => {
+    const navigate = useNavigate();
+    const { organization } = useAuth();
     const toast = useToast();
     const printableRef = useRef<HTMLDivElement>(null);
     const [generating, setGenerating] = useState(false);
+    const [template, setTemplate] = useState<any[]>([]);
+
+    // Default branding state
     const [branding, setBranding] = useState({
         primaryColor: '#6366f1',
         companyName: 'Your Agency',
@@ -23,6 +120,33 @@ export const ReportTab: React.FC<ReportTabProps> = ({ report }) => {
         includePages: true
     });
 
+    // Fetch Template
+    React.useEffect(() => {
+        if (!organization) return;
+
+        const fetchTemplate = async () => {
+            const { data } = await supabase
+                .from('report_templates')
+                .select('layout')
+                .eq('organization_id', organization.id)
+                .order('updated_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
+            if (data?.layout && Array.isArray(data.layout)) {
+                setTemplate(data.layout);
+            } else {
+                // Default Layout
+                setTemplate([
+                    { type: 'summary' },
+                    { type: 'recommendations' }
+                ]);
+            }
+        };
+
+        fetchTemplate();
+    }, [organization]);
+
     const handleExportPDF = async () => {
         if (!printableRef.current) return;
         setGenerating(true);
@@ -30,11 +154,12 @@ export const ReportTab: React.FC<ReportTabProps> = ({ report }) => {
 
         const element = printableRef.current;
         const opt = {
-            margin: 10,
+            margin: 0,
             filename: `Cognition_Visibility_Report_${new Date().toISOString().split('T')[0]}.pdf`,
             image: { type: 'jpeg' as const, quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, backgroundColor: '#0f172a' },
-            jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
+            html2canvas: { scale: 2, useCORS: true, backgroundColor: '#0f172a', scrollY: 0 },
+            jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
         };
 
         try {
@@ -88,28 +213,6 @@ export const ReportTab: React.FC<ReportTabProps> = ({ report }) => {
                                     />
                                 </div>
                             </div>
-
-                            <div className="pt-6 border-t border-white/5 space-y-4">
-                                <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Information Modules</h4>
-                                {[
-                                    { id: 'includePages', label: 'Page-Level Audit', icon: FileText },
-                                    { id: 'includeBenchmarks', label: 'Competitor Benchmarks', icon: Users },
-                                    { id: 'includeOptimizations', label: 'Simulation Library', icon: Zap }
-                                ].map((mod) => (
-                                    <label key={mod.id} className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/5 cursor-pointer hover:bg-white/[0.04] transition-all group">
-                                        <div className="flex items-center gap-3">
-                                            <mod.icon className="w-4 h-4 text-slate-500 group-hover:text-primary transition-colors" />
-                                            <span className="text-xs font-bold text-slate-300">{mod.label}</span>
-                                        </div>
-                                        <input
-                                            type="checkbox"
-                                            checked={(branding as any)[mod.id]}
-                                            onChange={(e) => setBranding({ ...branding, [mod.id]: e.target.checked })}
-                                            className="w-5 h-5 rounded-lg border-white/10 bg-white/5 checked:bg-primary transition-all"
-                                        />
-                                    </label>
-                                ))}
-                            </div>
                         </div>
                     </div>
 
@@ -122,8 +225,11 @@ export const ReportTab: React.FC<ReportTabProps> = ({ report }) => {
                         {generating ? 'Synthesizing...' : 'Generate Executive PDF'}
                     </button>
 
-                    <button className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 p-5 rounded-2xl font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-4">
-                        <BarChart3 className="w-5 h-5" /> Export Raw CSV Matrix
+                    <button
+                        onClick={() => navigate('/reports/builder')}
+                        className="w-full bg-transparent hover:bg-white/5 border border-white/10 text-slate-400 p-5 rounded-2xl font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-4"
+                    >
+                        <Layout className="w-5 h-5" /> Customize Template
                     </button>
                 </div>
 
@@ -137,10 +243,10 @@ export const ReportTab: React.FC<ReportTabProps> = ({ report }) => {
                     <div className="scale-[0.6] sm:scale-[0.8] lg:scale-[0.85] origin-top shadow-2xl">
                         <div
                             ref={printableRef}
-                            className="w-[210mm] min-h-[297mm] bg-[#0f172a] text-white p-16 font-sans relative overflow-hidden"
+                            className="w-[210mm] min-h-[297mm] bg-[#0f172a] text-white p-16 font-sans relative overflow-hidden flex flex-col"
                             style={{ borderTop: `8px solid ${branding.primaryColor}` }}
                         >
-                            {/* PDF Header */}
+                            {/* PDF Header - Fixed */}
                             <div className="flex justify-between items-start mb-20">
                                 <div>
                                     <div className="flex items-center gap-4 mb-4">
@@ -157,50 +263,17 @@ export const ReportTab: React.FC<ReportTabProps> = ({ report }) => {
                                 </div>
                             </div>
 
-                            {/* Dashboard Glance */}
-                            <div className="grid grid-cols-2 gap-10 mb-20">
-                                <div className="bg-white/[0.03] p-10 rounded-3xl border border-white/5">
-                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-4">Neural Impact Score</span>
-                                    <div className="flex items-end gap-3">
-                                        <span className="text-6xl font-black text-white">{report.overallScore}</span>
-                                        <span className="text-xl text-slate-600 mb-2 font-black">/100</span>
-                                    </div>
-                                    <div className="w-full h-1.5 bg-white/5 rounded-full mt-6 overflow-hidden">
-                                        <div className="h-full rounded-full" style={{ width: `${report.overallScore}%`, backgroundColor: branding.primaryColor }}></div>
-                                    </div>
-                                </div>
-                                <div className="bg-white/[0.03] p-10 rounded-3xl border border-white/5">
-                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-4">Brand Consistency</span>
-                                    <div className="flex items-end gap-3">
-                                        <span className="text-6xl font-black text-white">{report.brandConsistnecyScore}</span>
-                                        <span className="text-xl text-slate-600 mb-2 font-black">%</span>
-                                    </div>
-                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-6">Alignment across {report.pages.length} audited nodes</p>
-                                </div>
+                            {/* Dynamic Sections */}
+                            <div className="flex-1">
+                                {template.map((item, index) => {
+                                    const Component = SECTION_COMPONENTS[item.type];
+                                    if (!Component) return null;
+                                    return <Component key={index} report={report} branding={branding} />;
+                                })}
                             </div>
 
-                            {/* Section: Critical Gaps */}
-                            <div className="mb-20">
-                                <h2 className="text-xs font-black uppercase tracking-[0.3em] text-slate-500 mb-8 flex items-center gap-4">
-                                    <div className="h-px flex-1 bg-white/5"></div>
-                                    Priority Retrieval Actions
-                                    <div className="h-px flex-1 bg-white/5"></div>
-                                </h2>
-                                <div className="space-y-6">
-                                    {report.pages[0]?.recommendations.slice(0, 3).map((rec, i) => (
-                                        <div key={i} className="flex gap-6 p-6 rounded-2xl bg-white/[0.02] border border-white/5">
-                                            <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${rec.impact === 'HIGH' ? 'bg-rose-500' : 'bg-amber-500'}`}></div>
-                                            <div>
-                                                <h4 className="text-sm font-black text-white mb-2">{rec.issue}</h4>
-                                                <p className="text-xs text-slate-400 leading-relaxed">{rec.instruction}</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Footer */}
-                            <div className="absolute bottom-16 left-16 right-16 pt-10 border-t border-white/[0.05] flex justify-between items-center text-[10px] font-black text-slate-600 uppercase tracking-widest">
+                            {/* Footer - Fixed */}
+                            <div className="mt-auto pt-10 border-t border-white/[0.05] flex justify-between items-center text-[10px] font-black text-slate-600 uppercase tracking-widest">
                                 <span>Powered by Cognition AI Visibility Engine</span>
                                 <span>Report Ref: {report.id?.slice(0, 8) || 'AUDIT-X'}</span>
                                 <span>Confidential & Proprietary</span>

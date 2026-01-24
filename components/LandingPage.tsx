@@ -1,10 +1,14 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { InputLayer } from './InputLayer';
 import { Asset } from '../types';
 import { supabase } from '../services/supabase';
-import { Shield, Zap, Search, Globe, ChevronRight, Cpu, Lock, Check, AlertTriangle } from 'lucide-react';
-
+import { Shield, Zap, Search, Globe, ChevronRight, Cpu, Lock, Check, AlertTriangle, Play, Star, Quote, X } from 'lucide-react';
 import { NotificationDropdown } from './NotificationDropdown';
+import { Button } from './ui/Button';
+import { Card } from './ui/Card';
+import { Badge } from './ui/Badge';
+import { SlideUp, FadeIn, StaggerContainer } from './ui/Motion';
 
 interface LandingPageProps {
     onStartAnalysis: (assets: Asset[]) => void;
@@ -30,21 +34,24 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     const isLowCredits = credits !== null && credits !== undefined && credits <= 2;
     const isOutOfCredits = credits !== null && credits !== undefined && credits <= 0;
 
+    const [showVideo, setShowVideo] = React.useState(false);
+
     return (
-        <div className="min-h-screen bg-[#0f172a] text-white overflow-hidden selection:bg-primary selection:text-white">
+        <div className="min-h-screen bg-background text-text-primary overflow-hidden selection:bg-primary/30 font-sans">
             {/* Background Gradients */}
             <div className="fixed inset-0 z-0 pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/10 rounded-full blur-[120px]" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 rounded-full blur-[120px]" />
+                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/20 rounded-full blur-[120px] animate-pulse" style={{ animationDuration: '4s' }} />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-600/10 rounded-full blur-[120px]" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10" />
             </div>
 
             {/* Low Credit Banner */}
             {session && isOutOfCredits && (
-                <div className="relative z-20 bg-rose-500/10 border-b border-rose-500/30 px-6 py-3">
+                <div className="relative z-20 bg-red-900/20 border-b border-red-500/30 px-6 py-3">
                     <div className="max-w-7xl mx-auto flex items-center justify-center gap-3 text-sm">
-                        <AlertTriangle className="w-4 h-4 text-rose-400" />
-                        <span className="text-rose-300">You've run out of audit credits.</span>
-                        <a href="/settings?tab=billing" className="text-rose-400 hover:text-white font-medium underline underline-offset-2">
+                        <AlertTriangle className="w-4 h-4 text-red-400" />
+                        <span className="text-red-200">You've run out of audit credits.</span>
+                        <a href="/settings?tab=billing" className="text-red-400 hover:text-white font-medium underline underline-offset-2">
                             Upgrade now →
                         </a>
                     </div>
@@ -52,14 +59,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             )}
 
             {/* Navbar */}
-            <nav className="relative z-10 w-full max-w-7xl mx-auto px-6 h-20 flex items-center justify-between border-b border-white/5">
+            <nav className="relative z-10 w-full max-w-7xl mx-auto px-6 h-20 flex items-center justify-between border-b border-white/5 backdrop-blur-sm sticky top-0 bg-background/80">
                 <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-gradient-to-tr from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                    <div className="w-8 h-8 bg-gradient-to-tr from-primary to-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-primary/20">
                         <Cpu className="text-white w-5 h-5" />
                     </div>
-                    <span className="font-bold text-xl tracking-tight">Cognition AI</span>
+                    <span className="font-display font-bold text-xl tracking-tight text-white">Cognition AI</span>
                 </div>
-                <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
+                <div className="hidden md:flex items-center gap-8 text-sm font-medium text-text-secondary">
                     <a href="#features" className="hover:text-white transition-colors">Features</a>
                     <a href="#how-it-works" className="hover:text-white transition-colors">How it Works</a>
                     <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
@@ -69,32 +76,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     {session ? (
                         <>
                             <NotificationDropdown />
-                            <div className="w-px h-6 bg-slate-800 mx-1 hidden md:block" />
+                            <div className="w-px h-6 bg-border mx-1 hidden md:block" />
                             <a
                                 href="/settings?tab=billing"
-                                className={`px-3 py-1 rounded-full border text-xs font-mono transition-colors ${isOutOfCredits
-                                    ? 'bg-rose-500/20 border-rose-500/40 text-rose-400 hover:bg-rose-500/30'
-                                    : isLowCredits
-                                        ? 'bg-amber-500/20 border-amber-500/40 text-amber-400 hover:bg-amber-500/30'
-                                        : 'bg-slate-800 border-slate-700 text-blue-400 hover:bg-slate-700'
-                                    }`}
                             >
-                                {credits !== null ? `${credits} Credits` : 'Loading...'}
+                                <Badge variant={isOutOfCredits ? 'destructive' : isLowCredits ? 'warning' : 'secondary'} className="font-mono">
+                                    {credits !== null ? `${credits} Credits` : 'Loading...'}
+                                </Badge>
                             </a>
-                            <a href="/history" className="text-sm font-medium text-slate-400 hover:text-white transition-colors hidden md:inline">
+                            <Button variant="ghost" size="sm" onClick={() => window.location.href = '/history'} className="hidden md:inline-flex">
                                 History
-                            </a>
-                            <a href="/settings" className="text-sm font-medium text-slate-400 hover:text-white transition-colors hidden md:inline">
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => window.location.href = '/settings'} className="hidden md:inline-flex">
                                 Settings
-                            </a>
-                            <span className="text-sm font-medium text-slate-300 hidden md:inline">{session.user.email}</span>
+                            </Button>
                         </>
                     ) : (
                         <>
-                            <button onClick={handleLogin} className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Log In</button>
-                            <button onClick={handleLogin} className="text-sm font-medium bg-white text-slate-900 px-4 py-2 rounded-lg hover:bg-slate-100 transition-colors">
+                            <Button variant="ghost" size="sm" onClick={handleLogin}>Log In</Button>
+                            <Button size="sm" onClick={handleLogin}>
                                 Get Started
-                            </button>
+                            </Button>
                         </>
                     )}
                 </div>
@@ -102,36 +104,58 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
             {/* Hero Section */}
             <main className="relative z-10 text-center pt-24 pb-12 px-6">
-                <div className="max-w-4xl mx-auto mb-12">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold uppercase tracking-wider mb-6">
+                <SlideUp className="max-w-4xl mx-auto mb-12">
+                    <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold uppercase tracking-wider mb-8"
+                    >
                         <Zap className="w-3 h-3" />
                         <span>Now with Real-Time Crawling</span>
-                    </div>
-                    <h1 className="text-6xl md:text-8xl font-bold mb-8 tracking-tight leading-[1.1] font-display">
+                    </motion.div>
+
+                    <h1 className="text-6xl md:text-8xl font-display font-bold mb-8 tracking-tight leading-[1.05]">
                         The AI Visibility <br className="hidden md:block" />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400">Command Center.</span>
+                        <span className="text-gradient">Command Center.</span>
                     </h1>
-                    <p className="text-xl md:text-2xl text-slate-400 max-w-3xl mx-auto mb-12 leading-relaxed font-light">
+
+                    <p className="text-xl md:text-2xl text-text-secondary max-w-3xl mx-auto mb-10 leading-relaxed font-light">
                         Stop guessing how LLMs see your brand. <strong>Cognition</strong> reverse-engineers the vector space of ChatGPT, Gemini, and Claude to ensure your business is cited, not hallucinated.
                     </p>
 
-                    {/* Input Layer embedded as the primary CTA */}
-                    <div className="transform hover:scale-[1.01] transition-transform duration-500">
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-16">
+                        <Button
+                            onClick={() => document.getElementById('audit-section')?.scrollIntoView({ behavior: 'smooth' })}
+                            className="w-full sm:w-auto px-10 py-6 text-lg font-bold rounded-2xl bg-white text-black hover:bg-slate-200 hover:text-black shadow-xl hover:shadow-2xl hover:scale-105"
+                        >
+                            See How AI Sees You — Free
+                        </Button>
+                        <Button
+                            onClick={() => setShowVideo(true)}
+                            variant="secondary"
+                            className="w-full sm:w-auto px-10 py-6 text-lg font-bold rounded-2xl flex items-center gap-3 backdrop-blur-sm bg-white/5 border-white/10 hover:bg-white/10"
+                        >
+                            <Play className="w-5 h-5 fill-current" />
+                            Watch 90s Demo
+                        </Button>
+                    </div>
+
+                    <div id="audit-section" className="scroll-mt-32 transform hover:scale-[1.005] transition-transform duration-500">
                         <InputLayer
                             onStartAnalysis={onStartAnalysis}
                             isAnalyzing={isAnalyzing}
                             statusMessage={statusMessage}
                             discoveredCount={discoveredCount}
-                            embedded={true} // New prop to style it for landing page
+                            embedded={true}
                         />
                     </div>
-                </div>
+                </SlideUp>
 
                 {/* Social Proof */}
                 <div className="mt-16 pt-8 border-t border-white/5 max-w-5xl mx-auto">
-                    <p className="text-sm text-slate-500 font-medium mb-6">POWERED BY NEXT-GEN INFRASTRUCTURE</p>
-                    <div className="flex flex-wrap justify-center items-center gap-12 text-slate-600 grayscale opacity-70 hover:opacity-100 transition-opacity">
-                        {/* Simple text logos for now */}
+                    <p className="text-sm text-text-muted font-bold tracking-widest uppercase mb-8">Powered By Next-Gen Infrastructure</p>
+                    <div className="flex flex-wrap justify-center items-center gap-12 text-text-secondary grayscale opacity-70 hover:opacity-100 transition-opacity">
                         <span className="flex items-center gap-2 font-semibold text-lg"><Globe className="w-5 h-5" /> Google Gemini</span>
                         <span className="flex items-center gap-2 font-semibold text-lg"><Shield className="w-5 h-5" /> Supabase</span>
                         <span className="flex items-center gap-2 font-semibold text-lg"><Zap className="w-5 h-5" /> Firecrawl</span>
@@ -139,35 +163,99 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </div>
             </main>
 
-            {/* Features Grid */}
-            <section id="features" className="relative z-10 py-24 bg-slate-900/50 border-t border-white/5">
-                <div className="max-w-7xl mx-auto px-6">
-                    <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">Why Global Brands Trust Cognition</h2>
-                    <div className="grid md:grid-cols-3 gap-8">
-                        <FeatureCard
-                            icon={<Globe className="text-blue-400" />}
-                            title="Real-Time Crawling"
-                            desc="We don't simulate. We fetch your live HTML, parse it into clean Markdown, and feed it directly into the context window of advanced LLMs."
-                        />
-                        <FeatureCard
-                            icon={<Search className="text-purple-400" />}
-                            title="Vector Space Analysis"
-                            desc="Keywords are outdated. We analyze the 'Vector Distance' between your brand's content and the user's intent to ensure you show up in RAG responses."
-                        />
-                        <FeatureCard
-                            icon={<Lock className="text-pink-400" />}
-                            title="Entity Protection"
-                            desc="Ensure LLMs recognize your founders, pricing, and locations as Facts, not Hallucinations. Retrieve precise JSON-LD schema fixes."
-                        />
+            {/* Video Modal */}
+            {showVideo && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/90 backdrop-blur-xl animate-in fade-in duration-300">
+                    <button onClick={() => setShowVideo(false)} className="absolute top-6 right-6 p-3 bg-white/5 hover:bg-white/10 rounded-full text-white transition-colors">
+                        <X className="w-6 h-6" />
+                    </button>
+                    <div className="w-full max-w-5xl aspect-video bg-black rounded-[2.5rem] border border-white/10 overflow-hidden shadow-2xl relative group">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <Zap className="w-16 h-16 text-primary animate-pulse mb-6" />
+                            <h3 className="text-2xl font-bold text-white px-10 text-center leading-tight">
+                                Generating Cinematic <br />Product Walkthrough...
+                            </h3>
+                            <p className="text-text-secondary mt-4 text-xs font-bold uppercase tracking-widest">AEO Command Center in Action</p>
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-purple-500/10 opacity-30 group-hover:opacity-50 transition-opacity" />
                     </div>
+                </div>
+            )}
+
+            {/* Social Proof Section (Wall of Love) */}
+            <section id="social-proof" className="relative z-10 py-24 pb-48 overflow-hidden">
+                <div className="max-w-7xl mx-auto px-6">
+                    <div className="text-center mb-20 space-y-4">
+                        <h2 className="text-sm font-black text-primary uppercase tracking-[0.3em]">Wall of Love</h2>
+                        <h3 className="text-4xl md:text-5xl font-display font-bold tracking-tight text-white">Trusted by high-growth startups.</h3>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {[
+                            { name: "Sarah Miller", role: "VP of SEO @ FinTech Nova", text: "Cognition changed our entire content strategy. We saw a 40% increase in ChatGPT citations within 30 days. Absolute game changer.", color: "from-blue-500/10" },
+                            { name: "Mark Chen", role: "CEO @ Quantum Agency", text: "The vector distance analysis is something no other tool on the market provides. It's the difference between being guessed and being known.", color: "from-purple-500/10" },
+                            { name: "Emily Watson", role: "Content Lead @ ShopStream", text: "Finally, a way to prove that our AI optimization actually works. The real-time crawling is flawless.", color: "from-indigo-500/10" },
+                            { name: "David Kim", role: "Digital Strategy @ AutoLink", text: "The A/B Sandbox alone is worth the subscription. We can test how AI reacts to copy changes before going live.", color: "from-blue-500/10" },
+                            { name: "Jessica Low", role: "Founder @ Scribe AI", text: "Enterprise-grade features at a fraction of the cost. The Slack integration keeps our whole team in the loop.", color: "from-emerald-500/10" },
+                            { name: "Alex Rivera", role: "SEO Consultant", text: "I recommend Cognition to all my clients who care about the next era of search. It's the only tool that actually understands AEO.", color: "from-rose-500/10" }
+                        ].map((t, i) => (
+                            <Card key={i} variant="glass" className={`rounded-[2rem] border-white/5 hover:border-primary/20 bg-gradient-to-br ${t.color} to-white/[0.02] hover:-translate-y-1 transition-transform duration-300`}>
+                                <div className="space-y-6">
+                                    <div className="flex gap-1">
+                                        {[1, 2, 3, 4, 5].map(s => <Star key={s} className="w-3 h-3 text-cta fill-cta" />)}
+                                    </div>
+                                    <p className="text-slate-200 text-lg font-medium leading-[1.6]">"{t.text}"</p>
+                                </div>
+                                <div className="mt-10 pt-6 border-t border-white/5 flex items-center justify-between">
+                                    <div>
+                                        <div className="text-white font-bold text-sm">{t.name}</div>
+                                        <div className="text-text-muted text-[10px] font-bold uppercase tracking-widest mt-1">{t.role}</div>
+                                    </div>
+                                    <Quote className="w-8 h-8 text-white/5 group-hover:text-primary/20 transition-colors" />
+                                </div>
+                            </Card>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* Features Grid */}
+            <section id="features" className="relative z-10 py-24 bg-surface/30 border-t border-white/5 backdrop-blur-sm">
+                <div className="max-w-7xl mx-auto px-6">
+                    <FadeIn>
+                        <h2 className="text-3xl md:text-5xl font-display font-bold text-center mb-16 text-white">Why Global Brands Trust Cognition</h2>
+                    </FadeIn>
+                    <StaggerContainer className="grid md:grid-cols-3 gap-8">
+                        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }}>
+                            <FeatureCard
+                                icon={<Globe className="text-blue-400" />}
+                                title="Real-Time Crawling"
+                                desc="We don't simulate. We fetch your live HTML, parse it into clean Markdown, and feed it directly into the context window of advanced LLMs."
+                            />
+                        </motion.div>
+                        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }}>
+                            <FeatureCard
+                                icon={<Search className="text-purple-400" />}
+                                title="Vector Space Analysis"
+                                desc="Keywords are outdated. We analyze the 'Vector Distance' between your brand's content and the user's intent to ensure you show up in RAG responses."
+                            />
+                        </motion.div>
+                        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }}>
+                            <FeatureCard
+                                icon={<Lock className="text-pink-400" />}
+                                title="Entity Protection"
+                                desc="Ensure LLMs recognize your founders, pricing, and locations as Facts, not Hallucinations. Retrieve precise JSON-LD schema fixes."
+                            />
+                        </motion.div>
+                    </StaggerContainer>
                 </div>
             </section>
 
             {/* Pricing Section */}
             <section id="pricing" className="relative z-10 py-24 border-t border-white/5">
                 <div className="max-w-7xl mx-auto px-6 text-center">
-                    <h2 className="text-3xl md:text-4xl font-bold mb-4">Simple, Transparent Pricing</h2>
-                    <p className="text-slate-400 mb-16 max-w-2xl mx-auto">Start free, then scale as you grow. All plans include real-time crawling and multi-platform AI analysis.</p>
+                    <h2 className="text-3xl md:text-5xl font-display font-bold mb-4 text-white">Simple, Transparent Pricing</h2>
+                    <p className="text-text-secondary mb-16 max-w-2xl mx-auto text-lg">Start free, then scale as you grow. All plans include real-time crawling and multi-platform AI analysis.</p>
                     <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
                         <PricingCard
                             title="Starter"
@@ -200,8 +288,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             {/* FAQ Section */}
             <section id="faq" className="relative z-10 py-24 border-t border-white/5">
                 <div className="max-w-4xl mx-auto px-6">
-                    <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">Frequently Asked Questions</h2>
-                    <div className="space-y-6">
+                    <h2 className="text-3xl md:text-4xl font-display font-bold text-center mb-16 text-white">Frequently Asked Questions</h2>
+                    <div className="space-y-4">
                         <FAQItem
                             question="How is this different from traditional SEO tools?"
                             answer="Traditional SEO tools like Ahrefs and Semrush focus on Google search rankings. Cognition specifically optimizes for AI search engines—ChatGPT, Gemini, Claude, and Perplexity—which use different algorithms based on semantic understanding rather than backlinks."
@@ -227,21 +315,61 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </section>
 
             {/* Footer */}
-            <footer className="relative z-10 py-12 border-t border-white/5 text-center text-slate-500 text-sm">
-                <p>&copy; {new Date().getFullYear()} Cognition AI Visibility Engine. All rights reserved.</p>
+            <footer className="relative z-10 py-24 border-t border-white/5 bg-black/40 backdrop-blur-sm">
+                <div className="max-w-7xl mx-auto px-6">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-12 text-left mb-16">
+                        <div className="space-y-6 col-span-1 md:col-span-1">
+                            <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 bg-gradient-to-tr from-primary to-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-primary/20">
+                                    <Cpu className="text-white w-5 h-5" />
+                                </div>
+                                <span className="font-display font-bold text-xl tracking-tight text-white">Cognition AI</span>
+                            </div>
+                            <p className="text-text-secondary text-sm leading-relaxed font-medium">
+                                The world's first industrial-grade engine for Answer Engine Optimization. Synchronizing brands with the next generation of search.
+                            </p>
+                        </div>
+                        <div>
+                            <h4 className="text-xs font-black text-white uppercase tracking-widest mb-6">Product</h4>
+                            <ul className="space-y-4 text-sm font-bold text-text-muted">
+                                <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
+                                <li><a href="#pricing" className="hover:text-white transition-colors">Enterprise Pricing</a></li>
+                                <li><a href="/docs" className="hover:text-white transition-colors">API Docs</a></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 className="text-xs font-black text-white uppercase tracking-widest mb-6">Resources</h4>
+                            <ul className="space-y-4 text-sm font-bold text-text-muted">
+                                <li><a href="/blog" className="hover:text-white transition-colors">AEO Strategy Blog</a></li>
+                                <li><a href="/help" className="hover:text-white transition-colors">Help Center</a></li>
+                                <li><a href="/privacy" className="hover:text-white transition-colors">Security & Trust</a></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 className="text-xs font-black text-white uppercase tracking-widest mb-6">Newsletter</h4>
+                            <p className="text-text-muted text-xs font-bold mb-4 uppercase tracking-tighter">Get the Weekly AI Visibility report.</p>
+                            <div className="relative">
+                                <input type="email" placeholder="email@company.com" className="w-full bg-surface border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-primary outline-none transition-colors" />
+                                <button className="absolute right-2 top-1/2 -translate-y-1/2 text-primary hover:text-white transition-colors">
+                                    <ChevronRight className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </footer>
         </div>
     );
 };
 
 const FeatureCard = ({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) => (
-    <div className="p-8 rounded-2xl bg-white/5 border border-white/10 hover:border-blue-500/30 hover:bg-white/10 transition-all group">
-        <div className="w-12 h-12 rounded-lg bg-slate-800 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+    <Card className="p-8 border-white/5 bg-surface/50 hover:bg-surface hover:border-primary/30 transition-all group">
+        <div className="w-12 h-12 rounded-xl bg-surface border border-white/5 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-primary/10 transition-transform">
             {React.cloneElement(icon as React.ReactElement<{ className?: string }>, { className: "w-6 h-6" })}
         </div>
-        <h3 className="text-xl font-semibold text-white mb-3">{title}</h3>
-        <p className="text-slate-400 leading-relaxed">{desc}</p>
-    </div>
+        <h3 className="text-xl font-bold text-white mb-3 font-display">{title}</h3>
+        <p className="text-text-secondary leading-relaxed font-sans">{desc}</p>
+    </Card>
 );
 
 const PricingCard = ({ title, price, features, buttonText, priceId, recommended }: { title: string, price: string, features: string[], buttonText: string, priceId: string, recommended: boolean }) => {
@@ -272,35 +400,33 @@ const PricingCard = ({ title, price, features, buttonText, priceId, recommended 
     };
 
     return (
-        <div className={`relative p-8 rounded-2xl border flex flex-col ${recommended ? 'bg-slate-800/80 border-blue-500 shadow-2xl shadow-blue-500/20' : 'bg-slate-900/50 border-slate-700 hover:border-slate-600'} transition-all`}>
+        <Card variant={recommended ? 'glass' : 'default'} className={`relative p-8 flex flex-col ${recommended ? 'border-primary shadow-glow' : 'bg-surface/50'} transition-all hover:-translate-y-2`}>
             {recommended && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs font-bold uppercase tracking-wider rounded-full shadow-lg">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-gradient-to-r from-primary to-purple-600 text-white text-xs font-bold uppercase tracking-wider rounded-full shadow-lg">
                     Most Popular
                 </div>
             )}
-            <h3 className="text-lg font-medium text-slate-300 mb-2">{title}</h3>
+            <h3 className="text-lg font-medium text-text-secondary mb-2">{title}</h3>
             <div className="flex items-baseline justify-center gap-1 mb-6">
-                <span className="text-4xl font-bold text-white">{price}</span>
+                <span className="text-4xl font-bold text-white font-display">{price}</span>
                 <span className="text-slate-500">/mo</span>
             </div>
             <ul className="space-y-4 mb-8 text-left flex-grow">
                 {features.map((feat, i) => (
                     <li key={i} className="flex items-start gap-3 text-sm text-slate-300">
-                        <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
+                        <Check className="w-5 h-5 text-emerald-400 flex-shrink-0" />
                         <span>{feat}</span>
                     </li>
                 ))}
             </ul>
-            <button
+            <Button
                 onClick={handleSubscribe}
-                className={`w-full py-4 rounded-xl font-bold transition-all ${recommended
-                    ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-blue-500/25'
-                    : 'bg-slate-700 hover:bg-slate-600 text-white'
-                    }`}
+                variant={recommended ? 'primary' : 'secondary'}
+                className="w-full py-6 text-lg"
             >
                 {buttonText}
-            </button>
-        </div>
+            </Button>
+        </Card>
     );
 };
 
@@ -308,16 +434,16 @@ const FAQItem = ({ question, answer }: { question: string; answer: string }) => 
     const [isOpen, setIsOpen] = React.useState(false);
 
     return (
-        <div className="border border-slate-800 rounded-xl overflow-hidden">
+        <div className="border border-white/5 bg-surface/30 rounded-xl overflow-hidden hover:bg-surface/50 transition-colors">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-slate-800/50 transition-colors"
+                className="w-full flex items-center justify-between px-6 py-5 text-left"
             >
-                <span className="font-medium text-white">{question}</span>
-                <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`} />
+                <span className="font-medium text-white text-lg">{question}</span>
+                <ChevronRight className={`w-5 h-5 text-text-secondary transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`} />
             </button>
             {isOpen && (
-                <div className="px-6 pb-4 text-slate-400 text-sm leading-relaxed">
+                <div className="px-6 pb-6 text-text-secondary leading-relaxed border-t border-white/5 pt-4">
                     {answer}
                 </div>
             )}

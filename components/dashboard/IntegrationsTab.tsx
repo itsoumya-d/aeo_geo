@@ -12,7 +12,8 @@ interface IntegrationApp {
     icon: any;
     status: 'connected' | 'available' | 'coming_soon';
     category: 'Automation' | 'Communication' | 'Development';
-    dbType: 'slack' | 'discord' | 'webhook';
+
+    dbType: 'slack' | 'discord' | 'webhook' | 'hubspot_token';
 }
 
 const INTEGRATIONS: IntegrationApp[] = [
@@ -20,6 +21,7 @@ const INTEGRATIONS: IntegrationApp[] = [
     { id: 'webhooks', name: 'Generic Webhooks', desc: 'Push raw audit data to any HTTP endpoint.', icon: Cpu, status: 'available', category: 'Development', dbType: 'webhook' },
     { id: 'discord', name: 'Discord', desc: 'Keep your community updated on brand sentiment shifts.', icon: MessageSquare, status: 'coming_soon', category: 'Communication', dbType: 'discord' },
     { id: 'zapier', name: 'Zapier', desc: 'Auto-trigger audits or push alerts to 5000+ apps.', icon: Zap, status: 'available', category: 'Automation', dbType: 'webhook' },
+    { id: 'hubspot', name: 'HubSpot CRM', desc: 'Sync audit completion events to Contact Timeline.', icon: ExternalLink, status: 'available', category: 'Automation', dbType: 'hubspot_token' },
     { id: 'github', name: 'GitHub Actions', desc: 'Scale audits with your CI/CD pipeline.', icon: Github, status: 'coming_soon', category: 'Development', dbType: 'webhook' },
 ];
 
@@ -61,12 +63,29 @@ export const IntegrationsTab: React.FC = () => {
 
     const fetchIntegrations = async () => {
         setIsLoadingIntegrations(true);
-        const { data, error } = await supabase
-            .from('integration_webhooks')
-            .select('*')
-            .eq('organization_id', organization?.id);
+        try {
+            const { data, error } = await supabase.functions.invoke('manage-webhooks', {
+                body: { action: 'list' }
+            });
 
-        if (data) setActiveIntegrations(data);
+            if (data?.success) {
+                setActiveIntegrations(data.webhooks || []);
+            }
+        } catch (error) {
+            console.error('Failed to fetch webhooks:', error);
+        }
+
+        // Fetch HubSpot State
+        try {
+            const { data } = await supabase.functions.invoke('manage-webhooks', {
+                body: { action: 'get_hubspot_token' }
+            });
+            if (data?.isConfigured) {
+                // Add minimal placeholder for UI
+                setActiveIntegrations(prev => [...prev, { id: 'hubspot-connected', url: 'HubSpot Integrated', type: 'hubspot_token' }]);
+            }
+        } catch (e) { console.error(e) }
+
         setIsLoadingIntegrations(false);
     };
 
@@ -80,42 +99,54 @@ export const IntegrationsTab: React.FC = () => {
         }, 1500);
     };
 
-    const handleSaveIntegration = async (dbType: string) => {
+    const handleSaveIntegration = async (appId: string) => {
         if (!editUrl.trim()) return;
         setIsSaving(true);
 
-        const { data, error } = await supabase
-            .from('integration_webhooks')
-            .upsert({
-                organization_id: organization?.id,
-                type: dbType,
-                url: editUrl,
-                is_active: true,
-                events: ['audit_complete']
-            }, { onConflict: 'organization_id,type' })
-            .select()
-            .single();
+        try {
+            let body: any = {};
 
-        if (error) {
+            if (appId === 'hubspot_token') {
+                body = { action: 'save_hubspot_token', token: editUrl };
+            } else {
+                body = {
+                    action: editingId && !INTEGRATIONS.find(a => a.id === editingId) ? 'update' : 'create',
+                    webhookId: editingId && !INTEGRATIONS.find(a => a.id === editingId) ? editingId : undefined,
+                    url: editUrl,
+                    events: ['audit.completed', 'competitor.visibility_change']
+                };
+            }
+
+            const { data, error } = await supabase.functions.invoke('manage-webhooks', { body });
+
+            if (error || !data.success) {
+                toast.error("Save Failed", error?.message || data.error);
+            } else {
+                toast.success("Integration Active", `${appId.toUpperCase()} endpoint has been synchronized.`);
+                setEditingId(null);
+                setEditUrl('');
+                fetchIntegrations();
+            }
+        } catch (error: any) {
             toast.error("Save Failed", error.message);
-        } else {
-            toast.success("Integration Active", `${dbType.toUpperCase()} endpoint has been synchronized.`);
-            setEditingId(null);
-            setEditUrl('');
-            fetchIntegrations();
         }
         setIsSaving(false);
     };
 
     const handleDeleteIntegration = async (id: string) => {
-        const { error } = await supabase
-            .from('integration_webhooks')
-            .delete()
-            .eq('id', id);
+        if (!confirm('Are you sure you want to delete this integration?')) return;
 
-        if (!error) {
-            toast.success("Connection Severed", "Integrated endpoint has been removed.");
-            fetchIntegrations();
+        try {
+            const { data, error } = await supabase.functions.invoke('manage-webhooks', {
+                body: { action: 'delete', webhookId: id }
+            });
+
+            if (!error && data.success) {
+                toast.success("Connection Severed", "Integrated endpoint has been removed.");
+                fetchIntegrations();
+            }
+        } catch (error: any) {
+            toast.error("Delete Failed", error.message);
         }
     };
 
@@ -126,7 +157,18 @@ export const IntegrationsTab: React.FC = () => {
         setTimeout(() => setIsCopied(false), 2000);
     };
 
-    const getExisting = (dbType: string) => activeIntegrations.find(i => i.type === dbType);
+    const getExisting = (appId: string) => {
+        if (appId === 'hubspot_token') {
+            return activeIntegrations.find(i => i.type === 'hubspot_token');
+        }
+        // Map app icons/names to actual webhooks in DB
+        // For simplicity in this demo, we'll just check if URL contains keywords
+        return activeIntegrations.find(i =>
+            (appId === 'slack' && i.url.includes('slack.com')) ||
+            (appId === 'zapier' && i.url.includes('zapier.com')) ||
+            (appId === 'webhooks' && !i.url.includes('slack.com') && !i.url.includes('zapier.com') && i.type !== 'hubspot_token')
+        );
+    };
 
     return (
         <motion.div
@@ -232,8 +274,8 @@ export const IntegrationsTab: React.FC = () => {
                                             <div className="relative">
                                                 <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-500" />
                                                 <input
-                                                    type="text"
-                                                    placeholder={app.id === 'slack' ? "Webhook URL..." : "Endpoint URL..."}
+                                                    type={app.dbType === 'hubspot_token' ? "password" : "text"}
+                                                    placeholder={app.id === 'slack' ? "Webhook URL..." : (app.dbType === 'hubspot_token' ? "Private App Access Token..." : "Endpoint URL...")}
                                                     value={editUrl}
                                                     onChange={(e) => setEditUrl(e.target.value)}
                                                     className="w-full bg-black/40 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-xs text-white outline-none focus:border-primary transition-colors"

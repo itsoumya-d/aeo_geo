@@ -6,6 +6,9 @@ import {
     Zap, ShoppingCart, Loader2, Check,
     CreditCard, Sparkles, X, ShieldCheck
 } from 'lucide-react';
+import { Card } from './ui/Card';
+import { Button } from './ui/Button';
+import { Badge } from './ui/Badge';
 
 interface TopUpOption {
     id: string;
@@ -56,22 +59,22 @@ export const TopUpModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300">
-            <div className="bg-slate-900 w-full max-w-2xl rounded-3xl border border-slate-700 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+            <Card className="w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-300 p-0 shadow-2xl bg-surface border-border">
                 <div className="relative p-8 sm:p-12">
                     <button
                         onClick={onClose}
-                        className="absolute top-6 right-6 p-2 text-slate-500 hover:text-white hover:bg-slate-800 rounded-full transition-colors"
+                        className="absolute top-6 right-6 p-2 text-text-muted hover:text-white hover:bg-white/10 rounded-full transition-colors"
                     >
                         <X className="w-6 h-6" />
                     </button>
 
                     <div className="text-center mb-10">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold uppercase tracking-widest mb-4">
-                            <Sparkles className="w-3 h-3" /> Credit Top-up
-                        </div>
-                        <h2 className="text-3xl font-black text-white mb-2">Refuel Your Engine</h2>
-                        <p className="text-slate-400">Add instant credits to your account. No subscription required.</p>
+                        <Badge variant="default" className="mb-4">
+                            <Sparkles className="w-3 h-3 mr-1" /> Credit Top-up
+                        </Badge>
+                        <h2 className="text-3xl font-black text-white mb-2 font-display">Refuel Your Engine</h2>
+                        <p className="text-text-secondary">Add instant credits to your account. No subscription required.</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -79,64 +82,62 @@ export const TopUpModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                             <div
                                 key={option.id}
                                 className={`relative p-6 rounded-2xl border transition-all ${option.popular
-                                        ? 'bg-slate-800 border-primary shadow-lg shadow-primary/10'
-                                        : 'bg-slate-900 border-slate-700 hover:border-slate-500'
+                                    ? 'bg-primary/5 border-primary shadow-glow'
+                                    : 'bg-background/50 border-border hover:border-primary/50'
                                     }`}
                             >
                                 {option.popular && (
-                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-primary text-white text-[10px] font-bold rounded-full">
+                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-primary text-white text-[10px] font-bold rounded-full shadow-lg">
                                         Best Value
                                     </div>
                                 )}
                                 <div className="text-center mb-6">
-                                    <div className="text-3xl font-black text-white mb-1">{option.credits}</div>
-                                    <div className="text-[10px] uppercase font-bold text-slate-500 tracking-tighter">Audit Credits</div>
+                                    <div className="text-3xl font-black text-white mb-1 font-display">{option.credits}</div>
+                                    <div className="text-[10px] uppercase font-bold text-text-muted tracking-tighter">Audit Credits</div>
                                 </div>
                                 <div className="space-y-3 mb-8">
-                                    <div className="flex items-center gap-2 text-xs text-slate-400">
+                                    <div className="flex items-center gap-2 text-xs text-text-secondary">
                                         <Check className="w-4 h-4 text-emerald-400" />
                                         <span>{option.rewrites} Rewrites</span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-xs text-slate-400">
+                                    <div className="flex items-center gap-2 text-xs text-text-secondary">
                                         <Check className="w-4 h-4 text-emerald-400" />
                                         <span>Priority Processing</span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-xs text-slate-400">
+                                    <div className="flex items-center gap-2 text-xs text-text-secondary">
                                         <Check className="w-4 h-4 text-emerald-400" />
                                         <span>Never Expires</span>
                                     </div>
                                 </div>
-                                <button
+                                <Button
                                     onClick={() => handlePurchase(option)}
                                     disabled={loading !== null}
-                                    className={`w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${option.popular
-                                            ? 'bg-primary hover:bg-primary/90 text-white'
-                                            : 'bg-slate-700 hover:bg-slate-600 text-white'
-                                        }`}
+                                    variant={option.popular ? 'primary' : 'secondary'}
+                                    className="w-full"
                                 >
                                     {loading === option.id ? (
                                         <Loader2 className="w-4 h-4 animate-spin" />
                                     ) : (
                                         <>
-                                            <ShoppingCart className="w-4 h-4" />
+                                            <ShoppingCart className="w-4 h-4 mr-2" />
                                             {option.price}
                                         </>
                                     )}
-                                </button>
+                                </Button>
                             </div>
                         ))}
                     </div>
 
-                    <div className="mt-10 flex items-center justify-center gap-6 pt-8 border-t border-slate-800">
-                        <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <div className="mt-10 flex items-center justify-center gap-6 pt-8 border-t border-white/5">
+                        <div className="flex items-center gap-2 text-xs text-text-muted">
                             <ShieldCheck className="w-4 h-4" /> Secure Payment
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-slate-500">
+                        <div className="flex items-center gap-2 text-xs text-text-muted">
                             <CreditCard className="w-4 h-4" /> All Cards Accepted
                         </div>
                     </div>
                 </div>
-            </div>
+            </Card>
         </div>
     );
 };

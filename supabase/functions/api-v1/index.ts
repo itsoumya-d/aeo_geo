@@ -7,6 +7,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4"
 import { crypto } from "https://deno.land/std@0.168.0/crypto/mod.ts"
 // @ts-ignore
 import { encode as hexEncode } from "https://deno.land/std@0.168.0/encoding/hex.ts"
+import { withCache, CACHE_TTL } from "../_shared/redis.ts";
 
 declare const Deno: any;
 
@@ -65,21 +66,118 @@ serve(async (req: Request): Promise<Response> => {
             p_method: req.method
         })
 
-        // 4. Route Handling (basic CRUD for Audits)
+        // 4. Route Handling
         const url = new URL(req.url)
         const path = url.pathname.replace('/api-v1', '').replace(/\/$/, '')
 
+        // GET /usage - Get current credit balance and monthly usage
+        if (path === '/usage' && req.method === 'GET') {
+            const cacheKeyUsage = `api:usage:${orgId}`;
+
+            const cachedResponse = await withCache(
+                cacheKeyUsage,
+                CACHE_TTL.API_USAGE,
+                async () => {
+                    const { data: org, error: orgError } = await supabaseClient
+                        .from('organizations')
+                        .select('audit_credits_remaining, rewrite_credits_remaining, plan')
+                        .eq('id', orgId)
+                        .single()
+
+                    if (orgError) throw orgError
+
+                    // Get usage this month
+                    const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
+                    const { count, error: usageError } = await supabaseClient
+                        .from('audits')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('organization_id', orgId)
+                        .gte('created_at', firstDayOfMonth)
+
+                    if (usageError) throw usageError
+
+                    return {
+                        credits: {
+                            audits: org.audit_credits_remaining,
+                            rewrites: org.rewrite_credits_remaining
+                        },
+                        usage_this_month: count,
+                        plan: org.plan
+                    }
+                }
+            );
+
+            return new Response(JSON.stringify(cachedResponse), {
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            })
+        }
+
         // GET /audits - List past audits
         if (path === '/audits' && req.method === 'GET') {
-            const { data, error } = await supabaseClient
-                .from('audits')
-                .select('*')
-                .eq('organization_id', orgId)
-                .order('created_at', { ascending: false })
-                .limit(20)
+            const cacheKeyAudits = `api:audits:${orgId}`;
 
-            if (error) throw error
-            return new Response(JSON.stringify({ audits: data }), {
+            const cachedData = await withCache(
+                cacheKeyAudits,
+                CACHE_TTL.API_LIST,
+                async () => {
+                    const { data, error } = await supabaseClient
+                        .from('audits')
+                        .select('*')
+                        .eq('organization_id', orgId)
+                        .order('created_at', { ascending: false })
+                        .limit(20)
+
+                    if (error) throw error
+                    return { audits: data };
+                }
+            );
+
+            return new Response(JSON.stringify(cachedData), {
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            })
+        }
+
+        // POST /audits - Start a new audit
+        if (path === '/audits' && req.method === 'POST') {
+            const body = await req.json()
+            if (!body.url) {
+                return new Response(JSON.stringify({ error: 'URL is required' }), {
+                    status: 400,
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                })
+            }
+
+            // Trigger analyze-content (ANALYZE)
+            const { data: analysisResult, error: analysisError } = await supabaseClient.functions.invoke('analyze-content', {
+                body: {
+                    action: 'ANALYZE',
+                    payload: {
+                        websiteUrl: body.url,
+                        otherAssets: body.otherAssets || '',
+                        mainContent: body.mainContent || ''
+                    }
+                }
+            })
+
+            if (analysisError) throw analysisError
+
+            // Save the audit result
+            const { data: audit, error: auditError } = await supabaseClient
+                .from('audits')
+                .insert({
+                    organization_id: orgId,
+                    domain_url: body.url,
+                    overall_score: analysisResult.overallScore,
+                    status: 'complete',
+                    report: analysisResult,
+                    completed_at: new Date().toISOString()
+                })
+                .select()
+                .single()
+
+            if (auditError) throw auditError
+
+            return new Response(JSON.stringify({ success: true, audit }), {
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             })
         }
@@ -97,6 +195,45 @@ serve(async (req: Request): Promise<Response> => {
 
             if (error) throw error
             return new Response(JSON.stringify(data), {
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            })
+        }
+
+        // GET /competitors - List competitors
+        if (path === '/competitors' && req.method === 'GET') {
+            const { data, error } = await supabaseClient
+                .from('competitors')
+                .select('*')
+                .eq('organization_id', orgId)
+
+            if (error) throw error
+            return new Response(JSON.stringify({ competitors: data }), {
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            })
+        }
+
+        // POST /competitors - Add a new competitor
+        if (path === '/competitors' && req.method === 'POST') {
+            const body = await req.json()
+            if (!body.domain) {
+                return new Response(JSON.stringify({ error: 'Domain is required' }), {
+                    status: 400,
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                })
+            }
+
+            const { data, error } = await supabaseClient
+                .from('competitors')
+                .insert({
+                    organization_id: orgId,
+                    domain_url: body.domain,
+                    name: body.name || body.domain
+                })
+                .select()
+                .single()
+
+            if (error) throw error
+            return new Response(JSON.stringify({ success: true, competitor: data }), {
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             })
         }

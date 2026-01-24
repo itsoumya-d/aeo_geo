@@ -12,6 +12,7 @@ export interface DiscoverPayload {
 
 export interface AnalyzePayload {
     websiteUrl: string;
+    competitors?: string[];
     otherAssets?: string;
     mainContent?: string;
 }

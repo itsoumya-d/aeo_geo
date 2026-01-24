@@ -1,7 +1,7 @@
 import { Asset, Report, AssetType, DiscoveredPage } from "../types";
 import { ActionType, SandboxCompareResult } from "../supabase/functions/_shared/types";
 import { supabase } from "./supabase";
-import { rateLimiter, RateLimitError } from "./rateLimiter";
+
 
 /**
  * Invoke the secure Edge Function for AI operations with rate limiting.
@@ -18,15 +18,7 @@ async function invokeAI<T>(action: ActionType, payload: Record<string, unknown>)
 
   const endpoint = endpointMap[action] || 'default';
 
-  try {
-    // Acquire rate limit slot (may queue if limit exceeded)
-    await rateLimiter.acquire(endpoint);
-  } catch (err) {
-    if (err instanceof RateLimitError) {
-      throw new Error(`Rate limit exceeded. Please try again in ${err.retryAfter} seconds.`);
-    }
-    throw err;
-  }
+
 
   const { data, error } = await supabase.functions.invoke('analyze-content', {
     body: { action, payload }
@@ -34,6 +26,10 @@ async function invokeAI<T>(action: ActionType, payload: Record<string, unknown>)
 
   if (error) {
     console.error(`AI Service Error (${action}):`, error);
+    // Handle Supabase Function Errors (including our manual 429)
+    if (error.message?.includes("Rate limit exceeded") || error.context?.status === 429) {
+      throw new Error("You're moving too fast! Please wait a moment before trying again.");
+    }
     throw new Error(error.message || "AI Service Unavailable");
   }
 
@@ -43,22 +39,39 @@ async function invokeAI<T>(action: ActionType, payload: Record<string, unknown>)
 /**
  * Step 1: Discovery Phase
  */
+import { discoverLinks } from "./crawlService";
+
+/**
+ * Step 1: Discovery Phase
+ */
 export const discoverSiteStructure = async (url: string): Promise<DiscoveredPage[]> => {
   try {
-    const pages = await invokeAI<DiscoveredPage[]>('DISCOVER', { url });
-    // Normalize response
-    return Array.isArray(pages) ? pages.map((p) => ({
-      url: p.url,
-      type: p.type,
-      status: 'PENDING'
-    })) : [];
+    // Use Firecrawl to map the site
+    const links = await discoverLinks(url);
+
+    // Convert links to DiscoveredPage objects
+    // Heuristic: Check URL patterns to guess type
+    return links.map(link => {
+      let type: DiscoveredPage['type'] = 'OTHER';
+      const lower = link.toLowerCase();
+      if (link === url || link === url + '/') type = 'HOMEPAGE';
+      else if (lower.includes('about')) type = 'ABOUT';
+      else if (lower.includes('pricing')) type = 'PRICING';
+      else if (lower.includes('blog') || lower.includes('news')) type = 'BLOG';
+      else if (lower.includes('product') || lower.includes('feature')) type = 'PRODUCT';
+      else if (lower.includes('contact')) type = 'CONTACT';
+
+      return {
+        url: link,
+        type,
+        status: 'PENDING'
+      };
+    });
   } catch (error) {
     console.error("Discovery failed", error);
-    // Fallback if AI fails
+    // Fallback
     return [
-      { url: url, type: 'HOMEPAGE', status: 'PENDING' },
-      { url: `${url}/pricing`, type: 'PRICING', status: 'PENDING' },
-      { url: `${url}/about`, type: 'ABOUT', status: 'PENDING' }
+      { url: url, type: 'HOMEPAGE', status: 'PENDING' }
     ];
   }
 };
@@ -69,7 +82,8 @@ export const discoverSiteStructure = async (url: string): Promise<DiscoveredPage
 export const analyzeBrandAssets = async (
   assets: Asset[],
   discoveredPages: DiscoveredPage[],
-  cachedContent?: Record<string, string>
+  cachedContent?: Record<string, string>,
+  competitors?: string[]
 ): Promise<Report> => {
   const website = assets.find(a => a.type === AssetType.WEBSITE)?.url || "Unknown Website";
 
@@ -82,7 +96,8 @@ export const analyzeBrandAssets = async (
     const report = await invokeAI<Report>('ANALYZE', {
       websiteUrl: website,
       otherAssets,
-      mainContent: mainPageMarkdown
+      mainContent: mainPageMarkdown,
+      competitors
     });
     return report;
   } catch (error) {
@@ -146,16 +161,4 @@ export const simulateSandboxCompare = async (goal: string, variantA: string, var
   }
 };
 
-/**
- * Get current rate limit status for UI display
- */
-export const getRateLimitStatus = (action: ActionType = 'ANALYZE') => {
-  const endpointMap: Record<string, string> = {
-    'DISCOVER': 'discover',
-    'ANALYZE': 'analyze',
-    'REWRITE': 'rewrite',
-    'CHECK_VISIBILITY': 'visibility',
-    'SANDBOX_COMPARE': 'rewrite',
-  };
-  return rateLimiter.getStatus(endpointMap[action] || 'default');
-};
+

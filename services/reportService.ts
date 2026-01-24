@@ -1,4 +1,6 @@
 import { supabase } from './supabase';
+import { auditLog, getCurrentActor } from './auditService';
+import { sendSlackNotification } from './slackService';
 
 /**
  * Report Service
@@ -57,6 +59,24 @@ export async function upsertReportSchedule(schedule: Partial<ReportSchedule> & {
         return null;
     }
 
+    // Log the event
+    const actor = await getCurrentActor();
+    if (actor) {
+        await auditLog({
+            actor,
+            action: 'report.schedule_updated',
+            target: { id: data.id, type: 'report', display_name: `${data.type} report` },
+            metadata: { type: data.type, recipients: data.email_recipients }
+        });
+    }
+
+    // Dispatch Slack Notification
+    await sendSlackNotification(schedule.organization_id, {
+        title: '🗓️ Report Schedule Updated',
+        message: `Visibility reports will now be delivered *${data.type}* to ${data.email_recipients.length} recipients.`,
+        level: 'success'
+    });
+
     return data;
 }
 
@@ -95,6 +115,17 @@ export async function triggerOnDemandReport(organizationId: string, email: strin
     if (error) {
         console.error('Error triggering on-demand report:', error);
         return false;
+    }
+
+    // Log the event
+    const actor = await getCurrentActor();
+    if (actor) {
+        await auditLog({
+            actor,
+            action: 'report.triggered_on_demand',
+            target: { id: organizationId, type: 'report' },
+            metadata: { recipient: email }
+        });
     }
 
     return true;

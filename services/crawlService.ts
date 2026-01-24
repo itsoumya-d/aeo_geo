@@ -9,9 +9,14 @@ interface CrawlResult {
  * Triggers the Supabase Edge Function to crawl a specific URL.
  * Requires an existing AuditPage ID to link the content to.
  */
+/**
+ * Triggers the Supabase Edge Function to crawl a specific URL.
+ * Requires an existing AuditPage ID to link the content to.
+ */
 export const crawlPage = async (url: string, auditPageId: string): Promise<CrawlResult> => {
-    const { data, error } = await supabase.functions.invoke('crawl-site', {
-        body: { url, auditPageId },
+    // Action 'SCRAPE' is default, but let's be explicit
+    const { data: result, error } = await supabase.functions.invoke('crawl-site', {
+        body: { action: 'SCRAPE', url, auditPageId },
     });
 
     if (error) {
@@ -19,10 +24,15 @@ export const crawlPage = async (url: string, auditPageId: string): Promise<Crawl
         throw new Error(`Failed to crawl ${url}: ${error.message}`);
     }
 
-    // The function returns success message, but we might want to fetch the content immediately
-    // Or we can rely on the function returning it if we modify the function.
-    // For now, let's fetch the stored content from the DB to be sure.
+    // The function returns data directly now
+    if (result && result.data) {
+        return {
+            markdown: result.data.markdown,
+            metadata: result.data.metadata
+        };
+    }
 
+    // Fallback: Fetch from DB if function didn't return data (legacy compat)
     const { data: contentData, error: contentError } = await supabase
         .from('page_contents')
         .select('markdown_content, metadata')
@@ -40,11 +50,26 @@ export const crawlPage = async (url: string, auditPageId: string): Promise<Crawl
 };
 
 /**
- * Discovery Phase: Uses the real crawler (Firecrawl /map or just homepage links)
- * For now, we might simulate discovery or implement a 'map-site' function later.
+ * Discovery Phase: Uses Firecrawl /map via Edge Function
  */
 export const discoverLinks = async (url: string): Promise<string[]> => {
-    // TODO: Implement 'map-site' Edge Function for Firecrawl /map
-    // For now, return the url itself to start
-    return [url];
+    try {
+        const { data: result, error } = await supabase.functions.invoke('crawl-site', {
+            body: { action: 'MAP', url }
+        });
+
+        if (error) throw error;
+
+        // Result data should be a list of strings (links)
+        if (result && Array.isArray(result.data)) {
+            // Filter to only include subpaths or same domain?
+            // Firecrawl /map usually respects the domain.
+            return result.data.slice(0, 50); // Limit to 50 pages for now
+        }
+
+        return [url];
+    } catch (e) {
+        console.error("Discovery map failed", e);
+        return [url]; // Fallback to just the home page
+    }
 };

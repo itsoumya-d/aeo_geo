@@ -1,8 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
+import { Loader2 } from 'lucide-react';
 import { Asset, Report, DiscoveredPage, AssetType, AnalysisStatus } from './types';
 import { LandingPage } from './components/LandingPage';
-import { Dashboard } from './components/Dashboard';
+import { SEOHead } from './components/SEOHead';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { discoverSiteStructure, analyzeBrandAssets } from './services/geminiService';
 import { createAudit, createAuditPage, updateAudit } from './services/supabase';
@@ -10,11 +12,25 @@ import { crawlPage } from './services/crawlService';
 import { useToast } from './components/Toast';
 import { OnboardingWizard } from './components/OnboardingWizard';
 import { useKeyboardShortcuts, APP_SHORTCUTS } from './hooks/useKeyboardShortcuts';
-import { SettingsPage } from './pages/SettingsPage';
-import { HistoryPage } from './pages/HistoryPage';
-import { HelpCenter } from './pages/HelpCenter';
 import { useAuth } from './contexts/AuthContext';
 import { useAuditStore, useUIStore } from './stores';
+
+// Lazy Load Pages
+const Dashboard = React.lazy(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
+const SettingsPage = React.lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const HistoryPage = React.lazy(() => import('./pages/HistoryPage').then(m => ({ default: m.HistoryPage })));
+const HelpCenter = React.lazy(() => import('./pages/HelpCenter').then(m => ({ default: m.HelpCenter })));
+const APIDocs = React.lazy(() => import('./components/docs/APIDocs').then(m => ({ default: m.APIDocs })));
+const ReportBuilder = React.lazy(() => import('./components/reports/ReportBuilder').then(m => ({ default: m.ReportBuilder })));
+
+const PageLoading = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="flex flex-col items-center gap-4">
+      <Loader2 className="w-12 h-12 text-primary animate-spin" />
+      <p className="text-sm font-bold text-slate-500 uppercase tracking-widest animate-pulse">Loading Mission Control...</p>
+    </div>
+  </div>
+);
 
 const App: React.FC = () => {
   const { session, organization, onboarding, signInWithGoogle, loading, refreshOrganization } = useAuth();
@@ -166,62 +182,69 @@ const App: React.FC = () => {
 
   // Main content wrapper
   const MainLayout = ({ children }: { children: React.ReactNode }) => (
-    <div className="bg-background min-h-screen text-slate-200 font-sans selection:bg-primary/30">
-      {showOnboarding ? (
-        <OnboardingWizard
-          onComplete={() => setShowOnboarding(false)}
-          onStartFirstAudit={(domain) => handleStartAnalysis([{
-            id: 'initial-' + Date.now(),
-            type: AssetType.WEBSITE,
-            url: domain,
-            status: AnalysisStatus.IDLE
-          }])}
-        />
-      ) : (
-        children
-      )}
-    </div>
+    <HelmetProvider>
+      <div className="bg-background min-h-screen text-text-primary font-sans selection:bg-primary/30 overflow-x-hidden">
+        <SEOHead />
+        {showOnboarding ? (
+          <OnboardingWizard
+            onComplete={() => setShowOnboarding(false)}
+            onStartFirstAudit={(domain) => handleStartAnalysis([{
+              id: 'initial-' + Date.now(),
+              type: AssetType.WEBSITE,
+              url: domain,
+              status: AnalysisStatus.IDLE
+            }])}
+          />
+        ) : (
+          children
+        )}
+      </div>
+    </HelmetProvider>
   );
 
   return (
     <MainLayout>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
-              {/* Background Gradients */}
-              <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-                <div className="absolute top-[-20%] left-[-20%] w-[60%] h-[60%] bg-primary/10 rounded-full blur-[150px]"></div>
-                <div className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[60%] bg-purple-600/10 rounded-full blur-[150px]"></div>
+      <Suspense fallback={<PageLoading />}>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+                {/* Background Gradients */}
+                <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+                  <div className="absolute top-[-20%] left-[-20%] w-[60%] h-[60%] bg-primary/10 rounded-full blur-[150px]"></div>
+                  <div className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[60%] bg-purple-600/10 rounded-full blur-[150px]"></div>
+                </div>
+                <LandingPage
+                  onStartAnalysis={handleStartAnalysis}
+                  isAnalyzing={isAnalyzing}
+                  statusMessage={statusMessage}
+                  discoveredCount={discoveredPages.length}
+                  credits={organization?.audit_credits_remaining}
+                  session={session}
+                />
               </div>
-              <LandingPage
-                onStartAnalysis={handleStartAnalysis}
-                isAnalyzing={isAnalyzing}
-                statusMessage={statusMessage}
-                discoveredCount={discoveredPages.length}
-                credits={organization?.audit_credits_remaining}
-                session={session}
-              />
-            </div>
-          }
-        />
-        <Route
-          path="/dashboard"
-          element={
-            report ? (
-              <ErrorBoundary>
-                <Dashboard report={report} onReset={handleReset} />
-              </ErrorBoundary>
-            ) : null
-          }
-        />
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/history" element={<HistoryPage onSelectAudit={handleLoadAudit} />} />
-        <Route path="/help" element={<HelpCenter />} />
-        {/* Auth callback route for OAuth */}
-        <Route path="/auth/callback" element={<AuthCallback />} />
-      </Routes>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              report ? (
+                <ErrorBoundary>
+                  <Dashboard report={report} onReset={handleReset} />
+                </ErrorBoundary>
+              ) : null
+            }
+          />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/history" element={<HistoryPage onSelectAudit={handleLoadAudit} />} />
+          <Route path="/help" element={<HelpCenter />} />
+          <Route path="/docs/api" element={<APIDocs />} />
+          <Route path="/reports/builder" element={<ReportBuilder />} />
+          {/* Auth callback route for OAuth */}
+          <Route path="/auth/callback" element={<AuthCallback />} />
+        </Routes>
+      </Suspense>
     </MainLayout>
   );
 };

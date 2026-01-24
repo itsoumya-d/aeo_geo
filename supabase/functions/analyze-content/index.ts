@@ -32,11 +32,20 @@ import type {
 } from "../_shared/types.ts";
 import { sendEmail } from "../_shared/resend.ts";
 import { dispatchNotifications } from "../_shared/notifications.ts";
+import { trackEvent } from "../_shared/analytics.ts";
+import { withCache, CACHE_TTL } from "../_shared/redis.ts";
+import { syncHubSpotEvent } from "../_shared/hubspot.ts";
+import { initRateLimiter, checkRateLimit } from "../_shared/rateLimit.ts";
+import { withRetry, fetchWithRetry } from "../_shared/retry.ts";
 
 const corsHeaders: Record<string, string> = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Expose-Headers": "X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset"
 };
+
+// Initialize Rate Limiter once (outside handler for reuse)
+const rateLimiter = initRateLimiter();
 
 // --- Vector Math Helpers ---
 const dotProduct = (a: number[], b: number[]): number =>
@@ -120,7 +129,25 @@ serve(async (req: Request): Promise<Response> => {
             orgId = userData.organization_id;
         }
 
-        // 3. Credit Management
+        // 3. Rate Limiting (Server-Side)
+        if (orgId && rateLimiter) {
+            const { success, limit, remaining, reset } = await checkRateLimit(rateLimiter, orgId, action);
+
+            if (!success) {
+                return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
+                    headers: {
+                        ...corsHeaders,
+                        "Content-Type": "application/json",
+                        "X-RateLimit-Limit": limit.toString(),
+                        "X-RateLimit-Remaining": remaining.toString(),
+                        "X-RateLimit-Reset": reset.toString()
+                    },
+                    status: 429
+                });
+            }
+        }
+
+        // 4. Credit Management
         if (action === "ANALYZE" || action === "REWRITE" || action === "SANDBOX_COMPARE") {
             const { data: creditResult, error: creditError } = await supabaseAdmin.rpc('decrement_credits', {
                 p_org_id: orgId,
@@ -134,10 +161,41 @@ serve(async (req: Request): Promise<Response> => {
             }
             if (creditResult && !creditResult.success) {
                 return new Response(JSON.stringify({ error: creditResult.error }), {
-                    headers: { ...corsHeaders, "Content-Type": "application/json" },
                     status: 402,
                 });
             }
+        }
+
+        // --- 4. Enqueue Logic (Background Jobs) ---
+        if (action === "ENQUEUE_ANALYZE") {
+            if (!isAnalyzePayload(payload)) throw new Error("Invalid payload for ENQUEUE");
+
+            // Check Credit Again (Optional, but good for validation before queueing)
+            const { data: creditBalance } = await supabaseAdmin
+                .from('organizations')
+                .select('audit_credits_remaining')
+                .eq('id', orgId)
+                .single();
+
+            if ((creditBalance?.audit_credits_remaining || 0) < 1) {
+                throw new Error("Insufficient credits to queue analysis");
+            }
+
+            const { error: jobError } = await supabaseAdmin
+                .from('background_jobs')
+                .insert({
+                    organization_id: orgId,
+                    job_type: 'ANALYZE_BATCH',
+                    payload: payload,
+                    status: 'PENDING'
+                });
+
+            if (jobError) throw jobError;
+
+            return new Response(JSON.stringify({ success: true, message: "Job queued for AI processing" }), {
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+                status: 202
+            });
         }
 
         // 4. Init AI Models
@@ -158,14 +216,28 @@ serve(async (req: Request): Promise<Response> => {
                 if (!isDiscoverPayload(payload)) {
                     throw new Error("Invalid payload for DISCOVER action");
                 }
-                result = await handleDiscovery(payload.url);
+                // Cache Key: discover:{url}
+                const cacheKeyDiscover = `discover:${payload.url}`;
+
+                result = await withCache(
+                    cacheKeyDiscover,
+                    CACHE_TTL.DISCOVERY,
+                    async () => await handleDiscovery(payload.url)
+                );
                 break;
 
             case "ANALYZE":
                 if (!isAnalyzePayload(payload)) {
                     throw new Error("Invalid payload for ANALYZE action");
                 }
-                result = await handleAnalysis(model, payload);
+                // Cache Key: analyze:{url}
+                const cacheKeyAnalyze = `analyze:${payload.websiteUrl}`;
+
+                result = await withCache(
+                    cacheKeyAnalyze,
+                    CACHE_TTL.ANALYSIS,
+                    async () => await handleAnalysis(model, payload)
+                );
                 // Add notification
                 await supabaseAdmin.from('audit_notifications').insert({
                     organization_id: orgId,
@@ -173,6 +245,42 @@ serve(async (req: Request): Promise<Response> => {
                     title: 'Analysis Complete',
                     message: `Report for ${payload.websiteUrl} is ready.`
                 });
+
+                // Track Event
+                await trackEvent(orgId || 'anonymous', 'audit_completed', {
+                    domain: payload.websiteUrl,
+                    score: result.overallScore
+                });
+
+                // Sync to HubSpot
+                if (orgId) {
+                    // Fetch user email an HubSpot token
+                    const { data: orgData } = await supabaseAdmin
+                        .from('organizations')
+                        .select('hubspot_token')
+                        .eq('id', orgId)
+                        .single();
+
+                    const { data: userData } = await supabaseAdmin
+                        .from('users')
+                        .select('email')
+                        .eq('organization_id', orgId)
+                        .eq('role', 'owner')
+                        .limit(1)
+                        .maybeSingle();
+
+                    if (userData?.email && orgData?.hubspot_token) {
+                        await syncHubSpotEvent(
+                            orgData.hubspot_token,
+                            userData.email,
+                            'audit_completed',
+                            {
+                                domain: payload.websiteUrl,
+                                score: result.overallScore
+                            }
+                        );
+                    }
+                }
                 break;
 
             case "REWRITE":
@@ -296,11 +404,12 @@ async function handleDiscovery(url: string): Promise<DiscoveredPage[]> {
 }
 
 async function handleAnalysis(model: GenerativeModel, payload: AnalyzePayload): Promise<AnalysisReport> {
-    const { websiteUrl, otherAssets, mainContent } = payload;
+    const { websiteUrl, otherAssets, mainContent, competitors } = payload;
 
     const prompt = `
     Analyze this brand presence.
     Domain: ${websiteUrl}
+    Competitors: ${competitors ? competitors.join(', ') : 'None provided'}
     Assets: ${otherAssets || 'None'}
     Content Snippet: ${mainContent?.slice(0, 15000) || "No content"}
 
@@ -319,9 +428,11 @@ async function handleAnalysis(model: GenerativeModel, payload: AnalyzePayload): 
     Ensure strict JSON format.
     `;
 
-    const result = await model.generateContent({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: { responseMimeType: "application/json" }
+    const result = await withRetry(async () => {
+        return await model.generateContent({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: "application/json" }
+        });
     });
 
     const responseText = result.response.text();
@@ -425,7 +536,7 @@ async function handleVisibilityCheck(payload: VisibilityPayload): Promise<Visibi
     }
 
     try {
-        const response = await fetch("https://api.perplexity.ai/chat/completions", {
+        const response = await fetchWithRetry("https://api.perplexity.ai/chat/completions", {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${apiKey}`,
@@ -516,13 +627,30 @@ async function handleSandboxCompare(
     const responseText = genResult.response.text();
     const comparison = JSON.parse(responseText) as { a: any, b: any };
 
-    // Calculate alignment via vector similarity
+    // Calculate alignment via vector similarity using DB RPC (simulated for migration)
+    // In a real high-scale scenario, we would store these and search.
+    // For now, we use the RPC 'calculate_similarity' if we wanted to offload, 
+    // but to avoid network RTT for 2 vectors, we'll keep the JS for this specific function 
+    // BUT we will enable the saving of these vectors to the new table for future analysis.
+
     const vGoal = goalEmb.embedding.values as number[];
     const vA = aEmb.embedding.values as number[];
     const vB = bEmb.embedding.values as number[];
 
     const alignmentA = cosineSimilarity(vGoal, vA);
     const alignmentB = cosineSimilarity(vGoal, vB);
+
+    // Save to Knowledge Base (New Feature enabled by Migration)
+    if (orgId) {
+        try {
+            await supabaseAdmin.from('content_embeddings').insert([
+                { organization_id: orgId, content: variantA, embedding: vA, metadata: { type: 'variant', goal } },
+                { organization_id: orgId, content: variantB, embedding: vB, metadata: { type: 'variant', goal } }
+            ]);
+        } catch (e) {
+            console.warn("Failed to store embeddings:", e);
+        }
+    }
 
     return {
         a: { ...comparison.a, alignment: alignmentA },

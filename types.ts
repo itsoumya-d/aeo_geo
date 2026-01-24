@@ -26,7 +26,7 @@ export interface Asset {
 
 export interface DiscoveredPage {
   url: string;
-  type: 'HOMEPAGE' | 'PRICING' | 'PRODUCT' | 'BLOG' | 'DOCS' | 'ABOUT' | 'LEGAL' | 'OTHER';
+  type: 'HOMEPAGE' | 'PRICING' | 'PRODUCT' | 'BLOG' | 'DOCS' | 'ABOUT' | 'LEGAL' | 'CONTACT' | 'FEATURES' | 'OTHER';
   status: 'PENDING' | 'CRAWLED' | 'ANALYZED' | 'ERROR';
 }
 
