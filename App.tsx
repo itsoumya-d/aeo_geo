@@ -72,7 +72,7 @@ const App: React.FC = () => {
     }
   }, [session, loading, organization, onboarding, setShowOnboarding]);
 
-  const handleStartAnalysis = async (inputAssets: Asset[]) => {
+  const handleStartAnalysis = async (inputAssets: Asset[], options?: { llmProvider: 'gemini' | 'claude' | 'openai' }) => {
     if (!session) {
       const { error } = await signInWithGoogle();
       if (error) {
@@ -132,9 +132,17 @@ const App: React.FC = () => {
       }
 
       // Step 3: Deep Analysis (RAG)
-      setStatusMessage("Analyzing Content with Gemini 1.5 Pro...");
+      const provider = options?.llmProvider || 'gemini';
+      setStatusMessage(`Analyzing Content with ${provider === 'claude' ? 'Claude 3.5 Sonnet' : provider === 'openai' ? 'GPT-4o' : 'Gemini 1.5 Pro'}...`);
       const pagesToAnalyze = pages.length > 0 ? pages : [];
-      const generatedReport = await analyzeBrandAssets(inputAssets, pagesToAnalyze, contentMap);
+
+      const generatedReport = await analyzeBrandAssets(
+        inputAssets,
+        pagesToAnalyze,
+        contentMap,
+        undefined, // competitors
+        provider
+      );
 
       if (audit) {
         await updateAudit(audit.id, {

@@ -9,7 +9,7 @@ import { Card } from './ui/Card';
 import { Badge } from './ui/Badge';
 
 interface InputLayerProps {
-  onStartAnalysis: (assets: Asset[]) => void;
+  onStartAnalysis: (assets: Asset[], options?: { llmProvider: 'gemini' | 'claude' | 'openai' }) => void;
   isAnalyzing: boolean;
   statusMessage?: string;
   discoveredCount?: number;
@@ -19,6 +19,7 @@ interface InputLayerProps {
 export const InputLayer: React.FC<InputLayerProps> = ({ onStartAnalysis, isAnalyzing, statusMessage, discoveredCount, embedded = false }) => {
   const [inputValue, setInputValue] = useState('');
   const [batchInput, setBatchInput] = useState('');
+  const [selectedModel, setSelectedModel] = useState<'gemini' | 'claude' | 'openai'>('gemini');
   const [mode, setMode] = useState<'SINGLE' | 'BATCH'>('SINGLE');
   const [selectedType, setSelectedType] = useState<AssetType>(AssetType.WEBSITE);
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -115,22 +116,37 @@ export const InputLayer: React.FC<InputLayerProps> = ({ onStartAnalysis, isAnaly
         {/* Decorative Grid */}
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
 
-        {/* Input Toggle */}
-        <div className="flex gap-2 mb-6 relative z-10">
-          <Button
-            variant={mode === 'SINGLE' ? 'secondary' : 'ghost'}
-            size="sm"
-            onClick={() => setMode('SINGLE')}
-          >
-            Single Entry
-          </Button>
-          <Button
-            variant={mode === 'BATCH' ? 'secondary' : 'ghost'}
-            size="sm"
-            onClick={() => setMode('BATCH')}
-          >
-            Batch Import (CSV)
-          </Button>
+        {/* Input Toggle & Model Selector */}
+        <div className="flex justify-between items-center mb-6 relative z-10">
+          <div className="flex gap-2">
+            <Button
+              variant={mode === 'SINGLE' ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={() => setMode('SINGLE')}
+            >
+              Single Entry
+            </Button>
+            <Button
+              variant={mode === 'BATCH' ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={() => setMode('BATCH')}
+            >
+              Batch Import (CSV)
+            </Button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-text-muted uppercase tracking-wider hidden sm:block">AI Model:</span>
+            <select
+              value={selectedModel}
+              onChange={(e) => setSelectedModel(e.target.value as any)}
+              className="bg-surfaceHighlight border border-white/10 rounded-lg px-3 py-1.5 text-xs font-medium text-white focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+            >
+              <option value="gemini">Google Gemini 1.5 Pro</option>
+              <option value="claude">Anthropic Claude 3.5 Sonnet</option>
+              <option value="openai">OpenAI GPT-4o</option>
+            </select>
+          </div>
         </div>
 
         {/* Input Area */}
@@ -256,7 +272,7 @@ export const InputLayer: React.FC<InputLayerProps> = ({ onStartAnalysis, isAnaly
           )}
 
           <Button
-            onClick={() => onStartAnalysis(assets)}
+            onClick={() => onStartAnalysis(assets, { llmProvider: selectedModel })}
             disabled={assets.length === 0 || isAnalyzing}
             size="lg"
             className={`
@@ -275,11 +291,11 @@ export const InputLayer: React.FC<InputLayerProps> = ({ onStartAnalysis, isAnaly
 
           {!isAnalyzing && (
             <p className="mt-4 text-xs text-text-muted font-medium">
-              Uses 3.5 Sonnet & Gemini Pro equivalent logic • Deep Crawl Simulation • ~30s Runtime
+              Uses {selectedModel === 'claude' ? 'Claude 3.5 Sonnet' : selectedModel === 'openai' ? 'GPT-4o' : 'Gemini 1.5 Pro'} • Deep Crawl Simulation • ~30s Runtime
             </p>
           )}
         </div>
       </Card>
-    </div >
+    </div>
   );
 };

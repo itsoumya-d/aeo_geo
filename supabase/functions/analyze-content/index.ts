@@ -100,14 +100,64 @@ serve(async (req: Request): Promise<Response> => {
         let orgId: string | null = null;
         let isServiceRole = false;
 
-        // Check if the auth header is the service role key (internal call)
-        if (authHeader.replace("Bearer ", "") === serviceRoleKey || authHeader === serviceRoleKey) {
+        const authHeader = req.headers.get("Authorization") ?? "";
+        const apiKeyHeader = req.headers.get("x-api-key");
+
+        const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+        const supabaseAdmin: SupabaseClient = createClient(supabaseUrl, serviceRoleKey);
+
+        let orgId: string | null = null;
+        let isServiceRole = false;
+
+        // 1. API Key Auth (External)
+        if (apiKeyHeader) {
+            // Hash the provided key
+            const encoder = new TextEncoder();
+            const data = encoder.encode(apiKeyHeader);
+            const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const keyHash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+
+            // Validate Key
+            const { data: keyData, error: keyError } = await supabaseAdmin
+                .from('api_keys')
+                .select('id, organization_id, usage_count, rate_limit, revoked_at')
+                .eq('key_hash', keyHash)
+                .single();
+
+            if (keyError || !keyData) {
+                console.error("Invalid API Key attempt", keyHash.slice(0, 8));
+                throw new Error("Invalid API Key");
+            }
+            if (keyData.revoked_at) throw new Error("API Key has been revoked");
+            if (keyData.usage_count >= keyData.rate_limit) throw new Error("API Key rate limit exceeded");
+
+            orgId = keyData.organization_id;
+
+            // Async Usage Update (Non-blocking)
+            supabaseAdmin.from('api_keys').update({
+                usage_count: keyData.usage_count + 1,
+                last_used_at: new Date().toISOString()
+            }).eq('id', keyData.id).then();
+
+            // Usage Log
+            supabaseAdmin.from('api_usage_logs').insert({
+                api_key_id: keyData.id,
+                organization_id: orgId,
+                endpoint: action,
+                status_code: 200
+            }).then();
+
+        }
+        // 2. Service Role Auth (Internal)
+        else if (authHeader.replace("Bearer ", "") === serviceRoleKey || authHeader === serviceRoleKey) {
             isServiceRole = true;
-            // For service calls, orgId must be in the payload (like AUTO_AUDIT)
             if (action === "AUTO_AUDIT") {
                 orgId = payload.organizationId;
             }
-        } else {
+        }
+        // 3. User JWT Auth (Dashboard)
+        else {
             const supabase: SupabaseClient = createClient(supabaseUrl, anonKey, {
                 global: { headers: { Authorization: authHeader } },
             });
@@ -403,8 +453,78 @@ async function handleDiscovery(url: string): Promise<DiscoveredPage[]> {
     }
 }
 
+
+// --- Multi-Model Helper ---
+async function generateWithProvider(
+    provider: 'gemini' | 'claude' | 'openai' = 'gemini',
+    prompt: string,
+    geminiModel: GenerativeModel
+): Promise<string> {
+    console.log(`Generating with provider: ${provider}`);
+
+    if (provider === 'gemini') {
+        const result = await withRetry(async () => {
+            return await geminiModel.generateContent({
+                contents: [{ role: "user", parts: [{ text: prompt }] }],
+                generationConfig: { responseMimeType: "application/json" }
+            });
+        });
+        return result.response.text();
+    }
+
+    if (provider === 'claude') {
+        const apiKey = Deno.env.get("CLAUDE_API_KEY");
+        if (!apiKey) throw new Error("Missing CLAUDE_API_KEY");
+
+        const response = await fetchWithRetry("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: {
+                "x-api-key": apiKey,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json"
+            },
+            body: JSON.stringify({
+                model: "claude-3-5-sonnet-20240620",
+                max_tokens: 4096,
+                messages: [{ role: "user", content: prompt + "\n\nReturn strict JSON." }]
+            })
+        });
+
+        if (!response.ok) throw new Error(`Claude API Error: ${response.status} ${await response.text()}`);
+        const data = await response.json();
+        return data.content[0].text;
+    }
+
+    if (provider === 'openai') {
+        const apiKey = Deno.env.get("OPENAI_API_KEY");
+        if (!apiKey) throw new Error("Missing OPENAI_API_KEY");
+
+        const response = await fetchWithRetry("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${apiKey}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                model: "gpt-4o",
+                messages: [
+                    { role: "system", content: "You are a helpful assistant that outputs strict JSON." },
+                    { role: "user", content: prompt }
+                ],
+                response_format: { type: "json_object" }
+            })
+        });
+
+        if (!response.ok) throw new Error(`OpenAI API Error: ${response.status} ${await response.text()}`);
+        const data = await response.json();
+        return data.choices[0].message.content;
+    }
+
+    throw new Error(`Unsupported provider: ${provider}`);
+}
+
 async function handleAnalysis(model: GenerativeModel, payload: AnalyzePayload): Promise<AnalysisReport> {
-    const { websiteUrl, otherAssets, mainContent, competitors } = payload;
+    const { websiteUrl, otherAssets, mainContent, competitors, llmProvider } = payload;
 
     const prompt = `
     Analyze this brand presence for Generative Engine Optimization (GEO).
@@ -444,15 +564,14 @@ async function handleAnalysis(model: GenerativeModel, payload: AnalyzePayload): 
     Ensure strict JSON format.
     `;
 
-    const result = await withRetry(async () => {
-        return await model.generateContent({
-            contents: [{ role: "user", parts: [{ text: prompt }] }],
-            generationConfig: { responseMimeType: "application/json" }
-        });
-    });
-
-    const responseText = result.response.text();
-    return JSON.parse(responseText) as AnalysisReport;
+    const responseText = await generateWithProvider(llmProvider, prompt, model);
+    try {
+        return JSON.parse(responseText) as AnalysisReport;
+    } catch (e) {
+        // Fallback: try to clean markdown code blocks
+        const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '');
+        return JSON.parse(cleanJson) as AnalysisReport;
+    }
 }
 
 async function handleRewrite(
@@ -460,7 +579,7 @@ async function handleRewrite(
     embeddingModel: GenerativeModel,
     payload: RewritePayload
 ): Promise<RewriteResult> {
-    const { original, context, rewrite: userRewrite, goal, tone } = payload;
+    const { original, context, rewrite: userRewrite, goal, tone, llmProvider } = payload;
 
     let targetRewrite = userRewrite;
     let reasoning = "Analysis of provided rewrite.";
@@ -487,11 +606,9 @@ async function handleRewrite(
         Return strict JSON: { "rewrite": "string", "reasoning": "string" }
         `;
 
-        const genResult = await model.generateContent({
-            contents: [{ role: "user", parts: [{ text: prompt }] }],
-            generationConfig: { responseMimeType: "application/json" }
-        });
-        const genData = JSON.parse(genResult.response.text()) as { rewrite: string; reasoning: string };
+        const responseText = await generateWithProvider(llmProvider, prompt, model);
+        const genData = JSON.parse(responseText.replace(/```json/g, '').replace(/```/g, '')) as { rewrite: string; reasoning: string };
+
         targetRewrite = genData.rewrite;
         reasoning = genData.reasoning;
     } else {
@@ -502,14 +619,13 @@ async function handleRewrite(
         Task: Explain why the rewrite is better (or worse). Keep it under 15 words.
         Return strict JSON: { "reasoning": "string" }
         `;
-        const genResult = await model.generateContent({
-            contents: [{ role: "user", parts: [{ text: prompt }] }],
-            generationConfig: { responseMimeType: "application/json" }
-        });
-        reasoning = (JSON.parse(genResult.response.text()) as { reasoning: string }).reasoning;
+
+        const responseText = await generateWithProvider(llmProvider, prompt, model);
+        const genData = JSON.parse(responseText.replace(/```json/g, '').replace(/```/g, '')) as { reasoning: string };
+        reasoning = genData.reasoning;
     }
 
-    // 2. Calculate Vector Shift
+    // 2. Calculate Vector Shift (Always use Gemini for simplified vector space comparison)
     const [contextEmb, originalEmb, rewriteEmb] = await Promise.all([
         embeddingModel.embedContent(context),
         embeddingModel.embedContent(original),

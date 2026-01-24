@@ -12,6 +12,7 @@ import { TopUpModal } from './TopUpModal';
 import { DashboardHeader } from './dashboard/DashboardHeader';
 import { Sidebar } from './dashboard/Sidebar';
 import { DashboardPrintHeader } from './dashboard/DashboardPrintHeader';
+import { PDFReportGenerator } from './reports/PDFReportGenerator';
 import { TabType, Branding } from './dashboard/DashboardTypes';
 import { MobileBottomNav } from './dashboard/MobileBottomNav';
 import { OverviewSkeleton } from './ui/Skeleton';
@@ -154,52 +155,63 @@ export const Dashboard: React.FC<DashboardProps> = ({ report, onReset }) => {
                     isExporting={isExporting}
                 />
 
+// ... imports
+                import {PDFReportGenerator} from './reports/PDFReportGenerator';
+
+                // ... inside Dashboard component render ...
+
                 <main
                     id="dashboard-content"
-                    className="flex-1 p-4 sm:p-6 lg:ml-64 lg:mt-0 transition-all duration-300"
+                    className={`flex-1 p-4 sm:p-6 lg:ml-64 lg:mt-0 transition-all duration-300 ${isExporting ? 'bg-white !m-0 !p-0' : ''}`}
                 >
-                    {!isExporting && <div className="max-w-7xl mx-auto">
-                        <TopUpModal isOpen={showTopUp} onClose={() => setShowTopUp(false)} />
-                        {/* Mobile Bottom Nav */}
-                        <div className="lg:hidden">
-                            <MobileBottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
-                        </div>
-                    </div>}
-
-                    <div className="max-w-7xl mx-auto">
-                        <DashboardPrintHeader
+                    {isExporting ? (
+                        <PDFReportGenerator
+                            report={report}
                             branding={branding}
                             organizationName={organization?.name}
-                            overallScore={report.overallScore}
                         />
+                    ) : (
+                        <div className="max-w-7xl mx-auto">
+                            <TopUpModal isOpen={showTopUp} onClose={() => setShowTopUp(false)} />
+                            {/* Mobile Bottom Nav */}
+                            <div className="lg:hidden">
+                                <MobileBottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
+                            </div>
 
-                        <AnimatePresence mode="wait">
-                            <motion.div
-                                key={activeTab}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                transition={{ duration: 0.3 }}
-                            >
-                                <Suspense fallback={<OverviewSkeleton />}>
-                                    {activeTab === 'overview' && <OverviewTab report={report} setActiveTab={setActiveTab} />}
-                                    {activeTab === 'pages' && <PagesTab report={report} />}
-                                    {activeTab === 'search' && <SearchTab report={report} />}
-                                    {activeTab === 'benchmark' && <BenchmarkTab report={report} />}
-                                    {activeTab === 'reports' && <ReportTab report={report} />}
-                                    {activeTab === 'integrations' && <IntegrationsTab />}
-                                    {activeTab === 'history' && <HistoryTab currentReport={report} />}
-                                    {activeTab === 'sandbox' && <SandboxTab />}
-                                    {activeTab === 'settings' && <SettingsTab />}
-                                    {activeTab === 'consistency' && <ConsistencyTab report={report} />}
-                                    {activeTab === 'optimization' && <OptimizationTab />}
-                                    {activeTab === 'correlation' && <CorrelationTab report={report} />}
-                                    {activeTab === 'citation-lab' && <CitationLab report={report} />}
-                                    {activeTab === 'win-predictor' && <WinPredictor report={report} />}
-                                </Suspense>
-                            </motion.div>
-                        </AnimatePresence>
-                    </div>
+                            <DashboardPrintHeader
+                                branding={branding}
+                                organizationName={organization?.name}
+                                overallScore={report.overallScore}
+                            />
+
+                            <AnimatePresence mode="wait">
+                                <motion.div
+                                    key={activeTab}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    transition={{ duration: 0.3 }}
+                                >
+                                    <Suspense fallback={<OverviewSkeleton />}>
+                                        {activeTab === 'overview' && <OverviewTab report={report} setActiveTab={setActiveTab} />}
+                                        {activeTab === 'pages' && <PagesTab report={report} />}
+                                        {activeTab === 'search' && <SearchTab report={report} />}
+                                        {activeTab === 'benchmark' && <BenchmarkTab report={report} />}
+                                        {activeTab === 'reports' && <ReportTab report={report} />}
+                                        {activeTab === 'integrations' && <IntegrationsTab />}
+                                        {activeTab === 'history' && <HistoryTab currentReport={report} />}
+                                        {activeTab === 'sandbox' && <SandboxTab />}
+                                        {activeTab === 'settings' && <SettingsTab />}
+                                        {activeTab === 'consistency' && <ConsistencyTab report={report} />}
+                                        {activeTab === 'optimization' && <OptimizationTab />}
+                                        {activeTab === 'correlation' && <CorrelationTab report={report} />}
+                                        {activeTab === 'citation-lab' && <CitationLab report={report} />}
+                                        {activeTab === 'win-predictor' && <WinPredictor report={report} />}
+                                    </Suspense>
+                                </motion.div>
+                            </AnimatePresence>
+                        </div>
+                    )}
                 </main>
             </div>
         </div>

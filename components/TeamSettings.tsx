@@ -217,7 +217,7 @@ export const TeamSettings: React.FC = () => {
         }
     };
 
-    const handleChangeRole = async (memberId: string, newRole: 'admin' | 'member') => {
+    const handleChangeRole = async (memberId: string, newRole: 'admin' | 'member' | 'viewer') => {
         try {
             const { error } = await supabase
                 .from('users')

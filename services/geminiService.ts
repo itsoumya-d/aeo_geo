@@ -83,7 +83,8 @@ export const analyzeBrandAssets = async (
   assets: Asset[],
   discoveredPages: DiscoveredPage[],
   cachedContent?: Record<string, string>,
-  competitors?: string[]
+  competitors?: string[],
+  llmProvider: 'gemini' | 'claude' | 'openai' = 'gemini'
 ): Promise<Report> => {
   const website = assets.find(a => a.type === AssetType.WEBSITE)?.url || "Unknown Website";
 
@@ -97,7 +98,8 @@ export const analyzeBrandAssets = async (
       websiteUrl: website,
       otherAssets,
       mainContent: mainPageMarkdown,
-      competitors
+      competitors,
+      llmProvider
     });
     return report;
   } catch (error) {

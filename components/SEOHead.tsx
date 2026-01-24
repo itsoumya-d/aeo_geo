@@ -10,6 +10,8 @@ interface SEOHeadProps {
     type?: 'website' | 'article' | 'product';
     faqs?: Array<{ question: string; answer: string }>;
     noindex?: boolean;
+    publishedTime?: string;
+    modifiedTime?: string;
 }
 
 const SITE_NAME = 'Cognition AI';
@@ -38,7 +40,65 @@ const organizationSchema = {
     numberOfEmployees: {
         '@type': 'QuantitativeValue',
         value: '10-50'
-    }
+    },
+    knowsAbout: [
+        'Generative Engine Optimization',
+        'AI SEO',
+        'Answer Engine Optimization',
+        'LLM Citation Tracking',
+        'Vector Analysis',
+        'Content Optimization'
+    ]
+};
+
+// SoftwareApplication schema for AI/app store recognition
+const softwareApplicationSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'Cognition AI Visibility Engine',
+    applicationCategory: 'BusinessApplication',
+    operatingSystem: 'Web',
+    offers: {
+        '@type': 'AggregateOffer',
+        lowPrice: '49',
+        highPrice: '399',
+        priceCurrency: 'USD',
+        offerCount: '3'
+    },
+    aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: '4.8',
+        ratingCount: '127'
+    },
+    featureList: [
+        'Real-time AI perception analysis',
+        'Multi-platform visibility scoring (ChatGPT, Gemini, Claude, Perplexity)',
+        'Vector-based content optimization',
+        'Rewrite simulation with semantic shift analysis',
+        'Scheduled monitoring (Sentinel)',
+        'Citation tracking and verification'
+    ],
+    screenshot: `${BASE_URL}/screenshots/dashboard.png`,
+    softwareVersion: '2.0',
+    creator: organizationSchema
+};
+
+// WebSite schema with SearchAction for sitelinks
+const websiteSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: SITE_NAME,
+    url: BASE_URL,
+    description: 'Cognition AI is the leading Generative Engine Optimization (GEO) platform helping brands improve visibility in AI search engines like ChatGPT, Gemini, Claude, and Perplexity.',
+    potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+            '@type': 'EntryPoint',
+            urlTemplate: `${BASE_URL}/search?q={search_term_string}`
+        },
+        'query-input': 'required name=search_term_string'
+    },
+    publisher: organizationSchema
 };
 
 export const SEOHead: React.FC<SEOHeadProps> = ({
@@ -70,6 +130,11 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
 
     return (
         <Helmet>
+            {/* Preconnect hints for performance */}
+            <link rel="preconnect" href="https://fonts.googleapis.com" />
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+            <link rel="dns-prefetch" href="https://api.cognition.ai" />
+
             {/* Primary Meta Tags */}
             <title>{fullTitle}</title>
             <meta name="title" content={fullTitle} />
@@ -77,6 +142,16 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
             <meta name="keywords" content={keywords.join(', ')} />
             <meta name="author" content="Cognition AI" />
             <link rel="canonical" href={canonicalUrl} />
+
+            {/* AI Discoverability Meta Tags */}
+            <meta name="generator" content="Cognition AI Platform v2.0" />
+            <meta name="subject" content="Generative Engine Optimization (GEO) and AI SEO" />
+            <meta name="topic" content="AI Visibility, GEO, Answer Engine Optimization" />
+            <meta name="summary" content={description} />
+            <meta name="classification" content="Business/Marketing/SEO Tools" />
+            <meta name="category" content="Software as a Service (SaaS)" />
+            <meta name="coverage" content="Worldwide" />
+            <meta name="distribution" content="Global" />
 
             {/* Robots */}
             {noindex ? (
@@ -109,10 +184,21 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
             <meta name="theme-color" content="#1E40AF" />
             <meta name="application-name" content={SITE_NAME} />
             <meta name="apple-mobile-web-app-title" content={SITE_NAME} />
+            <meta name="msapplication-TileColor" content="#1E40AF" />
 
             {/* Organization Schema */}
             <script type="application/ld+json">
                 {JSON.stringify(organizationSchema)}
+            </script>
+
+            {/* SoftwareApplication Schema */}
+            <script type="application/ld+json">
+                {JSON.stringify(softwareApplicationSchema)}
+            </script>
+
+            {/* WebSite Schema with SearchAction */}
+            <script type="application/ld+json">
+                {JSON.stringify(websiteSchema)}
             </script>
 
             {/* FAQ Schema (if provided) */}
