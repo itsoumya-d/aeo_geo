@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase, UserProfile } from '../services/supabase';
 import { useToast } from './Toast';
+import { getTechnicalErrorMessage, toUserMessage } from '../utils/errors';
 import {
     Users, Mail, Shield, Trash2, Send, Loader2, Crown,
     UserPlus, Check, X, Clock, AlertTriangle, FileText, Activity, History
@@ -122,8 +123,9 @@ export const TeamSettings: React.FC = () => {
             }
 
         } catch (error: any) {
-            console.error('Failed to load team data:', error);
-            toast.error('Failed to load team', error.message);
+            console.error('Failed to load team data:', getTechnicalErrorMessage(error));
+            const user = toUserMessage(error);
+            toast.error(user.title, user.message);
         } finally {
             setLoading(false);
         }
@@ -135,51 +137,54 @@ export const TeamSettings: React.FC = () => {
 
         setSending(true);
         try {
+            // Duplicate check — already a member?
             const { data: existingUser } = await supabase
                 .from('users')
                 .select('id')
                 .eq('email', inviteEmail.toLowerCase())
                 .eq('organization_id', organization.id)
-                .single();
+                .maybeSingle();
 
             if (existingUser) {
                 toast.warning('Already a member', 'This email is already part of your team.');
-                setSending(false);
                 return;
             }
 
+            // Duplicate check — pending invite?
             const { data: existingInvite } = await supabase
                 .from('invitations')
                 .select('id')
                 .eq('email', inviteEmail.toLowerCase())
                 .eq('organization_id', organization.id)
                 .is('accepted_at', null)
-                .single();
+                .maybeSingle();
 
             if (existingInvite) {
                 toast.warning('Invite pending', 'An invitation has already been sent to this email.');
-                setSending(false);
                 return;
             }
 
-            const { error } = await supabase
-                .from('invitations')
-                .insert({
-                    organization_id: organization.id,
-                    email: inviteEmail.toLowerCase(),
+            // Send invitation via edge function (stores + emails invite link)
+            const { error: fnError } = await supabase.functions.invoke('send-invitation', {
+                body: {
+                    email: inviteEmail.toLowerCase().trim(),
                     role: inviteRole,
-                    invited_by: user?.id,
-                });
+                    organization_id: organization.id,
+                    organization_name: organization.name,
+                    invited_by_name: profile?.full_name || user?.email || 'A team member',
+                },
+            });
 
-            if (error) throw error;
+            if (fnError) throw fnError;
 
-            toast.success('Invitation sent', `Invited ${inviteEmail} as ${inviteRole}`);
+            toast.success('Invitation sent', `An invite email was sent to ${inviteEmail} as ${inviteRole}.`);
             setInviteEmail('');
             loadTeamData();
 
         } catch (error: any) {
-            console.error('Failed to send invite:', error);
-            toast.error('Invitation failed', error.message);
+            console.error('Failed to send invite:', getTechnicalErrorMessage(error));
+            const userMsg = toUserMessage(error);
+            toast.error(userMsg.title, userMsg.message);
         } finally {
             setSending(false);
         }
@@ -196,7 +201,9 @@ export const TeamSettings: React.FC = () => {
             toast.success('Invitation cancelled');
             loadTeamData();
         } catch (error: any) {
-            toast.error('Failed to cancel', error.message);
+            console.error('Cancel invite failed:', getTechnicalErrorMessage(error));
+            const user = toUserMessage(error);
+            toast.error(user.title, user.message);
         }
     };
 
@@ -213,7 +220,9 @@ export const TeamSettings: React.FC = () => {
             toast.success('Member removed', `${memberEmail} has been removed from the team.`);
             loadTeamData();
         } catch (error: any) {
-            toast.error('Failed to remove', error.message);
+            console.error('Remove member failed:', getTechnicalErrorMessage(error));
+            const user = toUserMessage(error);
+            toast.error(user.title, user.message);
         }
     };
 
@@ -228,7 +237,9 @@ export const TeamSettings: React.FC = () => {
             toast.success('Role updated');
             loadTeamData();
         } catch (error: any) {
-            toast.error('Failed to update role', error.message);
+            console.error('Change role failed:', getTechnicalErrorMessage(error));
+            const user = toUserMessage(error);
+            toast.error(user.title, user.message);
         }
     };
 
@@ -311,7 +322,7 @@ export const TeamSettings: React.FC = () => {
                                 </div>
                             </div>
                             <a
-                                href="/settings?tab=billing"
+                                href="/settings/billing"
                                 className="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-lg font-bold text-sm transition-colors whitespace-nowrap"
                             >
                                 Upgrade Now
@@ -332,15 +343,24 @@ export const TeamSettings: React.FC = () => {
                                         required
                                     />
                                 </div>
-                                <select
-                                    value={inviteRole}
-                                    onChange={(e) => setInviteRole(e.target.value as any)}
-                                    className="bg-slate-800 border border-slate-700 text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none"
-                                >
-                                    <option value="member">Member</option>
-                                    <option value="admin">Admin</option>
-                                    <option value="viewer">Viewer (Read-only)</option>
-                                </select>
+                                <div className="relative group">
+                                    <select
+                                        value={inviteRole}
+                                        onChange={(e) => setInviteRole(e.target.value as any)}
+                                        className="bg-slate-800 border border-slate-700 text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none"
+                                        title={
+                                            inviteRole === 'admin'
+                                                ? 'Admin: Can manage members, billing, and all settings'
+                                                : inviteRole === 'viewer'
+                                                ? 'Viewer: Read-only access to reports and audits'
+                                                : 'Member: Can run audits and view reports'
+                                        }
+                                    >
+                                        <option value="member">Member</option>
+                                        <option value="admin">Admin</option>
+                                        <option value="viewer">Viewer (Read-only)</option>
+                                    </select>
+                                </div>
                                 <button
                                     type="submit"
                                     disabled={sending || !inviteEmail.trim()}

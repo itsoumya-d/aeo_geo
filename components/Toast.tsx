@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react';
+import { announceToScreenReader } from '../utils/accessibility';
 
 type ToastType = 'success' | 'error' | 'warning' | 'info';
 
@@ -61,9 +62,10 @@ const ToastItem: React.FC<{ toast: Toast; onRemove: () => void }> = ({ toast, on
             </div>
             <button
                 onClick={onRemove}
+                aria-label={`Dismiss ${toast.title} notification`}
                 className="text-slate-400 hover:text-white transition-colors p-1 -m-1 rounded-md hover:bg-white/10"
             >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4" aria-hidden="true" />
             </button>
         </div>
     );
@@ -79,9 +81,9 @@ const ToastContainer: React.FC<{ toasts: Toast[]; onRemove: (id: string) => void
     if (toasts.length === 0) return null;
 
     return (
-        <div className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2 max-w-sm w-full pointer-events-none">
+        <div role="region" aria-label="Notifications" className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2 max-w-sm w-full pointer-events-none">
             {toasts.map((toast) => (
-                <div key={toast.id} className="pointer-events-auto">
+                <div key={toast.id} className="pointer-events-auto" role={toast.type === 'error' ? 'alert' : 'status'}>
                     <ToastItem toast={toast} onRemove={() => onRemove(toast.id)} />
                 </div>
             ))}
@@ -98,6 +100,9 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const addToast = useCallback((toast: Omit<Toast, 'id'>) => {
         const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         setToasts((prev) => [...prev, { ...toast, id }]);
+        // Announce to screen readers
+        const priority = toast.type === 'error' ? 'assertive' : 'polite';
+        announceToScreenReader(`${toast.type}: ${toast.title}${toast.description ? `. ${toast.description}` : ''}`, priority);
     }, []);
 
     const removeToast = useCallback((id: string) => {

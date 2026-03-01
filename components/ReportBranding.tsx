@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../services/supabase';
 import { useToast } from './Toast';
+import { getTechnicalErrorMessage, toUserMessage } from '../utils/errors';
 import {
     Palette, Image, Upload, Check, Loader2, Eye, RefreshCw,
     AlertTriangle
@@ -115,7 +116,9 @@ export const ReportBranding: React.FC = () => {
             toast.success('Branding saved', 'Your custom branding will appear on exported reports.');
             setHasChanges(false);
         } catch (error: any) {
-            toast.error('Failed to save', error.message);
+            console.error('Save branding failed:', getTechnicalErrorMessage(error));
+            const user = toUserMessage(error);
+            toast.error(user.title, user.message);
         } finally {
             setSaving(false);
         }
@@ -158,8 +161,9 @@ export const ReportBranding: React.FC = () => {
             updateBranding({ logo_url: urlData.publicUrl });
             toast.success('Logo uploaded', 'Your logo has been saved');
         } catch (error: any) {
-            console.error('Upload error:', error);
-            toast.error('Upload failed', error.message || 'Could not upload logo');
+            console.error('Upload error:', getTechnicalErrorMessage(error));
+            const user = toUserMessage(error);
+            toast.error(user.title, user.message);
         } finally {
             setSaving(false);
         }
@@ -179,7 +183,7 @@ export const ReportBranding: React.FC = () => {
                     Customize reports with your branding on Agency and Enterprise plans.
                 </p>
                 <a
-                    href="/settings?tab=billing"
+                    href="/settings/billing"
                     className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors"
                 >
                     Upgrade to Agency

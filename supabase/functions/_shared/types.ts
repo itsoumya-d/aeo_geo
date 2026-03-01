@@ -2,11 +2,8 @@
  * Shared types for Supabase Edge Functions
  */
 
-// LLM Provider types for multi-model support
-export type LLMProvider = 'gemini' | 'claude' | 'openai';
-
 // Action types for the analyze-content function
-export type ActionType = 'DISCOVER' | 'ANALYZE' | 'REWRITE' | 'CHECK_VISIBILITY' | 'SANDBOX_COMPARE' | 'AUTO_AUDIT';
+export type ActionType = 'DISCOVER' | 'ANALYZE' | 'REWRITE' | 'CHECK_VISIBILITY' | 'CHECK_VISIBILITY_BATCH' | 'SANDBOX_COMPARE' | 'AUTO_AUDIT';
 
 // Request payload types
 export interface DiscoverPayload {
@@ -18,7 +15,6 @@ export interface AnalyzePayload {
     competitors?: string[];
     otherAssets?: string;
     mainContent?: string;
-    llmProvider?: LLMProvider;  // Optional: defaults to 'gemini'
 }
 
 export interface RewritePayload {
@@ -27,7 +23,6 @@ export interface RewritePayload {
     rewrite?: string;
     goal?: 'SNIPPET' | 'AUTHORITY' | 'CLARITY' | 'CONVERSION';
     tone?: 'PROFESSIONAL' | 'AUTHORITATIVE' | 'CONVERSATIONAL' | 'TECHNICAL';
-    llmProvider?: LLMProvider;  // Optional: defaults to 'gemini'
 }
 
 export interface SandboxComparePayload {
@@ -37,8 +32,13 @@ export interface SandboxComparePayload {
 }
 
 export interface VisibilityPayload {
+    platform: string;
     query: string;
     domain: string;
+}
+
+export interface VisibilityBatchPayload {
+    checks: VisibilityPayload[];
 }
 
 export interface AutoAuditPayload {
@@ -47,7 +47,14 @@ export interface AutoAuditPayload {
     frequency: 'daily' | 'weekly' | 'monthly';
 }
 
-export type ActionPayload = DiscoverPayload | AnalyzePayload | RewritePayload | VisibilityPayload | SandboxComparePayload | AutoAuditPayload;
+export type ActionPayload =
+    | DiscoverPayload
+    | AnalyzePayload
+    | RewritePayload
+    | VisibilityPayload
+    | VisibilityBatchPayload
+    | SandboxComparePayload
+    | AutoAuditPayload;
 
 // Request body structure
 export interface FunctionRequest {
@@ -107,15 +114,16 @@ export interface SeoAudit {
 export interface VectorMapPoint {
     x: number;
     y: number;
+    z: number;
     label: string;
-    type: 'brand' | 'competitor' | 'keyword';
+    type: 'brand' | 'competitor' | 'keyword' | 'your_content' | 'gold_standard';
 }
 
 export interface AnalysisReport {
     overallScore: number;
     platformScores: PlatformScore[];
     pages: PageAnalysis[];
-    brandConsistnecyScore: number;
+    brandConsistencyScore: number;
     consistencyAnalysis: string;
     topicalDominance: string[];
     searchQueries: SearchQuery[];

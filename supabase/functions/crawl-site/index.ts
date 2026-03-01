@@ -2,11 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { withRetry } from "../_shared/retry.ts";
-
-const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { buildCorsHeaders } from "../_shared/cors.ts";
 
 interface RequestBody {
     action: 'SCRAPE' | 'MAP';
@@ -15,6 +11,9 @@ interface RequestBody {
 }
 
 serve(async (req) => {
+    const requestId = crypto.randomUUID();
+    const corsHeaders = buildCorsHeaders(req.headers.get("origin"));
+
     // Handle CORS preflight
     if (req.method === "OPTIONS") {
         return new Response("ok", { headers: corsHeaders });
@@ -65,7 +64,12 @@ serve(async (req) => {
 
         if (creditError) throw new Error(`Credit transaction failed: ${creditError.message}`);
         if (!creditResult.success) {
-            return new Response(JSON.stringify({ error: "Insufficient credits", required: cost }), {
+            return new Response(JSON.stringify({
+                success: false,
+                error: "Insufficient credits",
+                details: { code: "INSUFFICIENT_CREDITS", requestId },
+                required: cost
+            }), {
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
                 status: 402,
             });
@@ -116,14 +120,22 @@ serve(async (req) => {
         }
 
         return new Response(JSON.stringify({ success: true, data: resultData }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            headers: { ...corsHeaders, "Content-Type": "application/json", "X-Request-Id": requestId },
             status: 200,
         });
 
     } catch (error) {
         console.error("Function Error:", error);
-        return new Response(JSON.stringify({ error: error.message }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+        return new Response(JSON.stringify({
+            success: false,
+            error: error.message,
+            details: {
+                code: "CRAWL_SITE_FAILED",
+                message: error.message,
+                requestId,
+            },
+        }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json", "X-Request-Id": requestId },
             status: 500,
         });
     }

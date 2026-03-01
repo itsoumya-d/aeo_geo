@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Menu, Zap, Download, FileText, PlusCircle, X, Brain } from 'lucide-react';
+import { Menu, Zap, Download, FileText, PlusCircle, X, Brain, Share2 } from 'lucide-react';
+import { useToast } from '../Toast';
 import { TabType } from './DashboardTypes';
 import { NotificationDropdown } from '../NotificationDropdown';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
+import { useTranslation } from 'react-i18next';
 // import { MobileMenu } from './MobileMenu'; // Could extract mobile menu separately
 
 interface DashboardHeaderProps {
@@ -16,6 +18,7 @@ interface DashboardHeaderProps {
     onExportCSV: () => void;
     onTopUp: () => void;
     isExporting: boolean;
+    sidebarCollapsed?: boolean;
 }
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
@@ -26,28 +29,38 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     onExportPDF,
     onExportCSV,
     onTopUp,
-    isExporting
+    isExporting,
+    sidebarCollapsed,
 }) => {
+    const { t, i18n } = useTranslation();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const toast = useToast();
+
+    const handleShare = () => {
+        navigator.clipboard.writeText(window.location.href);
+        toast.success('Link copied!', 'Share this report with your team.');
+    };
 
     if (isExporting) return null;
 
-    // Mobile Tabs list for the mobile menu
+    // Mobile Tabs list - synced with Sidebar tabs
     const tabs = [
-        { id: 'overview' as const, label: 'Overview' },
-        { id: 'pages' as const, label: 'Page Audit' },
-        { id: 'search' as const, label: 'Search & SEO' },
-        { id: 'benchmark' as const, label: 'Benchmark' },
-        { id: 'consistency' as const, label: 'Alignment' },
-        { id: 'optimization' as const, label: 'Optimization' },
-        { id: 'sandbox' as const, label: 'Sandbox' },
-        { id: 'reports' as const, label: 'Reports' },
-        { id: 'settings' as const, label: 'Settings' },
+        { id: 'overview' as const, label: t('sidebar.dashboard', 'Dashboard') },
+        { id: 'pages' as const, label: t('sidebar.pages', 'Pages') },
+        { id: 'search' as const, label: t('sidebar.search', 'Search') },
+        { id: 'benchmark' as const, label: t('sidebar.benchmark', 'Benchmark') },
+        { id: 'consistency' as const, label: t('sidebar.consistency', 'Consistency') },
+        { id: 'optimization' as const, label: t('sidebar.optimization', 'Optimization') },
+        { id: 'sandbox' as const, label: t('sidebar.sandbox', 'Sandbox') },
+        { id: 'reports' as const, label: t('sidebar.reports', 'Reports') },
+        { id: 'history' as const, label: t('sidebar.history', 'History') },
+        { id: 'integrations' as const, label: t('sidebar.integrations', 'Integrations') },
+        { id: 'settings' as const, label: t('sidebar.settings', 'Settings') },
     ];
 
     return (
         <>
-            <header className="sticky top-0 z-30 w-full bg-background/80 backdrop-blur-md border-b border-border lg:pl-64 transition-all duration-300">
+            <header className={`sticky top-0 z-30 w-full bg-background/80 backdrop-blur-md border-b border-border transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-[68px]' : 'lg:pl-64'}`}>
                 <div className="w-full px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16 sm:h-20">
                         {/* Mobile: Logo & Menu Toggle */}
@@ -55,8 +68,11 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                             <button
                                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                                 className="p-2 -ml-2 text-text-secondary hover:text-white transition-colors"
+                                aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+                                aria-expanded={mobileMenuOpen}
+                                aria-controls="mobile-nav-menu"
                             >
-                                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                                {mobileMenuOpen ? <X className="w-6 h-6" aria-hidden="true" /> : <Menu className="w-6 h-6" aria-hidden="true" />}
                             </button>
                             <div className="flex items-center gap-2" onClick={onReset}>
                                 <div className="bg-primary/20 p-1.5 rounded-lg">
@@ -74,27 +90,72 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                         {/* Actions */}
                         <div className="flex items-center gap-3 sm:gap-4 ml-auto">
                             {/* Credits Badge */}
-                            <div
+                            <button
                                 onClick={onTopUp}
-                                className="cursor-pointer hover:opacity-80 transition-opacity"
+                                className="cursor-pointer hover:opacity-80 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-full"
+                                aria-label={`${auditCredits} credits remaining. Click to top up.`}
                             >
                                 <Badge variant={auditCredits <= 5 ? 'warning' : 'default'} className="px-3 py-1.5 flex gap-2">
-                                    <Zap className="w-3.5 h-3.5 fill-current" />
-                                    <span>{auditCredits} Credits</span>
+                                    <Zap className="w-3.5 h-3.5 fill-current" aria-hidden="true" />
+                                    <span aria-hidden="true">{auditCredits} Credits</span>
                                 </Badge>
-                            </div>
+                            </button>
 
                             <div className="h-6 w-px bg-border hidden sm:block"></div>
 
                             {/* Tools */}
                             <div className="flex items-center gap-1 sm:gap-2">
                                 <NotificationDropdown />
-                                <div className="hidden sm:flex items-center bg-surface p-1 rounded-lg border border-border">
-                                    <button onClick={onExportPDF} className="p-2 text-text-secondary hover:text-white transition-colors tooltip" title="Export PDF">
-                                        <Download className="w-4 h-4" />
+
+                                {/* Language Selector */}
+                                <div
+                                    role="group"
+                                    aria-label="Language selector"
+                                    className="hidden sm:flex items-center bg-surface p-1 rounded-lg border border-border mr-1"
+                                >
+                                    <button
+                                        onClick={() => i18n.changeLanguage('en')}
+                                        className={`px-2 py-1 text-xs font-bold rounded ${i18n.language.startsWith('en') ? 'bg-primary text-white' : 'text-text-secondary hover:text-white'}`}
+                                        aria-label="English"
+                                        aria-pressed={i18n.language.startsWith('en')}
+                                    >
+                                        EN
                                     </button>
-                                    <button onClick={onExportCSV} className="p-2 text-text-secondary hover:text-white transition-colors tooltip" title="Export CSV">
-                                        <FileText className="w-4 h-4" />
+                                    <button
+                                        onClick={() => i18n.changeLanguage('es')}
+                                        className={`px-2 py-1 text-xs font-bold rounded ${i18n.language.startsWith('es') ? 'bg-primary text-white' : 'text-text-secondary hover:text-white'}`}
+                                        aria-label="Español"
+                                        aria-pressed={i18n.language.startsWith('es')}
+                                    >
+                                        ES
+                                    </button>
+                                </div>
+
+                                <div className="hidden sm:flex items-center bg-surface p-1 rounded-lg border border-border">
+                                    <button
+                                        onClick={onExportPDF}
+                                        className="p-2 text-text-secondary hover:text-white transition-colors tooltip"
+                                        title="Export PDF"
+                                        aria-label="Export as PDF"
+                                    >
+                                        <Download className="w-4 h-4" aria-hidden="true" />
+                                    </button>
+                                    <button
+                                        onClick={onExportCSV}
+                                        className="p-2 text-text-secondary hover:text-white transition-colors tooltip"
+                                        title="Export CSV"
+                                        aria-label="Export as CSV"
+                                    >
+                                        <FileText className="w-4 h-4" aria-hidden="true" />
+                                    </button>
+                                    <div className="w-px h-4 bg-border mx-1" aria-hidden="true" />
+                                    <button
+                                        onClick={handleShare}
+                                        className="p-2 text-text-secondary hover:text-white transition-colors tooltip"
+                                        title="Copy link"
+                                        aria-label="Copy link to clipboard"
+                                    >
+                                        <Share2 className="w-4 h-4" aria-hidden="true" />
                                     </button>
                                 </div>
                             </div>
@@ -119,6 +180,10 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                         />
                         <motion.div
+                            id="mobile-nav-menu"
+                            role="dialog"
+                            aria-modal="true"
+                            aria-label="Navigation menu"
                             initial={{ x: '-100%' }}
                             animate={{ x: 0 }}
                             exit={{ x: '-100%' }}
@@ -130,10 +195,33 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                                     key={tab.id}
                                     onClick={() => { setActiveTab(tab.id); setMobileMenuOpen(false); }}
                                     className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium mb-1 ${activeTab === tab.id ? 'bg-primary/10 text-primary' : 'text-text-secondary'}`}
+                                    aria-current={activeTab === tab.id ? 'page' : undefined}
                                 >
                                     {tab.label}
                                 </button>
                             ))}
+
+                            {/* Mobile-only actions */}
+                            <div className="mt-4 pt-4 border-t border-border space-y-2">
+                                <button
+                                    onClick={() => { onReset(); setMobileMenuOpen(false); }}
+                                    className="w-full flex items-center gap-2 px-4 py-3 bg-primary/10 text-primary rounded-lg text-sm font-medium"
+                                >
+                                    <PlusCircle className="w-4 h-4" /> New Audit
+                                </button>
+                                <button
+                                    onClick={() => { onExportPDF(); setMobileMenuOpen(false); }}
+                                    className="w-full flex items-center gap-2 px-4 py-3 text-text-secondary rounded-lg text-sm font-medium hover:bg-white/5"
+                                >
+                                    <Download className="w-4 h-4" /> Export PDF
+                                </button>
+                                <button
+                                    onClick={() => { onExportCSV(); setMobileMenuOpen(false); }}
+                                    className="w-full flex items-center gap-2 px-4 py-3 text-text-secondary rounded-lg text-sm font-medium hover:bg-white/5"
+                                >
+                                    <FileText className="w-4 h-4" /> Export CSV
+                                </button>
+                            </div>
                         </motion.div>
                     </div>
                 )}

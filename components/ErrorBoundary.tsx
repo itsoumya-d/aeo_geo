@@ -1,5 +1,6 @@
 import React, { Component, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Copy, Check } from 'lucide-react';
+import { toUserMessage } from '../utils/errors';
 
 interface ErrorBoundaryProps {
     children: ReactNode;
@@ -11,12 +12,13 @@ interface ErrorBoundaryState {
     error: Error | null;
     errorInfo: React.ErrorInfo | null;
     copied: boolean;
+    errorId: string | null;
 }
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     constructor(props: ErrorBoundaryProps) {
         super(props);
-        this.state = { hasError: false, error: null, errorInfo: null, copied: false };
+        this.state = { hasError: false, error: null, errorInfo: null, copied: false, errorId: null };
     }
 
     static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
@@ -25,16 +27,19 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
     componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
         console.error('ErrorBoundary caught an error:', error, errorInfo);
-        this.setState({ errorInfo });
+        const errorId = this.state.errorId || (crypto?.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`);
+        this.setState({ errorInfo, errorId });
     }
 
     handleReset = () => {
-        this.setState({ hasError: false, error: null, errorInfo: null });
+        this.setState({ hasError: false, error: null, errorInfo: null, errorId: null });
     };
 
     handleCopyError = async () => {
-        const { error, errorInfo } = this.state;
-        const errorText = `Error: ${error?.message}\n\nStack:\n${error?.stack}\n\nComponent Stack:\n${errorInfo?.componentStack}`;
+        const { error, errorInfo, errorId } = this.state;
+        const errorText = import.meta.env.DEV
+            ? `Error: ${error?.message}\n\nStack:\n${error?.stack}\n\nComponent Stack:\n${errorInfo?.componentStack}`
+            : `Error ID: ${errorId || 'unknown'}`;
 
         try {
             await navigator.clipboard.writeText(errorText);
@@ -51,6 +56,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 return this.props.fallback;
             }
 
+            const user = toUserMessage(this.state.error);
+            const supportId = this.state.errorId ? this.state.errorId.slice(0, 8) : null;
+
             return (
                 <div className="min-h-[400px] flex items-center justify-center p-8">
                     <div className="bg-surface border border-slate-700 rounded-2xl p-8 max-w-lg w-full shadow-xl animate-in fade-in zoom-in-95 duration-300">
@@ -59,14 +67,16 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                                 <AlertTriangle className="w-6 h-6 text-rose-500" />
                             </div>
                             <div>
-                                <h2 className="text-xl font-bold text-white">Something went wrong</h2>
-                                <p className="text-sm text-slate-400">An unexpected error occurred</p>
+                                <h2 className="text-xl font-bold text-white">{user.title}</h2>
+                                <p className="text-sm text-slate-400">{user.message}</p>
                             </div>
                         </div>
 
                         <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-4 mb-6">
                             <p className="text-sm text-slate-300 font-mono break-all">
-                                {this.state.error?.message || 'Unknown error'}
+                                {import.meta.env.DEV
+                                    ? (this.state.error?.message || 'Unknown error')
+                                    : (supportId ? `Error ID: ${supportId}` : 'Error ID: unavailable')}
                             </p>
                         </div>
 
@@ -90,14 +100,14 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                                 ) : (
                                     <>
                                         <Copy className="w-4 h-4" />
-                                        Copy Error
+                                        {import.meta.env.DEV ? 'Copy Error' : 'Copy ID'}
                                     </>
                                 )}
                             </button>
                         </div>
 
                         <p className="text-xs text-slate-500 mt-4 text-center">
-                            If this problem persists, please contact support with the error details.
+                            If this problem persists, contact support with the error ID.
                         </p>
                     </div>
                 </div>

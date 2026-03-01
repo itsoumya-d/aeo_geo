@@ -8,8 +8,16 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
 });
 
 const endpointSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+const stripeWebhooksEnabled = (Deno.env.get("STRIPE_WEBHOOKS_ENABLED") || "false").toLowerCase() === "true";
 
 serve(async (req) => {
+    if (!stripeWebhooksEnabled) {
+        return new Response(
+            JSON.stringify({ success: false, error: "Stripe webhooks are disabled for this environment." }),
+            { status: 410, headers: { "Content-Type": "application/json" } }
+        );
+    }
+
     const signature = req.headers.get("stripe-signature");
 
     if (!signature || !endpointSecret) {

@@ -1,46 +1,69 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from './ui/Card';
 import { Button } from './ui/Button';
-import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Label } from 'recharts';
+import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { motion } from 'framer-motion';
 import { Brain, Target, Sparkles, RefreshCw, ChevronRight } from 'lucide-react';
+import { VectorMapPoint } from '../types';
 import { supabase } from '../services/supabase';
 
-interface VectorPoint {
-    x: number;
-    y: number;
-    z: number; // Size/Importance
-    label: string;
-    type: 'your_content' | 'competitor' | 'gold_standard' | 'optimization_target';
+interface VectorLabProps {
+    data?: VectorMapPoint[];
 }
 
-export const VectorLab: React.FC = () => {
+export const VectorLab: React.FC<VectorLabProps> = ({ data: initialData }) => {
     const [goal, setGoal] = useState("Rank for 'AI SEO Tools'");
     const [isSimulating, setIsSimulating] = useState(false);
     const [optimizationLevel, setOptimizationLevel] = useState(0); // 0 to 100
-    const [data, setData] = useState<VectorPoint[]>([]);
+    const [data, setData] = useState<VectorMapPoint[]>([]);
 
     useEffect(() => {
-        // Initial Mock Data - In real app, this comes from 'analyze-content' RPC
-        setData([
-            { x: 20, y: 30, z: 400, label: 'Your Current Page', type: 'your_content' },
-            { x: 45, y: 80, z: 600, label: 'Market Leader (Surfer)', type: 'competitor' },
-            { x: 80, y: 60, z: 500, label: 'Niche Specialist', type: 'competitor' },
-            { x: 90, y: 90, z: 1000, label: 'AI "Perfect" Answer', type: 'gold_standard' },
-        ]);
-    }, []);
+        if (initialData) {
+            setData(initialData);
+        }
+    }, [initialData]);
 
     const handleSimulation = async () => {
         setIsSimulating(true);
-        // Simulate API delay
-        await new Promise(r => setTimeout(r, 1500));
+        try {
+            // Try real match_content RPC for actual semantic comparison
+            const { data: matchData, error } = await supabase.rpc('match_content', {
+                query_text: goal,
+                match_threshold: 0.5,
+                match_count: 10,
+            });
 
-        // Add a "Proposed Rewrite" point that moves closer to Gold Standard based on slider
+            if (!error && matchData && matchData.length > 0) {
+                // Map real semantic matches to vector points
+                const newData = data.filter(d => d.type !== 'optimization_target');
+                const progress = optimizationLevel / 100;
+                matchData.forEach((match: any, i: number) => {
+                    newData.push({
+                        x: Math.min(100, (match.similarity || 0.5) * 100 * (1 + progress * 0.3)),
+                        y: Math.min(100, 40 + i * 8 + progress * 20),
+                        z: 300 + (match.similarity || 0.5) * 300,
+                        label: match.title || `Match ${i + 1}`,
+                        type: 'optimization_target' as const,
+                    });
+                });
+                setData(newData);
+            } else {
+                // Fallback: local simulation
+                runLocalSimulation();
+            }
+        } catch {
+            // Fallback: local simulation if RPC isn't available
+            runLocalSimulation();
+        } finally {
+            setIsSimulating(false);
+        }
+    };
+
+    const runLocalSimulation = () => {
         const startX = 20;
         const startY = 30;
         const targetX = 90;
         const targetY = 90;
-
         const progress = optimizationLevel / 100;
         const newX = startX + (targetX - startX) * progress;
         const newY = startY + (targetY - startY) * progress;
@@ -53,13 +76,29 @@ export const VectorLab: React.FC = () => {
             label: `Optimized Ver. (${optimizationLevel}%)`,
             type: 'optimization_target'
         });
-
         setData(newData);
-        setIsSimulating(false);
     };
 
+    if (!data || data.length === 0) {
+        return (
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex flex-col items-center justify-center py-24 text-center"
+            >
+                <div className="bg-primary/10 p-4 rounded-2xl mb-4">
+                    <Brain className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="text-lg font-bold text-white mb-2">No vector data yet</h3>
+                <p className="text-sm text-slate-400 max-w-sm">
+                    Run an audit and use the Optimization tab to generate semantic vector data for your content.
+                </p>
+            </motion.div>
+        );
+    }
+
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-6">
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-2xl font-display font-bold text-white flex items-center gap-2">
@@ -69,7 +108,7 @@ export const VectorLab: React.FC = () => {
                     <p className="text-text-secondary">Visualize and optimize your content's semantic position in the AI latent space.</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => setData(initialData || [])}>
                         <RefreshCw className="w-4 h-4 mr-2" />
                         Reset Data
                     </Button>
@@ -173,7 +212,7 @@ export const VectorLab: React.FC = () => {
                                         if (entry.type === 'gold_standard') { fill = '#34d399'; r = 8; } // Green
                                         if (entry.type === 'optimization_target') { fill = '#f59e0b'; r = 7; } // Amber
 
-                                        return <cell key={`cell-${index}`} fill={fill} r={r} />;
+                                        return <Cell key={`cell-${index}`} fill={fill} />;
                                     })}
                                 </Scatter>
                             </ScatterChart>
@@ -228,6 +267,6 @@ export const VectorLab: React.FC = () => {
                     </div>
                 </Card>
             </div>
-        </div>
+        </motion.div>
     );
 };

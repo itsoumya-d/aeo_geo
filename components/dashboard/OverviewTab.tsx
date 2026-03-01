@@ -49,6 +49,19 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ report, setActiveTab }
         fill: report.overallScore > 75 ? '#10b981' : '#2563eb'
     }];
 
+    // Dynamic Impact Potential: calculated from high-priority recommendations and low platform scores
+    const allRecs = report.pages.flatMap(p => p.recommendations);
+    const highCount = allRecs.filter(r => r.impact === 'HIGH').length;
+    const lowPlatforms = report.platformScores.filter(p => p.score < 50).length;
+    const impactScore = report.overallScore;
+    const impactPotential = (highCount >= 5 || lowPlatforms >= 2 || impactScore < 40)
+        ? { label: 'Very High', color: 'text-rose-400' }
+        : (highCount >= 2 || lowPlatforms >= 1 || impactScore < 65)
+            ? { label: 'High', color: 'text-amber-400' }
+            : (impactScore < 80)
+                ? { label: 'Moderate', color: 'text-primary' }
+                : { label: 'Low', color: 'text-emerald-400' };
+
     return (
         <motion.div
             variants={containerVariants}
@@ -80,11 +93,11 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ report, setActiveTab }
                         <div className="mt-8 grid grid-cols-2 gap-8 w-full border-t border-border pt-8">
                             <div className="text-center">
                                 <div className="text-text-muted text-[10px] uppercase tracking-wider mb-1 font-bold">Consistency</div>
-                                <div className="text-white font-bold font-mono">{report.brandConsistnecyScore}%</div>
+                                <div className="text-white font-bold font-mono">{report.brandConsistencyScore}%</div>
                             </div>
                             <div className="text-center">
                                 <div className="text-text-muted text-[10px] uppercase tracking-wider mb-1 font-bold">Impact Potential</div>
-                                <div className="text-primary font-bold font-display">High</div>
+                                <div className={`font-bold font-display ${impactPotential.color}`}>{impactPotential.label}</div>
                             </div>
                         </div>
                     </Card>
@@ -93,11 +106,11 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ report, setActiveTab }
                 {/* Platform Breakdown */}
                 <motion.div variants={itemVariants} className="lg:col-span-8">
                     <Card className="h-full p-8">
-                        <div className="flex items-center justify-between mb-10">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-10">
                             <h3 className="text-text-secondary text-xs font-bold uppercase tracking-[0.2em] flex items-center gap-2 font-display">
                                 <Cpu className="w-4 h-4 text-purple-400" /> Model Performance
                             </h3>
-                            <div className="flex items-center gap-4 text-[10px] text-text-muted font-bold uppercase tracking-wider">
+                            <div className="flex items-center gap-3 sm:gap-4 text-[10px] text-text-muted font-bold uppercase tracking-wider">
                                 <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500"></div> Optimal</div>
                                 <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-amber-500"></div> Fair</div>
                                 <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-rose-500"></div> Poor</div>
@@ -107,13 +120,13 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ report, setActiveTab }
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12">
                             <div className="h-64 sm:h-72">
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={scoreData} layout="vertical" margin={{ left: -20, right: 20 }}>
+                                    <BarChart data={scoreData} layout="vertical" margin={{ left: -10, right: 10 }}>
                                         <XAxis type="number" domain={[0, 100]} hide />
                                         <YAxis
                                             dataKey="name"
                                             type="category"
-                                            width={100}
-                                            tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 600, fontFamily: 'Fira Code' }}
+                                            width={80}
+                                            tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 600, fontFamily: 'Fira Code' }}
                                             axisLine={false}
                                             tickLine={false}
                                         />
@@ -173,15 +186,29 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ report, setActiveTab }
                             <h3 className="text-text-secondary text-xs font-bold uppercase tracking-[0.2em] font-display">Topical Dominance</h3>
                         </div>
                         <div className="flex flex-wrap gap-3">
-                            {report.topicalDominance?.map((topic, i) => (
-                                <div
-                                    key={i}
-                                    className="bg-surface border border-border text-text-primary px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 hover:border-primary/50 transition-colors"
-                                >
-                                    <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-glow"></div>
-                                    {topic}
-                                </div>
-                            ))}
+                            {report.topicalDominance?.map((topic, i) => {
+                                const strength = i < 2 ? 'strong' : i < 4 ? 'medium' : 'emerging';
+                                const colors = {
+                                    strong: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400',
+                                    medium: 'bg-primary/10 border-primary/30 text-primary',
+                                    emerging: 'bg-surface border-border text-text-primary'
+                                };
+                                return (
+                                    <div
+                                        key={i}
+                                        className={`${colors[strength]} px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 hover:scale-105 transition-transform cursor-default`}
+                                    >
+                                        <div className={`w-1.5 h-1.5 rounded-full ${strength === 'strong' ? 'bg-emerald-400' : strength === 'medium' ? 'bg-primary' : 'bg-text-muted'} shadow-glow`}></div>
+                                        {topic}
+                                        {strength === 'strong' && <span className="text-[9px] uppercase tracking-wider opacity-70">★</span>}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <div className="mt-6 flex gap-6 text-[10px] text-text-muted font-bold uppercase tracking-wider">
+                            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500"></div> Strong</div>
+                            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-primary"></div> Medium</div>
+                            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-text-muted"></div> Emerging</div>
                         </div>
                     </Card>
                 </motion.div>
@@ -219,7 +246,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ report, setActiveTab }
                             onClick={() => setActiveTab('pages')}
                         >
                             <div className="flex items-center justify-between mb-4">
-                                <Badge variant="destructive" className="animate-pulse">Priority</Badge>
+                                <Badge variant="destructive">Priority</Badge>
                                 <span className="text-[10px] text-text-muted bg-background px-2 py-1 rounded border border-border max-w-[120px] truncate font-mono">
                                     {rec.location}
                                 </span>

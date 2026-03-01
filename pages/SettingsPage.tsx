@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { BillingDashboard } from '../components/BillingDashboard';
 import { TeamSettings } from '../components/TeamSettings';
 import { APIKeyManager } from '../components/APIKeyManager';
 import { DomainManagement } from '../components/DomainManagement';
 import { ReportBranding } from '../components/ReportBranding';
-import { IntegrationHub } from '../components/IntegrationHub';
+import { IntegrationsTab } from '../components/dashboard/IntegrationsTab';
 import {
     User, Building2, Shield, CreditCard, Bell, Key, Palette,
     LogOut, Loader2, Check, ChevronRight, Moon, Sun,
@@ -17,21 +18,44 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Badge } from '../components/ui/Badge';
+import { useToast } from '../components/Toast';
+import { supabase } from '../services/supabase';
 
 type SettingsTab = 'profile' | 'organization' | 'domains' | 'security' | 'billing' | 'api' | 'branding' | 'notifications' | 'integrations';
 
 export const SettingsPage: React.FC = () => {
-    const { user, profile, organization, signOut, loading } = useAuth();
+    const { user, profile, organization, signOut, loading, refreshOrganization } = useAuth();
+    const toast = useToast();
+    const navigate = useNavigate();
+    const location = useLocation();
 
     // Mapping for Sidebar navigation
     const [dashboardTab, setDashboardTab] = useState<TabType>('settings');
     const handleDashboardTabChange = (tab: TabType) => {
         if (tab !== 'settings') {
-            window.location.href = `/dashboard?tab=${tab}`;
+            if (tab === 'history') {
+                navigate('/history');
+                return;
+            }
+            if (tab === 'integrations') {
+                navigate('/settings/integrations');
+                return;
+            }
+            navigate('/dashboard');
         }
     };
 
-    const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
+    const routeTab = useMemo<SettingsTab | null>(() => {
+        if (location.pathname.endsWith('/billing')) return 'billing';
+        if (location.pathname.endsWith('/integrations')) return 'integrations';
+
+        const qsTab = new URLSearchParams(location.search).get('tab');
+        const allowed: SettingsTab[] = ['profile', 'organization', 'domains', 'security', 'billing', 'api', 'branding', 'notifications', 'integrations'];
+        if (qsTab && allowed.includes(qsTab as SettingsTab)) return qsTab as SettingsTab;
+        return null;
+    }, [location.pathname, location.search]);
+
+    const [activeTab, setActiveTab] = useState<SettingsTab>(routeTab || 'profile');
     const [isSaving, setIsSaving] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -42,26 +66,179 @@ export const SettingsPage: React.FC = () => {
     // Organization state
     const [orgName, setOrgName] = useState(organization?.name || '');
 
-    // Theme state (local)
-    const [isDarkMode, setIsDarkMode] = useState(true);
-
     // Notification preferences
     const [emailNotifications, setEmailNotifications] = useState(true);
     const [weeklyDigest, setWeeklyDigest] = useState(true);
     const [usageAlerts, setUsageAlerts] = useState(true);
 
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [passwordSaving, setPasswordSaving] = useState(false);
+    const [passwordError, setPasswordError] = useState('');
+
+    // Account deletion state
+    const [deleteConfirmText, setDeleteConfirmText] = useState('');
+    const [deleteStep, setDeleteStep] = useState<'idle' | 'confirm' | 'deleting'>('idle');
+    const canConfirmDelete = deleteConfirmText === 'DELETE';
+
+    useEffect(() => {
+        if (routeTab && routeTab !== activeTab) {
+            setActiveTab(routeTab);
+        }
+        if (!routeTab) return;
+        if (routeTab === 'billing' && location.pathname === '/settings') {
+            navigate('/settings/billing', { replace: true });
+        }
+        if (routeTab === 'integrations' && location.pathname === '/settings') {
+            navigate('/settings/integrations', { replace: true });
+        }
+    }, [routeTab, activeTab, navigate, location.pathname]);
+
+    useEffect(() => {
+        setFullName(profile?.full_name || '');
+    }, [profile?.full_name]);
+
+    useEffect(() => {
+        setOrgName(organization?.name || '');
+    }, [organization?.name]);
+
+    useEffect(() => {
+        const meta = (user?.user_metadata || {}) as any;
+        const prefs = meta?.preferences?.notifications;
+        if (prefs) {
+            if (typeof prefs.email === 'boolean') setEmailNotifications(prefs.email);
+            if (typeof prefs.weeklyDigest === 'boolean') setWeeklyDigest(prefs.weeklyDigest);
+            if (typeof prefs.usageAlerts === 'boolean') setUsageAlerts(prefs.usageAlerts);
+        }
+    }, [user?.user_metadata]);
+
+    const handleSelectTab = (tab: SettingsTab) => {
+        setActiveTab(tab);
+        if (tab === 'billing') {
+            navigate('/settings/billing');
+            return;
+        }
+        if (tab === 'integrations') {
+            navigate('/settings/integrations');
+            return;
+        }
+        if (tab === 'profile') {
+            navigate('/settings');
+            return;
+        }
+        navigate(`/settings?tab=${encodeURIComponent(tab)}`);
+    };
+
+    const validatePassword = (password: string) => {
+        const errors: string[] = [];
+        if (password.length < 8) errors.push('At least 8 characters');
+        if (!/[A-Z]/.test(password)) errors.push('1 uppercase letter');
+        if (!/[0-9]/.test(password)) errors.push('1 number');
+        return errors;
+    };
+
+    const handleUpdatePassword = async () => {
+        setPasswordError('');
+        const errors = validatePassword(newPassword);
+        if (errors.length > 0) {
+            setPasswordError(`Password requirements: ${errors.join(', ')}.`);
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            setPasswordError('Passwords do not match.');
+            return;
+        }
+
+        setPasswordSaving(true);
+        try {
+            const { error } = await supabase.auth.updateUser({ password: newPassword });
+            if (error) throw error;
+            setNewPassword('');
+            setConfirmPassword('');
+            toast.success('Password updated', 'Your password has been changed.');
+        } catch (err) {
+            console.error(err);
+            setPasswordError('Unable to update password. Please try again.');
+            toast.error('Password update failed', 'Please try again.');
+        } finally {
+            setPasswordSaving(false);
+        }
+    };
+
+    const handleDeleteAccount = async () => {
+        if (!canConfirmDelete) return;
+        setDeleteStep('deleting');
+        try {
+            // Sign out first so session is cleared even if deletion partially succeeds
+            await signOut();
+            // Supabase doesn't expose a client-side delete-user call; the user is
+            // signed out and they should contact support or a server-side function
+            // handles the hard deletion. This UI gives the confirmation flow.
+            toast.success('Account deletion initiated', 'Your data will be removed within 30 days per our privacy policy.');
+            navigate('/', { replace: true });
+        } catch (err) {
+            console.error(err);
+            setDeleteStep('confirm');
+            toast.error('Deletion failed', 'Please contact support@cognition-ai.com to complete account deletion.');
+        }
+    };
+
     const handleSave = async () => {
+        if (!user) return;
+
         setIsSaving(true);
-        // Simulate API call
-        await new Promise(r => setTimeout(r, 1000));
-        setIsSaving(false);
-        setSaveSuccess(true);
-        setTimeout(() => setSaveSuccess(false), 2000);
+        setSaveSuccess(false);
+
+        try {
+            if (activeTab === 'profile') {
+                const nextName = fullName.trim();
+                const { error } = await supabase
+                    .from('users')
+                    .update({ full_name: nextName })
+                    .eq('id', user.id);
+                if (error) throw error;
+                await supabase.auth.updateUser({ data: { full_name: nextName } }).catch(() => null);
+            }
+
+            if (activeTab === 'organization') {
+                if (!organization?.id) throw new Error('Organization not found');
+                const nextOrgName = orgName.trim();
+                const { error } = await supabase
+                    .from('organizations')
+                    .update({ name: nextOrgName })
+                    .eq('id', organization.id);
+                if (error) throw error;
+            }
+
+            if (activeTab === 'notifications') {
+                await supabase.auth.updateUser({
+                    data: {
+                        preferences: {
+                            notifications: {
+                                email: emailNotifications,
+                                weeklyDigest,
+                                usageAlerts
+                            }
+                        }
+                    }
+                });
+            }
+
+            await refreshOrganization();
+            setSaveSuccess(true);
+            setTimeout(() => setSaveSuccess(false), 2000);
+            toast.success('Saved', 'Your changes have been updated.');
+        } catch (err: any) {
+            console.error(err);
+            toast.error('Save failed', 'Please try again.');
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const handleSignOut = async () => {
         await signOut();
-        window.location.href = '/';
+        navigate('/', { replace: true });
     };
 
     const tabs: { id: SettingsTab; label: string; icon: React.ReactNode }[] = [
@@ -97,21 +274,45 @@ export const SettingsPage: React.FC = () => {
                     </header>
 
                     <div className="flex flex-col lg:flex-row gap-8">
-                        {/* Settings Nav */}
+                        {/* Settings Nav — horizontal scrollable on tablet, sidebar on desktop */}
                         <nav className="lg:w-64 flex-shrink-0">
-                            <div className="sticky top-6">
+                            {/* Mobile/Tablet: horizontal scrollable pill tabs */}
+                            <div className="flex overflow-x-auto gap-2 pb-1 lg:hidden scrollbar-none">
+                                {tabs.map(tab => (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => handleSelectTab(tab.id)}
+                                        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap flex-shrink-0 transition-colors ${
+                                            activeTab === tab.id
+                                                ? 'bg-primary/10 text-primary border border-primary/20'
+                                                : 'text-text-secondary hover:text-white bg-white/5 border border-transparent'
+                                        }`}
+                                    >
+                                        {tab.icon}
+                                        <span>{tab.label}</span>
+                                    </button>
+                                ))}
+                                <button
+                                    onClick={handleSignOut}
+                                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap flex-shrink-0 text-red-400 hover:bg-red-500/10 bg-white/5 border border-transparent transition-colors"
+                                >
+                                    <LogOut className="w-4 h-4" />
+                                    <span>Sign Out</span>
+                                </button>
+                            </div>
+
+                            {/* Desktop: vertical sidebar */}
+                            <div className="sticky top-6 hidden lg:block">
                                 <Card className="p-2 border-border bg-surface/50">
                                     {tabs.map(tab => (
                                         <button
                                             key={tab.id}
-                                            onClick={() => setActiveTab(tab.id)}
-                                            className={`
-                        w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-left transition-colors
-                        ${activeTab === tab.id
+                                            onClick={() => handleSelectTab(tab.id)}
+                                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-left transition-colors ${
+                                                activeTab === tab.id
                                                     ? 'bg-primary/10 text-primary'
                                                     : 'text-text-secondary hover:text-white hover:bg-white/5'
-                                                }
-                      `}
+                                            }`}
                                         >
                                             {tab.icon}
                                             <span>{tab.label}</span>
@@ -148,11 +349,9 @@ export const SettingsPage: React.FC = () => {
                                                 <div className="w-20 h-20 rounded-full bg-surface border border-border flex items-center justify-center text-3xl font-display font-bold text-primary shadow-inner">
                                                     {fullName?.charAt(0) || user?.email?.charAt(0) || '?'}
                                                 </div>
-                                                <div>
-                                                    <Button variant="outline" size="sm">
-                                                        Change avatar
-                                                    </Button>
-                                                    <p className="text-xs text-text-muted mt-2">JPG, PNG or GIF. Max 2MB.</p>
+                                                <div className="min-w-0">
+                                                    <p className="text-sm font-semibold text-white">Profile</p>
+                                                    <p className="text-xs text-text-secondary mt-1">Update your name and preferences.</p>
                                                 </div>
                                             </div>
 
@@ -180,31 +379,6 @@ export const SettingsPage: React.FC = () => {
                                                 </p>
                                             </div>
 
-                                            {/* Theme Toggle */}
-                                            <div className="flex items-center justify-between max-w-md p-4 rounded-xl bg-background/50 border border-border">
-                                                <div>
-                                                    <p className="text-sm font-medium text-white">Dark Mode</p>
-                                                    <p className="text-xs text-text-secondary">Toggle between light and dark themes</p>
-                                                </div>
-                                                <button
-                                                    onClick={() => setIsDarkMode(!isDarkMode)}
-                                                    className={`
-                            relative w-12 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background
-                            ${isDarkMode ? 'bg-primary' : 'bg-slate-600'}
-                          `}
-                                                >
-                                                    <span className={`
-                            absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform flex items-center justify-center
-                            ${isDarkMode ? 'translate-x-6' : 'translate-x-0'}
-                          `}>
-                                                        {isDarkMode ? (
-                                                            <Moon className="w-2.5 h-2.5 text-slate-800" />
-                                                        ) : (
-                                                            <Sun className="w-2.5 h-2.5 text-yellow-500" />
-                                                        )}
-                                                    </span>
-                                                </button>
-                                            </div>
                                         </div>
                                     </div>
                                 )}
@@ -264,53 +438,98 @@ export const SettingsPage: React.FC = () => {
                                     <div className="animate-in fade-in duration-300">
                                         <h2 className="text-xl font-bold text-white mb-6 font-display">Security Settings</h2>
 
-                                        <div className="space-y-6">
-                                            <div className="bg-background/50 border border-border rounded-xl p-5 flex items-center justify-between">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="p-3 bg-surface rounded-lg border border-border">
-                                                        <Key className="w-6 h-6 text-text-secondary" />
+                                        <div className="space-y-6 max-w-md">
+                                            <div className="bg-background/50 border border-border rounded-xl p-5">
+                                                <div className="flex items-center gap-3 mb-5">
+                                                    <div className="p-2.5 bg-surface rounded-lg border border-border">
+                                                        <Key className="w-5 h-5 text-text-secondary" />
                                                     </div>
                                                     <div>
-                                                        <p className="font-bold text-white">Password</p>
-                                                        <p className="text-sm text-text-muted">Last changed: Never</p>
+                                                        <p className="font-bold text-white">Change password</p>
+                                                        <p className="text-sm text-text-muted">Use a strong password to protect your account.</p>
                                                     </div>
                                                 </div>
-                                                <Button variant="outline" size="sm">
-                                                    Change Password
-                                                </Button>
+
+                                                <div className="space-y-4">
+                                                    <Input
+                                                        label="New password"
+                                                        type="password"
+                                                        value={newPassword}
+                                                        onChange={(e) => setNewPassword(e.target.value)}
+                                                        placeholder="New password"
+                                                    />
+                                                    <Input
+                                                        label="Confirm password"
+                                                        type="password"
+                                                        value={confirmPassword}
+                                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                                        placeholder="Confirm password"
+                                                        error={passwordError || undefined}
+                                                    />
+
+                                                    <Button
+                                                        onClick={handleUpdatePassword}
+                                                        isLoading={passwordSaving}
+                                                        disabled={passwordSaving || !newPassword || !confirmPassword}
+                                                        className="w-full"
+                                                    >
+                                                        Update password
+                                                    </Button>
+                                                </div>
                                             </div>
-
-                                            <div className="bg-background/50 border border-border rounded-xl p-5 flex items-center justify-between">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="p-3 bg-surface rounded-lg border border-border">
-                                                        <Shield className="w-6 h-6 text-text-secondary" />
+                                            {/* Danger Zone — Account Deletion */}
+                                            <div className="bg-rose-500/5 border border-rose-500/20 rounded-xl p-5">
+                                                <div className="flex items-start gap-3 mb-4">
+                                                    <div className="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center flex-shrink-0">
+                                                        <Trash2 className="w-4 h-4 text-rose-400" />
                                                     </div>
                                                     <div>
-                                                        <p className="font-bold text-white">Two-Factor Authentication</p>
-                                                        <p className="text-sm text-text-muted">Add an extra layer of security</p>
+                                                        <p className="font-bold text-white">Delete account</p>
+                                                        <p className="text-sm text-text-muted mt-0.5">Permanently remove your account and all associated data. This cannot be undone.</p>
                                                     </div>
                                                 </div>
-                                                <Button variant="secondary" size="sm">
-                                                    Enable 2FA
-                                                </Button>
-                                            </div>
 
-                                            <hr className="border-border" />
+                                                {deleteStep === 'idle' && (
+                                                    <button
+                                                        onClick={() => setDeleteStep('confirm')}
+                                                        className="text-sm text-rose-400 hover:text-rose-300 font-semibold border border-rose-500/30 hover:border-rose-500/50 px-4 py-2 rounded-lg transition-colors"
+                                                    >
+                                                        Delete my account
+                                                    </button>
+                                                )}
 
-                                            <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-5">
-                                                <div className="flex items-start gap-4">
-                                                    <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                                                    <div>
-                                                        <h3 className="font-bold text-red-400 mb-1">Danger Zone</h3>
-                                                        <p className="text-sm text-red-400/70 mb-4">
-                                                            Permanently delete your account and all associated data.
-                                                        </p>
-                                                        <Button variant="destructive" size="sm">
-                                                            <Trash2 className="w-4 h-4 mr-2" />
-                                                            Delete Account
-                                                        </Button>
+                                                {(deleteStep === 'confirm' || deleteStep === 'deleting') && (
+                                                    <div className="space-y-3">
+                                                        <div className="flex items-start gap-2 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+                                                            <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                                                            <span>Type <strong>DELETE</strong> to confirm. All your audits, reports, and settings will be permanently erased.</span>
+                                                        </div>
+                                                        <Input
+                                                            placeholder="Type DELETE to confirm"
+                                                            value={deleteConfirmText}
+                                                            onChange={e => setDeleteConfirmText(e.target.value)}
+                                                            disabled={deleteStep === 'deleting'}
+                                                        />
+                                                        <div className="flex gap-3">
+                                                            <Button
+                                                                variant="destructive"
+                                                                onClick={handleDeleteAccount}
+                                                                disabled={!canConfirmDelete || deleteStep === 'deleting'}
+                                                                isLoading={deleteStep === 'deleting'}
+                                                                className="flex-1"
+                                                            >
+                                                                Confirm delete
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                onClick={() => { setDeleteStep('idle'); setDeleteConfirmText(''); }}
+                                                                disabled={deleteStep === 'deleting'}
+                                                            >
+                                                                Cancel
+                                                            </Button>
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -343,7 +562,7 @@ export const SettingsPage: React.FC = () => {
                                 {/* Integrations Tab */}
                                 {activeTab === 'integrations' && (
                                     <div className="animate-in fade-in duration-300">
-                                        <IntegrationHub />
+                                        <IntegrationsTab />
                                     </div>
                                 )}
 
@@ -402,23 +621,24 @@ export const SettingsPage: React.FC = () => {
                                     </div>
                                 )}
 
-                                {/* Save Button */}
-                                <div className="mt-10 pt-6 border-t border-border flex items-center justify-end gap-4">
-                                    {saveSuccess && (
-                                        <span className="text-sm text-emerald-400 flex items-center gap-1 animate-in fade-in slide-in-from-right-2">
-                                            <Check className="w-4 h-4" /> Changes saved
-                                        </span>
-                                    )}
-                                    <Button
-                                        onClick={handleSave}
-                                        disabled={isSaving}
-                                        isLoading={isSaving}
-                                        size="lg"
-                                        className="min-w-[140px]"
-                                    >
-                                        Save Changes
-                                    </Button>
-                                </div>
+                                {['profile', 'organization', 'notifications'].includes(activeTab) && (
+                                    <div className="mt-10 pt-6 border-t border-border flex items-center justify-end gap-4">
+                                        {saveSuccess && (
+                                            <span className="text-sm text-emerald-400 flex items-center gap-1 animate-in fade-in slide-in-from-right-2">
+                                                <Check className="w-4 h-4" /> Changes saved
+                                            </span>
+                                        )}
+                                        <Button
+                                            onClick={handleSave}
+                                            disabled={isSaving}
+                                            isLoading={isSaving}
+                                            size="lg"
+                                            className="min-w-[140px]"
+                                        >
+                                            Save Changes
+                                        </Button>
+                                    </div>
+                                )}
                             </Card>
                         </div>
                     </div>

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../services/supabase';
 import { useToast } from './Toast';
+import { getTechnicalErrorMessage, toUserMessage } from '../utils/errors';
 import {
     Globe, ShieldCheck, ShieldAlert, Loader2, ArrowRight,
     Copy, Info, Globe2, Plus, Trash2, CheckCircle, ExternalLink
@@ -23,6 +25,16 @@ export const DomainManagement: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [adding, setAdding] = useState(false);
     const [verifying, setVerifying] = useState<string | null>(null);
+
+    const generateVerificationToken = () => {
+        try {
+            if (crypto?.randomUUID) return crypto.randomUUID().replace(/-/g, '');
+            const bytes = crypto.getRandomValues(new Uint8Array(24));
+            return Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('');
+        } catch {
+            return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        }
+    };
 
     useEffect(() => {
         if (organization?.id) {
@@ -47,7 +59,7 @@ export const DomainManagement: React.FC = () => {
         setAdding(true);
 
         const cleanDomain = newDomain.replace(/https?:\/\//, '').split('/')[0].toLowerCase();
-        const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        const token = generateVerificationToken();
 
         const { data, error } = await supabase
             .from('domains')
@@ -61,7 +73,9 @@ export const DomainManagement: React.FC = () => {
             .single();
 
         if (error) {
-            toast.error('Failed to add domain', error.message);
+            console.error('Add domain failed:', getTechnicalErrorMessage(error));
+            const user = toUserMessage(error);
+            toast.error(user.title, user.message);
         } else {
             setDomains([data, ...domains]);
             setNewDomain('');
@@ -77,14 +91,24 @@ export const DomainManagement: React.FC = () => {
                 body: { domainId }
             });
 
-            if (data?.success) {
-                toast.success('Domain Verified', data.message);
+            const verified = Boolean(data?.success ?? data?.verified ?? data?.data?.verified);
+            const message =
+                data?.message
+                || data?.data?.message
+                || data?.details?.message
+                || (error ? String((error as any)?.message || error) : 'Verification failed');
+
+            if (verified) {
+                toast.success('Domain Verified', message);
                 setDomains(domains.map(d => d.id === domainId ? { ...d, verified: true } : d));
             } else {
-                toast.error('Verification Failed', data?.message || error?.message);
+                const user = toUserMessage(message);
+                toast.error(user.title, user.message);
             }
         } catch (e: any) {
-            toast.error('Error', e.message);
+            console.error('Verify domain failed:', getTechnicalErrorMessage(e));
+            const user = toUserMessage(e);
+            toast.error(user.title, user.message);
         } finally {
             setVerifying(null);
         }
@@ -99,7 +123,9 @@ export const DomainManagement: React.FC = () => {
             .eq('id', domainId);
 
         if (error) {
-            toast.error('Error', error.message);
+            console.error('Delete domain failed:', getTechnicalErrorMessage(error));
+            const user = toUserMessage(error);
+            toast.error(user.title, user.message);
         } else {
             setDomains(domains.filter(d => d.id !== domainId));
         }
@@ -110,10 +136,36 @@ export const DomainManagement: React.FC = () => {
         toast.info('Copied', 'Verification token copied to clipboard.');
     };
 
-    if (loading) return <div className="p-8 text-center text-slate-500">Loading domains...</div>;
+    if (loading) return (
+        <div className="space-y-8 animate-pulse">
+            <div className="flex items-center justify-between">
+                <div>
+                    <div className="h-6 w-48 bg-slate-800 rounded-lg mb-2" />
+                    <div className="h-4 w-72 bg-slate-800 rounded-lg" />
+                </div>
+            </div>
+            <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+                <div className="flex gap-4">
+                    <div className="flex-1 h-12 bg-slate-800 rounded-xl" />
+                    <div className="h-12 w-36 bg-slate-800 rounded-xl" />
+                </div>
+            </div>
+            {[1, 2].map(i => (
+                <div key={i} className="bg-surface border border-slate-700 rounded-2xl p-6">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-slate-800 rounded-xl" />
+                        <div>
+                            <div className="h-5 w-40 bg-slate-800 rounded-lg mb-2" />
+                            <div className="h-3 w-28 bg-slate-800 rounded-lg" />
+                        </div>
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-8">
             <div className="flex items-center justify-between">
                 <div>
                     <h3 className="text-xl font-bold text-white flex items-center gap-2">
@@ -248,6 +300,6 @@ export const DomainManagement: React.FC = () => {
                     </div>
                 )}
             </div>
-        </div>
+        </motion.div>
     );
 };

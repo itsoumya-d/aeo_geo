@@ -2,22 +2,54 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4"
 import { sendEmail } from "../_shared/resend.ts";
-
-const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { buildCorsHeaders } from "../_shared/cors.ts";
 
 serve(async (req: Request) => {
+    const requestId = crypto.randomUUID();
+    const corsHeaders = buildCorsHeaders(req.headers.get("origin"));
+    const jsonResponse = (status: number, body: Record<string, unknown>) =>
+        new Response(JSON.stringify(body), {
+            status,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Request-Id': requestId },
+        });
+
     // Cron trigger will send a POST request
     if (req.method === 'OPTIONS') {
         return new Response('ok', { headers: corsHeaders })
     }
 
     try {
+        const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+        const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+        const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+        const cronSecret = Deno.env.get('CRON_SECRET') ?? '';
+
+        if (!supabaseUrl || !serviceRoleKey) {
+            throw new Error("Server Misconfiguration: Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+        }
+
+        const authHeader = req.headers.get('Authorization') ?? '';
+        const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+        const isAuthorized =
+            token === serviceRoleKey
+            || (cronSecret.length > 0 && token === cronSecret)
+            || (cronSecret.length === 0 && token === anonKey);
+
+        if (!isAuthorized) {
+            return jsonResponse(401, {
+                success: false,
+                error: "Unauthorized",
+                details: {
+                    code: "UNAUTHORIZED",
+                    message: "Missing or invalid scheduler token",
+                    requestId,
+                },
+            });
+        }
+
         const supabase = createClient(
-            Deno.env.get('SUPABASE_URL') ?? '',
-            Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+            supabaseUrl,
+            serviceRoleKey
         )
 
         // 1. Pick next job
@@ -26,9 +58,13 @@ serve(async (req: Request) => {
         if (pickError) throw pickError
 
         if (!jobs || jobs.length === 0) {
-            return new Response(JSON.stringify({ message: 'No pending jobs' }), {
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            })
+            return jsonResponse(200, {
+                success: true,
+                data: {
+                    processed: 0,
+                    message: 'No pending jobs',
+                },
+            });
         }
 
         const job = jobs[0]
@@ -42,10 +78,7 @@ serve(async (req: Request) => {
             // 2. Process Job based on Type
             switch (job.job_type) {
                 case 'CRAWL':
-                    // Mock Long Running Task
-                    await new Promise(r => setTimeout(r, 2000))
-                    result = { crawled_pages: 5, status: 'success' }
-                    break
+                    throw new Error('CRAWL jobs are not supported by this worker.');
 
                 case 'ANALYZE_BATCH':
                     const { urls, organizationId } = job.payload;
@@ -56,10 +89,10 @@ serve(async (req: Request) => {
                     for (const url of urls) {
                         try {
                             // Call analyze-content internally
-                            const analyzeRes = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/analyze-content`, {
+                            const analyzeRes = await fetch(`${supabaseUrl}/functions/v1/analyze-content`, {
                                 method: 'POST',
                                 headers: {
-                                    'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+                                    'Authorization': `Bearer ${serviceRoleKey}`,
                                     'Content-Type': 'application/json',
                                 },
                                 body: JSON.stringify({
@@ -161,18 +194,26 @@ serve(async (req: Request) => {
 
         if (updateError) throw updateError
 
-        return new Response(JSON.stringify({
+        return jsonResponse(200, {
             success: true,
             job_id: job.id,
-            status: success ? 'COMPLETED' : 'FAILED'
-        }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: success ? 'COMPLETED' : 'FAILED',
+            data: {
+                job_id: job.id,
+                status: success ? 'COMPLETED' : 'FAILED',
+            },
         })
 
-    } catch (error: any) {
-        return new Response(JSON.stringify({ error: error.message }), {
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+    } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        return jsonResponse(500, {
+            success: false,
+            error: message,
+            details: {
+                code: "PROCESS_JOB_FAILED",
+                message,
+                requestId,
+            },
+        });
     }
 })

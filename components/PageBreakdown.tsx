@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PageAnalysis, Recommendation } from '../types';
-import { ChevronDown, RefreshCw, Layout, FileCode, Search, Code, Check, Zap, Target, ArrowRight } from 'lucide-react';
+import { ChevronDown, RefreshCw, Layout, FileCode, Search, Code, Check, Zap, Target, ArrowRight, CheckCircle } from 'lucide-react';
 import { simulateRewriteAnalysis } from '../services/geminiService';
 import { useAuth } from '../contexts/AuthContext';
 import { saveRewriteSimulation } from '../services/supabase';
@@ -8,9 +8,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 interface PageBreakdownProps {
     page: PageAnalysis;
+    auditId?: string;
 }
 
-export const PageBreakdown: React.FC<PageBreakdownProps> = ({ page }) => {
+export const PageBreakdown: React.FC<PageBreakdownProps> = ({ page, auditId }) => {
     const [isExpanded, setIsExpanded] = useState(false);
 
     return (
@@ -108,7 +109,7 @@ export const PageBreakdown: React.FC<PageBreakdownProps> = ({ page }) => {
                             </div>
                             <div className="space-y-6 sm:space-y-8">
                                 {page.recommendations.map(rec => (
-                                    <RecommendationCard key={rec.id} rec={rec} />
+                                    <RecommendationCard key={rec.id} rec={rec} auditId={auditId} pageUrl={page.url} />
                                 ))}
                             </div>
                         </div>
@@ -119,11 +120,15 @@ export const PageBreakdown: React.FC<PageBreakdownProps> = ({ page }) => {
     );
 };
 
-const RecommendationCard: React.FC<{ rec: Recommendation }> = ({ rec }) => {
+import { updateRecommendationStatus } from '../services/supabase';
+
+const RecommendationCard: React.FC<{ rec: Recommendation, auditId?: string, pageUrl: string }> = ({ rec, auditId, pageUrl }) => {
     const [simulating, setSimulating] = useState(false);
     const [draft, setDraft] = useState(rec.suggested || rec.snippet || "");
     const [result, setResult] = useState<{ scoreDelta: number, reasoning: string, vectorShift?: number } | null>(null);
     const [copiedSchema, setCopiedSchema] = useState(false);
+    const [status, setStatus] = useState<'OPEN' | 'DONE' | 'IGNORED'>(rec.status || 'OPEN');
+    const [updatingStatus, setUpdatingStatus] = useState(false);
     const { organization } = useAuth();
 
     const runSimulation = async () => {
@@ -154,6 +159,35 @@ const RecommendationCard: React.FC<{ rec: Recommendation }> = ({ rec }) => {
         }
     };
 
+    const handleUpdateStatus = async (newStatus: 'OPEN' | 'DONE' | 'IGNORED') => {
+        if (!auditId) return;
+        setUpdatingStatus(true);
+        // Optimistic update
+        setStatus(newStatus);
+
+        const success = await updateRecommendationStatus(auditId, pageUrl, rec.id, newStatus);
+
+        if (!success) {
+            // Revert on failure
+            setStatus(rec.status || 'OPEN');
+        }
+        setUpdatingStatus(false);
+    };
+
+    if (status === 'DONE') {
+        return (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 0.5 }} className="border border-emerald-500/20 bg-emerald-500/5 rounded-2xl p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-emerald-500" />
+                    <span className="text-emerald-400 font-bold text-sm">Optimization Applied</span>
+                </div>
+                <button onClick={() => handleUpdateStatus('OPEN')} className="text-xs text-text-muted hover:text-white underline">Undo</button>
+            </motion.div>
+        );
+    }
+
+    if (status === 'IGNORED') return null; // Or show collapsed view
+
     return (
         <motion.div
             whileHover={{ x: 5 }}
@@ -161,17 +195,35 @@ const RecommendationCard: React.FC<{ rec: Recommendation }> = ({ rec }) => {
         >
             <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-10 mb-10">
                 <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-4 sm:mb-6">
-                        <span className={`px-3 sm:px-4 py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest ${rec.impact === 'HIGH' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.1)]' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}`}>
-                            {rec.impact} Impact
-                        </span>
-                        <span className={`px-3 sm:px-4 py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest bg-white/[0.05] text-slate-400 border border-white/[0.05]`}>
-                            {rec.effort} Effort
-                        </span>
-                        <div className="h-3 sm:h-4 w-px bg-white/10 hidden sm:block"></div>
-                        <span className="text-[9px] sm:text-[10px] font-black font-mono text-slate-500 uppercase tracking-widest truncate max-w-[120px]">
-                            {rec.location}
-                        </span>
+                    <div className="flex flex-wrap items-center justify-between gap-4 mb-4 sm:mb-6 w-full">
+                        <div className="flex items-center gap-2 sm:gap-4">
+                            <span className={`px-3 sm:px-4 py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest ${rec.impact === 'HIGH' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.1)]' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}`}>
+                                {rec.impact} Impact
+                            </span>
+                            <span className={`px-3 sm:px-4 py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest bg-white/[0.05] text-slate-400 border border-white/[0.05]`}>
+                                {rec.effort} Effort
+                            </span>
+                            <div className="h-3 sm:h-4 w-px bg-white/10 hidden sm:block"></div>
+                            <span className="text-[9px] sm:text-[10px] font-black font-mono text-slate-500 uppercase tracking-widest truncate max-w-[120px]">
+                                {rec.location}
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => handleUpdateStatus('IGNORED')}
+                                disabled={updatingStatus}
+                                className="text-[10px] font-bold text-slate-500 hover:text-white transition-colors uppercase tracking-wider"
+                            >
+                                Ignore
+                            </button>
+                            <button
+                                onClick={() => handleUpdateStatus('DONE')}
+                                disabled={updatingStatus}
+                                className="text-[10px] font-bold text-primary flex items-center gap-1 group-hover:gap-2 transition-all bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-lg border border-primary/20"
+                            >
+                                MARK AS DONE <Check className="w-3 h-3" />
+                            </button>
+                        </div>
                     </div>
                     <h5 className="font-black text-white text-lg sm:text-xl mb-3 sm:mb-4 tracking-tight group-hover:text-primary transition-colors leading-tight">{rec.issue}</h5>
                     <p className="text-slate-400 text-xs sm:text-sm leading-relaxed font-medium mb-6 sm:mb-8">{rec.instruction}</p>

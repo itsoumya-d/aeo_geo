@@ -2,14 +2,17 @@ import React, { useState } from 'react';
 import { Asset, AssetType, AnalysisStatus } from '../types';
 import { Plus, Trash2, Globe, Youtube, Linkedin, FileText, Twitter, Search, Zap, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { validateUrl, normalizeUrl, isDuplicateUrl } from '../utils/validation';
+import { useToast } from './Toast';
 import { ProgressSteps, ANALYSIS_STEPS, getStepFromStatus } from './ProgressSteps';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Card } from './ui/Card';
 import { Badge } from './ui/Badge';
+import { useAuth } from '../contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 
 interface InputLayerProps {
-  onStartAnalysis: (assets: Asset[], options?: { llmProvider: 'gemini' | 'claude' | 'openai' }) => void;
+  onStartAnalysis: (assets: Asset[]) => void;
   isAnalyzing: boolean;
   statusMessage?: string;
   discoveredCount?: number;
@@ -17,6 +20,13 @@ interface InputLayerProps {
 }
 
 export const InputLayer: React.FC<InputLayerProps> = ({ onStartAnalysis, isAnalyzing, statusMessage, discoveredCount, embedded = false }) => {
+  const { t } = useTranslation();
+  const { organization } = useAuth();
+  const toast = useToast();
+  const creditsRemaining = organization?.audit_credits_remaining ?? null;
+  const isOutOfCredits = creditsRemaining !== null && creditsRemaining <= 0;
+  const isLowCredits = creditsRemaining !== null && creditsRemaining > 0 && creditsRemaining <= 3;
+
   const [inputValue, setInputValue] = useState('');
   const [batchInput, setBatchInput] = useState('');
   // Model selection moved to backend defaults
@@ -63,18 +73,38 @@ export const InputLayer: React.FC<InputLayerProps> = ({ onStartAnalysis, isAnaly
     if (!batchInput.trim()) return;
 
     const lines = batchInput.split('\n').filter(l => l.trim().length > 0);
-    const newAssets = lines.map(line => {
-      let url = line.trim();
-      if (!url.startsWith('http')) url = `https://${url}`;
-      return {
-        id: crypto.randomUUID(),
-        type: AssetType.OTHER, // Default to Other for batch, or could infer
-        url: url,
-        status: AnalysisStatus.IDLE
-      };
-    });
+    const existingUrls = assets.map(a => a.url);
+    const newAssets: Asset[] = [];
+    let skipped = 0;
 
-    setAssets([...assets, ...newAssets]);
+    for (const line of lines) {
+      const raw = line.trim();
+      const validation = validateUrl(raw);
+      if (!validation.isValid) {
+        skipped++;
+        continue;
+      }
+      const normalized = normalizeUrl(raw);
+      if (isDuplicateUrl(normalized, [...existingUrls, ...newAssets.map(a => a.url)])) {
+        skipped++;
+        continue;
+      }
+      newAssets.push({
+        id: crypto.randomUUID(),
+        type: AssetType.OTHER,
+        url: normalized,
+        status: AnalysisStatus.IDLE
+      });
+    }
+
+    if (newAssets.length > 0) {
+      setAssets([...assets, ...newAssets]);
+    }
+
+    if (skipped > 0) {
+      toast.warning('Some URLs skipped', `Added ${newAssets.length} URL${newAssets.length !== 1 ? 's' : ''}, skipped ${skipped} invalid or duplicate.`);
+    }
+
     setBatchInput('');
     setMode('SINGLE');
   };
@@ -116,7 +146,7 @@ export const InputLayer: React.FC<InputLayerProps> = ({ onStartAnalysis, isAnaly
               size="sm"
               onClick={() => setMode('BATCH')}
             >
-              Batch Import (CSV)
+              Add Multiple URLs
             </Button>
           </div>
         </div>
@@ -222,20 +252,20 @@ export const InputLayer: React.FC<InputLayerProps> = ({ onStartAnalysis, isAnaly
 
           {/* Progress Steps during Analysis */}
           {isAnalyzing && (
-            <div className="w-full max-w-2xl mb-6 animate-in fade-in duration-500">
+            <div className="w-full max-w-2xl mb-6 animate-in fade-in duration-500" aria-live="polite" aria-atomic="true">
               <ProgressSteps
                 steps={ANALYSIS_STEPS}
                 currentStep={getStepFromStatus(statusMessage || '')}
                 className="mb-4"
               />
-              <div className="bg-background/80 rounded-lg p-4 border border-border">
+              <div className="bg-background/80 rounded-lg p-4 border border-border" role="status">
                 <div className="flex items-center justify-center gap-3 mb-2">
-                  <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                  <Loader2 className="w-5 h-5 text-primary animate-spin" aria-hidden="true" />
                   <span className="text-sm font-medium text-text-primary">{statusMessage || "Initializing..."}</span>
                 </div>
                 {discoveredCount !== undefined && discoveredCount > 0 && (
                   <div className="flex items-center justify-center gap-2 text-xs text-secondary">
-                    <CheckCircle2 className="w-3 h-3" />
+                    <CheckCircle2 className="w-3 h-3" aria-hidden="true" />
                     <span>Discovered {discoveredCount} pages in site structure map</span>
                   </div>
                 )}
@@ -243,20 +273,37 @@ export const InputLayer: React.FC<InputLayerProps> = ({ onStartAnalysis, isAnaly
             </div>
           )}
 
-          <Button
-            onClick={() => onStartAnalysis(assets, { llmProvider: 'gemini' })}
-            disabled={assets.length === 0 || isAnalyzing}
+          {/* Credit display */}
+          {creditsRemaining !== null && !isAnalyzing && (
+            <div role="status" aria-live="polite" className={`flex items-center gap-1.5 text-xs font-medium mb-3 ${
+              isOutOfCredits ? 'text-rose-400' : isLowCredits ? 'text-amber-400' : 'text-text-muted'
+            }`}>
+              <Zap className="w-3.5 h-3.5" aria-hidden="true" />
+              {isOutOfCredits
+                ? t('audit.no_credits', 'No credits remaining — top up to run audits')
+                : `${creditsRemaining} ${t(creditsRemaining === 1 ? 'audit.credits_label' : 'audit.credits_label_plural', creditsRemaining === 1 ? 'audit credit' : 'audit credits')} ${t('audit.credits_remaining', 'remaining · 1 credit per audit')}`
+              }
+            </div>
+          )}
+
+        <Button
+            onClick={() => onStartAnalysis(assets)}
+            disabled={assets.length === 0 || isAnalyzing || isOutOfCredits}
             size="lg"
             className={`
-              w-full sm:w-auto h-14 px-12 text-lg font-bold flex items-center gap-3 
-              ${isAnalyzing ? 'opacity-70' : 'bg-gradient-to-r from-primary via-blue-600 to-indigo-600 hover:shadow-glow'}
+              w-full sm:w-auto h-14 px-12 text-lg font-bold flex items-center gap-3
+              ${isAnalyzing ? 'opacity-70' : isOutOfCredits ? 'opacity-60 cursor-not-allowed' : 'bg-gradient-to-r from-primary via-blue-600 to-indigo-600 hover:shadow-glow'}
             `}
-          >
+        >
             {isAnalyzing ? (
-              <>Running AI Audit...</>
+              <>{t('audit.running', 'Running AI Audit…')}</>
+            ) : isOutOfCredits ? (
+              <>
+                <AlertCircle className="w-5 h-5" aria-hidden="true" /> {t('audit.top_up', 'Top Up to Continue')}
+              </>
             ) : (
               <>
-                <Search className="w-5 h-5" /> Start Deep Analysis
+                <Search className="w-5 h-5" aria-hidden="true" /> {t('audit.start', 'Start Deep Analysis')}
               </>
             )}
           </Button>

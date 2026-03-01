@@ -12,6 +12,7 @@ import {
 import { Card } from './ui/Card';
 import { Badge } from './ui/Badge';
 import { motion } from 'framer-motion';
+import { SentinelSkeleton } from './ui/Skeleton';
 
 interface RankingData {
     id: string;
@@ -78,16 +79,17 @@ export const SentinelDashboard: React.FC = () => {
 
         // Group by Date and Platform
         const grouped = filtered.reduce((acc, curr) => {
-            const date = new Date(curr.created_at).toLocaleDateString();
-            if (!acc[date]) acc[date] = { date };
+            const dateKey = curr.created_at.slice(0, 10);
+            const label = new Date(`${dateKey}T00:00:00Z`).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            if (!acc[dateKey]) acc[dateKey] = { date: label, _k: dateKey };
 
             // If multiple entries for same platform on same day, ensure we take specific one or avg? 
             // For now assume one audit per day.
-            acc[date][curr.platform] = curr.rank;
+            acc[dateKey][curr.platform] = curr.rank;
             return acc;
         }, {} as Record<string, any>);
 
-        return Object.values(grouped).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        return Object.values(grouped).sort((a, b) => String(a._k).localeCompare(String(b._k)));
     };
 
     const chartData = processChartData();
@@ -98,6 +100,61 @@ export const SentinelDashboard: React.FC = () => {
         'Claude': '#d97706',
         'Perplexity': '#06b6d4'
     };
+
+    const insight = React.useMemo(() => {
+        const keyword = selectedKeyword === 'all' ? uniqueKeywords[0] : selectedKeyword;
+        if (!keyword) return null;
+
+        const rows = rankings.filter((r) => r.keyword === keyword);
+        if (rows.length === 0) return null;
+
+        const snapshots = platforms.map((platform) => {
+            const byPlatform = rows
+                .filter((r) => r.platform === platform)
+                .sort((a, b) => a.created_at.localeCompare(b.created_at));
+
+            const latest = byPlatform[byPlatform.length - 1];
+            const prev = byPlatform[byPlatform.length - 2];
+
+            const latestRank = latest?.rank ?? null;
+            const prevRank = prev?.rank ?? null;
+            const delta = latestRank !== null && prevRank !== null ? prevRank - latestRank : null;
+
+            return {
+                platform,
+                latestRank,
+                prevRank,
+                delta,
+                cited: Boolean(latest?.citation_found),
+            };
+        });
+
+        const citedCount = snapshots.filter((s) => s.cited).length;
+        const best = snapshots
+            .filter((s) => s.delta !== null && s.latestRank !== null && s.prevRank !== null)
+            .sort((a, b) => Math.abs(b.delta || 0) - Math.abs(a.delta || 0))[0];
+
+        const parts: string[] = [];
+        if (best && best.delta !== null && best.latestRank !== null && best.prevRank !== null && best.delta !== 0) {
+            const direction = best.delta > 0 ? 'improved' : 'dropped';
+            parts.push(`${best.platform} ${direction} from #${best.prevRank} to #${best.latestRank}.`);
+        } else {
+            const latestWithRank = snapshots.find((s) => s.latestRank !== null);
+            if (latestWithRank && latestWithRank.latestRank !== null) {
+                parts.push(`Latest ranks are updating. ${latestWithRank.platform} is currently at #${latestWithRank.latestRank}.`);
+            }
+        }
+
+        if (citedCount > 0) {
+            parts.push(`${citedCount}/${platforms.length} platforms cited your brand in the latest check.`);
+        } else {
+            parts.push('No citations detected in the latest check. Try refining the query or improving on-page clarity.');
+        }
+
+        return { keyword, text: parts.join(' ') };
+    }, [platforms, rankings, selectedKeyword, uniqueKeywords]);
+
+    if (loading) return <SentinelSkeleton />;
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
@@ -111,12 +168,13 @@ export const SentinelDashboard: React.FC = () => {
                         Sentinel Tracking
                     </h2>
                     <p className="text-text-secondary mt-2 max-w-2xl text-sm">
-                        Real-time citation tracking across Generative Engines. Monitor how your keywords are ranking in AI responses.
+                        Track citation and ranking signals across major AI platforms.
                     </p>
                 </div>
                 <div className="flex gap-3">
                     <button
                         onClick={fetchRankings}
+                        aria-label="Refresh tracking data"
                         className="p-2 text-text-muted hover:text-white transition-colors"
                     >
                         <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -148,7 +206,7 @@ export const SentinelDashboard: React.FC = () => {
                             <TrendingUp className="w-4 h-4 text-emerald-400" />
                             Rank Velocity: <span className="text-primary">{selectedKeyword}</span>
                         </h3>
-                        <div className="h-[300px] w-full">
+                        <div className="h-[220px] sm:h-[300px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={chartData}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.2} />
@@ -226,7 +284,11 @@ export const SentinelDashboard: React.FC = () => {
                                 <h4 className="text-sm font-bold text-white">Sentinel Insight</h4>
                             </div>
                             <p className="text-xs text-slate-300 leading-relaxed">
-                                Your visibility for <strong>"{selectedKeyword}"</strong> has stabilized on ChatGPT but is fluctuating on Gemini. Consider optimizing your "Technical Specs" section to improve authority signals for Google's model.
+                                {insight ? (
+                                    <>For <strong>"{insight.keyword}"</strong>: {insight.text}</>
+                                ) : (
+                                    <>Run visibility checks to generate insights for your tracked keywords.</>
+                                )}
                             </p>
                         </div>
                     </div>
@@ -236,8 +298,7 @@ export const SentinelDashboard: React.FC = () => {
                     <Search className="w-12 h-12 text-slate-700 mx-auto mb-4" />
                     <h3 className="text-white font-bold text-lg mb-2">No Tracking Data Yet</h3>
                     <p className="text-slate-500 max-w-md mx-auto text-sm">
-                        Sentinel starts tracking keywords automatically after your first audit.
-                        Run a new audit to populate this dashboard.
+                        Run a visibility check for at least one keyword to populate this dashboard.
                     </p>
                 </div>
             )}

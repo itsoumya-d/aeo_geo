@@ -11,6 +11,8 @@ import {
     createOrganization,
     getOnboardingStatus
 } from '../services/supabase';
+import { Workspace } from '../types';
+import { getWorkspaces, getDefaultWorkspace } from '../services/workspaceService';
 
 interface AuthContextType {
     user: User | null;
@@ -22,16 +24,24 @@ interface AuthContextType {
     error: AuthError | null;
     isConfigured: boolean;
 
+    // Workspace state
+    workspaces: Workspace[] | null;
+    currentWorkspace: Workspace | null;
+
     // Auth methods
     signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
-    signUp: (email: string, password: string, fullName?: string) => Promise<{ error: AuthError | null }>;
-    signInWithGoogle: () => Promise<{ error: AuthError | null }>;
+    signUp: (email: string, password: string, fullName?: string) => Promise<{ data?: { session: Session | null }; error: AuthError | null }>;
+    signInWithGoogle: (returnTo?: string) => Promise<{ error: AuthError | null }>;
     signOut: () => Promise<void>;
     resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
 
     // Organization methods
     createOrg: (name: string) => Promise<Organization | null>;
     refreshOrganization: () => Promise<void>;
+
+    // Workspace methods
+    loadWorkspaces: () => Promise<void>;
+    switchWorkspace: (workspaceId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -48,6 +58,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [session, setSession] = useState<Session | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<AuthError | null>(null);
+
+    // Workspace state
+    const [workspaces, setWorkspaces] = useState<Workspace[] | null>(null);
+    const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
 
     const isConfigured = isSupabaseConfigured();
 
@@ -101,10 +115,62 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setProfile(userProfile);
             setOrganization(org);
             setOnboarding(onboardingStatus);
+
+            // Load workspaces if organization exists
+            if (org?.id) {
+                await loadWorkspacesInternal(org.id);
+            }
         } catch (err) {
             console.error('Error loading user data:', err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Internal function to load workspaces
+    const loadWorkspacesInternal = async (organizationId: string) => {
+        try {
+            const workspaceList = await getWorkspaces(organizationId);
+            setWorkspaces(workspaceList);
+
+            // Get stored workspace ID or use default
+            const storedWorkspaceId = localStorage.getItem('current_workspace_id');
+            let workspace: Workspace | null = null;
+
+            if (storedWorkspaceId) {
+                workspace = workspaceList.find(w => w.id === storedWorkspaceId) || null;
+            }
+
+            // Fallback to default (first) workspace
+            if (!workspace && workspaceList.length > 0) {
+                workspace = workspaceList[0];
+            }
+
+            setCurrentWorkspace(workspace);
+
+            // Store for next session
+            if (workspace) {
+                localStorage.setItem('current_workspace_id', workspace.id);
+            }
+        } catch (err) {
+            console.error('Error loading workspaces:', err);
+        }
+    };
+
+    // Public function to reload workspaces
+    const loadWorkspaces = async () => {
+        if (!organization?.id) return;
+        await loadWorkspacesInternal(organization.id);
+    };
+
+    // Switch to different workspace
+    const switchWorkspace = async (workspaceId: string) => {
+        if (!workspaces) return;
+
+        const workspace = workspaces.find(w => w.id === workspaceId);
+        if (workspace) {
+            setCurrentWorkspace(workspace);
+            localStorage.setItem('current_workspace_id', workspaceId);
         }
     };
 
@@ -120,7 +186,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const signUp = async (email: string, password: string, fullName?: string) => {
         setError(null);
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
             email,
             password,
             options: {
@@ -130,15 +196,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             },
         });
         if (error) setError(error);
-        return { error };
+        return { data, error };
     };
 
-    const signInWithGoogle = async () => {
+    const signInWithGoogle = async (returnTo?: string) => {
         setError(null);
+        const redirectTo = `${window.location.origin}/auth/callback${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`;
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: `${window.location.origin}/auth/callback`,
+                redirectTo,
             },
         });
         if (error) setError(error);
@@ -152,12 +219,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setOrganization(null);
         setSession(null);
         setOnboarding(null);
+        setWorkspaces(null);
+        setCurrentWorkspace(null);
+        localStorage.removeItem('current_workspace_id');
     };
 
     const resetPassword = async (email: string) => {
         setError(null);
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: `${window.location.origin}/auth/reset-password`,
+            redirectTo: `${window.location.origin}/reset-password`,
         });
         if (error) setError(error);
         return { error };
@@ -173,10 +243,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     const refreshOrganization = async () => {
-        const [org, onboardingStatus] = await Promise.all([
+        const [userProfile, org, onboardingStatus] = await Promise.all([
+            getUserProfile(),
             getOrganization(),
             getOnboardingStatus(),
         ]);
+        setProfile(userProfile);
         setOrganization(org);
         setOnboarding(onboardingStatus);
     };
@@ -190,6 +262,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         loading,
         error,
         isConfigured,
+        workspaces,
+        currentWorkspace,
         signIn,
         signUp,
         signInWithGoogle,
@@ -197,6 +271,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         resetPassword,
         createOrg,
         refreshOrganization,
+        loadWorkspaces,
+        switchWorkspace,
     };
 
     return (

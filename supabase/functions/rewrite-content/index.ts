@@ -1,13 +1,11 @@
 // @ts-nocheck
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.1.0";
-
-const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { buildCorsHeaders } from "../_shared/cors.ts";
 
 serve(async (req) => {
+    const requestId = crypto.randomUUID();
+    const corsHeaders = buildCorsHeaders(req.headers.get("origin"));
     if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
     try {
@@ -47,13 +45,26 @@ serve(async (req) => {
         const response = await result.response;
         const optimizedText = response.text();
 
-        return new Response(JSON.stringify({ optimizedText }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+        return new Response(JSON.stringify({
+            success: true,
+            optimizedText,
+            data: { optimizedText },
+        }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json", "X-Request-Id": requestId },
             status: 200,
         });
     } catch (error) {
-        return new Response(JSON.stringify({ error: error.message }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+        const message = error instanceof Error ? error.message : "Unknown error";
+        return new Response(JSON.stringify({
+            success: false,
+            error: message,
+            details: {
+                code: "REWRITE_CONTENT_FAILED",
+                message,
+                requestId,
+            },
+        }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json", "X-Request-Id": requestId },
             status: 400,
         });
     }

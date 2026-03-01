@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertCircle, RefreshCw, Home } from 'lucide-react';
+import { toUserMessage } from '../utils/errors';
 
 interface Props {
     children: ReactNode;
@@ -8,25 +9,32 @@ interface Props {
 interface State {
     hasError: boolean;
     error: Error | null;
+    errorId: string | null;
 }
 
 export class AppErrorBoundary extends Component<Props, State> {
     public state: State = {
         hasError: false,
-        error: null
+        error: null,
+        errorId: null
     };
 
     public static getDerivedStateFromError(error: Error): State {
-        return { hasError: true, error };
+        return { hasError: true, error, errorId: null };
     }
 
     public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
         console.error('Uncaught error:', error, errorInfo);
         // Here we would potentially log to Sentry
+        const errorId = this.state.errorId || (crypto?.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`);
+        this.setState({ errorId });
     }
 
     public render() {
         if (this.state.hasError) {
+            const user = toUserMessage(this.state.error);
+            const supportId = this.state.errorId ? this.state.errorId.slice(0, 8) : null;
+
             return (
                 <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
                     <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-10 max-w-md text-center backdrop-blur-xl shadow-2xl">
@@ -34,14 +42,16 @@ export class AppErrorBoundary extends Component<Props, State> {
                             <AlertCircle className="w-8 h-8 text-rose-500" />
                         </div>
 
-                        <h1 className="text-2xl font-bold text-white mb-2">Something went wrong</h1>
+                        <h1 className="text-2xl font-bold text-white mb-2">{user.title}</h1>
                         <p className="text-slate-400 mb-8 leading-relaxed">
-                            The application encountered an unexpected error. Our team has been notified.
+                            {user.message}
                         </p>
 
                         <div className="bg-black/30 rounded-xl p-4 mb-8 text-left overflow-auto max-h-32 border border-white/5">
                             <code className="text-xs text-rose-300 font-mono">
-                                {this.state.error?.message || 'Unknown error'}
+                                {import.meta.env.DEV
+                                    ? (this.state.error?.message || 'Unknown error')
+                                    : (supportId ? `Error ID: ${supportId}` : 'Error ID: unavailable')}
                             </code>
                         </div>
 

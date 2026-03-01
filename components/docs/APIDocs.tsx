@@ -13,7 +13,8 @@ import {
     Code as CodeIcon,
     Cpu,
     Webhook as WebhookIcon,
-    ArrowUpRight
+    ArrowUpRight,
+    Play
 } from 'lucide-react';
 
 interface Endpoint {
@@ -27,11 +28,15 @@ interface Endpoint {
     samples: Array<{ lang: string; code: string }>;
 }
 
+const API_BASE_URL = import.meta.env.VITE_SUPABASE_URL
+    ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/api-v1`
+    : 'https://api.cognition-ai.com/v1';
+
 const ENDPOINTS: Endpoint[] = [
     {
         id: 'auth',
         method: 'GET',
-        path: '/v1/usage',
+        path: '/usage',
         title: 'Authentication & Usage',
         description: 'Authentication is handled via the `x-api-key` header. You can get your credit balance and monthly usage stats here.',
         response: {
@@ -40,14 +45,15 @@ const ENDPOINTS: Endpoint[] = [
             plan: "professional"
         },
         samples: [
-            { lang: 'bash', code: 'curl -X GET https://api.cognition-ai.com/v1/usage \\\n  -H "x-api-key: YOUR_API_KEY"' },
-            { lang: 'javascript', code: 'const res = await fetch("https://api.cognition-ai.com/v1/usage", {\n  headers: { "x-api-key": "YOUR_API_KEY" }\n});\nconst data = await res.json();' }
+            { lang: 'bash', code: `curl -X GET ${API_BASE_URL}/usage \\\n  -H "x-api-key: YOUR_API_KEY"` },
+            { lang: 'javascript', code: `const res = await fetch("${API_BASE_URL}/usage", {\n  headers: { "x-api-key": "YOUR_API_KEY" }\n});\nconst data = await res.json();` },
+            { lang: 'python', code: `import requests\n\nurl = "${API_BASE_URL}/usage"\nheaders = {"x-api-key": "YOUR_API_KEY"}\n\nresponse = requests.get(url, headers=headers)\nprint(response.json())` }
         ]
     },
     {
         id: 'list-audits',
         method: 'GET',
-        path: '/v1/audits',
+        path: '/audits',
         title: 'List Audits',
         description: 'Returns the 20 most recent audits completed by your organization.',
         response: {
@@ -56,13 +62,15 @@ const ENDPOINTS: Endpoint[] = [
             ]
         },
         samples: [
-            { lang: 'bash', code: 'curl -X GET https://api.cognition-ai.com/v1/audits \\\n  -H "x-api-key: YOUR_API_KEY"' }
+            { lang: 'bash', code: `curl -X GET ${API_BASE_URL}/audits \\\n  -H "x-api-key: YOUR_API_KEY"` },
+            { lang: 'javascript', code: `const res = await fetch("${API_BASE_URL}/audits", {\n  headers: { "x-api-key": "YOUR_API_KEY" }\n});\nconst data = await res.json();` },
+            { lang: 'python', code: `import requests\n\nurl = "${API_BASE_URL}/audits"\nheaders = {"x-api-key": "YOUR_API_KEY"}\n\nresponse = requests.get(url, headers=headers)\nprint(response.json())` }
         ]
     },
     {
         id: 'create-audit',
         method: 'POST',
-        path: '/v1/audits',
+        path: '/audits',
         title: 'Create Audit',
         description: 'Trigger a new AI Visibility Audit for a specific URL. This will consume 1 credit.',
         parameters: [
@@ -74,13 +82,15 @@ const ENDPOINTS: Endpoint[] = [
             audit: { id: "aud_456", domain_url: "google.com", status: "complete", overall_score: 92 }
         },
         samples: [
-            { lang: 'bash', code: 'curl -X POST https://api.cognition-ai.com/v1/audits \\\n  -H "x-api-key: YOUR_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d \'{"url": "https://google.com"}\'' }
+            { lang: 'bash', code: `curl -X POST ${API_BASE_URL}/audits \\\n  -H "x-api-key: YOUR_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '{"url": "https://google.com"}'` },
+            { lang: 'javascript', code: `const res = await fetch("${API_BASE_URL}/audits", {\n  method: "POST",\n  headers: { \n    "x-api-key": "YOUR_API_KEY",\n    "Content-Type": "application/json"\n  },\n  body: JSON.stringify({ url: "https://google.com" })\n});\nconst data = await res.json();` },
+            { lang: 'python', code: `import requests\n\nurl = "${API_BASE_URL}/audits"\nheaders = {\n    "x-api-key": "YOUR_API_KEY",\n    "Content-Type": "application/json"\n}\ndata = {"url": "https://google.com"}\n\nresponse = requests.post(url, headers=headers, json=data)\nprint(response.json())` }
         ]
     },
     {
         id: 'competitors',
         method: 'GET',
-        path: '/v1/competitors',
+        path: '/competitors',
         title: 'List Competitors',
         description: 'Retrieve all domains tracked as competitors for your organization.',
         response: {
@@ -89,14 +99,33 @@ const ENDPOINTS: Endpoint[] = [
             ]
         },
         samples: [
-            { lang: 'bash', code: 'curl -X GET https://api.cognition-ai.com/v1/competitors \\\n  -H "x-api-key: YOUR_API_KEY"' }
+            { lang: 'bash', code: `curl -X GET ${API_BASE_URL}/competitors \\\n  -H "x-api-key: YOUR_API_KEY"` },
+            { lang: 'javascript', code: `const res = await fetch("${API_BASE_URL}/competitors", {\n  headers: { "x-api-key": "YOUR_API_KEY" }\n});\nconst data = await res.json();` },
+            { lang: 'python', code: `import requests\n\nurl = "${API_BASE_URL}/competitors"\nheaders = {"x-api-key": "YOUR_API_KEY"}\n\nresponse = requests.get(url, headers=headers)\nprint(response.json())` }
         ]
     }
 ];
 
 export const APIDocs: React.FC = () => {
     const [activeEndpointId, setActiveEndpointId] = useState(ENDPOINTS[0].id);
+    const [activeSection, setActiveSection] = useState<string | null>(null);
+    const [activeLang, setActiveLang] = useState<Record<string, string>>({});
     const [copied, setCopied] = useState<string | null>(null);
+
+    const [testingEndpoint, setTestingEndpoint] = useState<string | null>(null);
+    const [testResponse, setTestResponse] = useState<any>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [apiKey, setApiKey] = useState('');
+    const [params, setParams] = useState<Record<string, string>>({});
+
+    const scrollToSection = (sectionId: string) => {
+        setActiveSection(sectionId);
+        setActiveEndpointId('');
+        const el = document.getElementById(sectionId);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    const getActiveLang = (epId: string) => activeLang[epId] || 'bash';
 
     const handleCopy = (code: string, id: string) => {
         navigator.clipboard.writeText(code);
@@ -104,8 +133,45 @@ export const APIDocs: React.FC = () => {
         setTimeout(() => setCopied(null), 2000);
     };
 
+    const runTest = async (endpoint: Endpoint) => {
+        if (!apiKey) {
+            setTestResponse({ error: "Please enter your API Key first" });
+            return;
+        }
+
+        setIsLoading(true);
+        setTestResponse(null);
+
+        try {
+            const url = `${API_BASE_URL}${endpoint.path}`;
+            const options: RequestInit = {
+                method: endpoint.method,
+                headers: {
+                    'x-api-key': apiKey,
+                    'Content-Type': 'application/json'
+                }
+            };
+
+            if (endpoint.method === 'POST' && endpoint.parameters) {
+                const body: Record<string, any> = {};
+                endpoint.parameters.forEach(p => {
+                    if (params[p.name]) body[p.name] = params[p.name];
+                });
+                options.body = JSON.stringify(body);
+            }
+
+            const res = await fetch(url, options);
+            const data = await res.json();
+            setTestResponse(data);
+        } catch (error: any) {
+            setTestResponse({ error: error.message || "Failed to fetch" });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
-        <div className="flex h-screen bg-[#020617] text-slate-300 overflow-hidden font-inter">
+        <div className="flex min-h-screen bg-[#020617] text-slate-300 font-inter">
             {/* Left Sidebar: Navigation */}
             <div className="w-72 border-r border-white/5 flex flex-col pt-8 bg-slate-950/50">
                 <div className="px-6 mb-8 flex items-center gap-2">
@@ -117,19 +183,19 @@ export const APIDocs: React.FC = () => {
 
                 <nav className="flex-1 overflow-y-auto px-4 space-y-1 custom-scrollbar">
                     <div className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-2 px-2 mt-4">Getting Started</div>
-                    <button className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-white/5 transition-colors flex items-center gap-2">
+                    <button onClick={() => scrollToSection('section-introduction')} className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${activeSection === 'section-introduction' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'hover:bg-white/5 text-slate-400'}`}>
                         <BookOpen className="w-4 h-4" />
                         Introduction
                     </button>
-                    <button className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-white/5 transition-colors flex items-center gap-2">
+                    <button onClick={() => scrollToSection('section-authentication')} className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${activeSection === 'section-authentication' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'hover:bg-white/5 text-slate-400'}`}>
                         <Shield className="w-4 h-4" />
                         Authentication
                     </button>
-                    <button className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-white/5 transition-colors flex items-center gap-2">
+                    <button onClick={() => scrollToSection('section-errors')} className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${activeSection === 'section-errors' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'hover:bg-white/5 text-slate-400'}`}>
                         <Activity className="w-4 h-4" />
                         Errors
                     </button>
-                    <button className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-white/5 transition-colors flex items-center gap-2">
+                    <button onClick={() => scrollToSection('section-webhooks')} className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${activeSection === 'section-webhooks' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'hover:bg-white/5 text-slate-400'}`}>
                         <WebhookIcon className="w-4 h-4" />
                         Webhooks
                     </button>
@@ -138,7 +204,7 @@ export const APIDocs: React.FC = () => {
                     {ENDPOINTS.map(ep => (
                         <button
                             key={ep.id}
-                            onClick={() => setActiveEndpointId(ep.id)}
+                            onClick={() => { setActiveEndpointId(ep.id); setActiveSection(null); const el = document.getElementById(ep.id); if (el) el.scrollIntoView({ behavior: 'smooth' }); }}
                             className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${activeEndpointId === ep.id ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'hover:bg-white/5 text-slate-400'
                                 }`}
                         >
@@ -163,6 +229,64 @@ export const APIDocs: React.FC = () => {
             <div className="flex-1 flex overflow-hidden">
                 {/* Center: Prose (Documentation) */}
                 <div className="flex-1 overflow-y-auto px-12 py-16 custom-scrollbar">
+                    {/* Getting Started Sections */}
+                    <div id="section-introduction" className="mb-24">
+                        <h2 className="text-3xl font-bold text-white mb-4 tracking-tight">Introduction</h2>
+                        <p className="text-slate-400 leading-relaxed mb-6 max-w-2xl text-lg">
+                            The Cognition API lets you programmatically run AI visibility audits, track competitors, and retrieve analysis data. All endpoints return JSON and use standard HTTP response codes.
+                        </p>
+                        <div className="bg-[#0f172a] rounded-xl border border-white/5 p-4 font-mono text-sm">
+                            <code className="text-indigo-300">Base URL: <span className="text-emerald-400">{API_BASE_URL}</span></code>
+                        </div>
+                    </div>
+
+                    <div id="section-authentication" className="mb-24">
+                        <h2 className="text-3xl font-bold text-white mb-4 tracking-tight">Authentication</h2>
+                        <p className="text-slate-400 leading-relaxed mb-6 max-w-2xl text-lg">
+                            All API requests require an API key passed via the <code className="text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded text-sm">x-api-key</code> header. You can generate and manage API keys from your dashboard Settings &gt; API Keys.
+                        </p>
+                        <div className="bg-[#0f172a] rounded-xl border border-white/5 p-4 font-mono text-sm">
+                            <code className="text-indigo-300 whitespace-pre">{`curl -X GET ${API_BASE_URL}/usage \\\n  -H "x-api-key: YOUR_API_KEY"`}</code>
+                        </div>
+                    </div>
+
+                    <div id="section-errors" className="mb-24">
+                        <h2 className="text-3xl font-bold text-white mb-4 tracking-tight">Errors</h2>
+                        <p className="text-slate-400 leading-relaxed mb-6 max-w-2xl text-lg">
+                            The API uses standard HTTP status codes. Errors include a JSON body with an <code className="text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded text-sm">error</code> field describing the issue.
+                        </p>
+                        <div className="space-y-3">
+                            {[
+                                { code: '400', desc: 'Bad Request — Missing or invalid parameters' },
+                                { code: '401', desc: 'Unauthorized — Invalid or missing API key' },
+                                { code: '403', desc: 'Forbidden — Insufficient permissions or plan limits reached' },
+                                { code: '404', desc: 'Not Found — Resource does not exist' },
+                                { code: '429', desc: 'Too Many Requests — Rate limit exceeded' },
+                                { code: '500', desc: 'Internal Server Error — Something went wrong on our end' },
+                            ].map(e => (
+                                <div key={e.code} className="flex items-center gap-4 bg-[#0f172a] rounded-xl border border-white/5 p-4">
+                                    <span className={`text-xs font-bold px-2 py-1 rounded ${parseInt(e.code) >= 500 ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20' : parseInt(e.code) >= 400 ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'}`}>
+                                        {e.code}
+                                    </span>
+                                    <span className="text-sm text-slate-400">{e.desc}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div id="section-webhooks" className="mb-24">
+                        <h2 className="text-3xl font-bold text-white mb-4 tracking-tight">Webhooks</h2>
+                        <p className="text-slate-400 leading-relaxed mb-6 max-w-2xl text-lg">
+                            Configure webhooks from your dashboard to receive real-time notifications when audits complete, scores change, or scheduled tasks run. Webhooks send POST requests with a JSON payload signed using your webhook secret.
+                        </p>
+                        <div className="bg-[#0f172a] rounded-xl border border-white/5 p-4 font-mono text-sm overflow-x-auto">
+                            <pre className="text-blue-300">{JSON.stringify({
+                                event: "audit.completed",
+                                data: { audit_id: "aud_123", domain: "example.com", score: 85, completed_at: "2024-03-20T12:00:00Z" }
+                            }, null, 2)}</pre>
+                        </div>
+                    </div>
+
                     {ENDPOINTS.map(ep => (
                         <div
                             key={ep.id}
@@ -194,12 +318,87 @@ export const APIDocs: React.FC = () => {
                                                 <div className="flex-1 text-sm leading-relaxed">
                                                     <span className="text-rose-500/80 text-[10px] font-bold uppercase mr-2">{p.required ? 'Required' : 'Optional'}</span>
                                                     {p.description}
+                                                    {testingEndpoint === ep.id && (
+                                                        <input
+                                                            type="text"
+                                                            placeholder={`Value for ${p.name}`}
+                                                            className="w-full mt-2 bg-slate-900 border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-indigo-500 outline-none"
+                                                            onChange={e => setParams(prev => ({ ...prev, [p.name]: e.target.value }))}
+                                                        />
+                                                    )}
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
                             )}
+
+                            {/* Try It Section */}
+                            <div className="mb-8 p-6 bg-slate-900/50 rounded-xl border border-white/5">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h4 className="text-sm uppercase tracking-wider font-bold text-slate-500">Test Request</h4>
+                                    <button
+                                        onClick={() => {
+                                            if (testingEndpoint === ep.id) {
+                                                setTestingEndpoint(null);
+                                                setTestResponse(null);
+                                            } else {
+                                                setTestingEndpoint(ep.id);
+                                                setTestResponse(null);
+                                            }
+                                        }}
+                                        className="text-xs text-indigo-400 hover:text-indigo-300 font-bold"
+                                    >
+                                        {testingEndpoint === ep.id ? 'Hide Console' : 'Open Console'}
+                                    </button>
+                                </div>
+
+                                {testingEndpoint === ep.id && (
+                                    <div className="animate-in fade-in slide-in-from-top-4 duration-300">
+                                        <div className="mb-4">
+                                            <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">API Key</label>
+                                            <input
+                                                type="password"
+                                                value={apiKey}
+                                                onChange={e => setApiKey(e.target.value)}
+                                                placeholder="Enter your x-api-key..."
+                                                className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:border-indigo-500 outline-none transition-colors"
+                                            />
+                                        </div>
+
+                                        <button
+                                            onClick={() => runTest(ep)}
+                                            disabled={isLoading}
+                                            className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-500/20"
+                                        >
+                                            {isLoading ? (
+                                                <span className="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />
+                                            ) : (
+                                                <Play className="w-4 h-4 fill-current" />
+                                            )}
+                                            {isLoading ? 'Sending Request...' : 'Send Request'}
+                                        </button>
+
+                                        {testResponse && (
+                                            <div className="mt-6">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <span className="text-xs font-bold text-slate-500 uppercase">Response</span>
+                                                    {testResponse.error ? (
+                                                        <span className="text-xs font-bold text-rose-500 bg-rose-500/10 px-2 py-1 rounded">Error</span>
+                                                    ) : (
+                                                        <span className="text-xs font-bold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded">200 OK</span>
+                                                    )}
+                                                </div>
+                                                <div className="bg-slate-950 rounded-lg border border-white/10 p-4 overflow-x-auto max-h-[300px] custom-scrollbar">
+                                                    <pre className="text-xs font-mono text-blue-300">
+                                                        {JSON.stringify(testResponse, null, 2)}
+                                                    </pre>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
 
                             <div>
                                 <h4 className="text-sm uppercase tracking-wider font-bold text-slate-500 mb-4">Response Sample</h4>
@@ -221,7 +420,11 @@ export const APIDocs: React.FC = () => {
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex gap-4">
                                     {ep.samples.map((s, idx) => (
-                                        <button key={idx} className="text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-white pb-1 border-b-2 border-transparent hover:border-indigo-500 transition-all">
+                                        <button
+                                            key={idx}
+                                            onClick={() => setActiveLang(prev => ({ ...prev, [ep.id]: s.lang }))}
+                                            className={`text-[10px] font-bold uppercase tracking-wider pb-1 border-b-2 transition-all ${getActiveLang(ep.id) === s.lang ? 'text-white border-indigo-500' : 'text-slate-500 hover:text-white border-transparent hover:border-indigo-500'}`}
+                                        >
                                             {s.lang === 'bash' ? 'cURL' : s.lang === 'javascript' ? 'JavaScript' : s.lang}
                                         </button>
                                     ))}
@@ -229,7 +432,7 @@ export const APIDocs: React.FC = () => {
                             </div>
 
                             <div className="space-y-4">
-                                {ep.samples.map((s, idx) => (
+                                {ep.samples.filter(s => s.lang === getActiveLang(ep.id)).map((s, idx) => (
                                     <div key={idx} className="group relative">
                                         <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button

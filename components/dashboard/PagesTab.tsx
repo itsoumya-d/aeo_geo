@@ -1,14 +1,43 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Report } from '../../types';
 import { PageBreakdown } from '../PageBreakdown';
 import { motion } from 'framer-motion';
-import { FileText, Info } from 'lucide-react';
+import { FileText, Info, Search, Filter } from 'lucide-react';
 
 interface PagesTabProps {
     report: Report;
 }
 
+type ImpactFilter = 'ALL' | 'HIGH' | 'MEDIUM' | 'LOW';
+
 export const PagesTab: React.FC<PagesTabProps> = ({ report }) => {
+    const [searchQuery, setSearchQuery] = useState('');
+    const [impactFilter, setImpactFilter] = useState<ImpactFilter>('ALL');
+
+    const filteredPages = useMemo(() => {
+        return report.pages.filter(page => {
+            const matchesSearch = searchQuery === '' ||
+                page.url.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                page.title.toLowerCase().includes(searchQuery.toLowerCase());
+
+            const matchesImpact = impactFilter === 'ALL' ||
+                page.recommendations.some(r => r.impact === impactFilter);
+
+            return matchesSearch && matchesImpact;
+        });
+    }, [report.pages, searchQuery, impactFilter]);
+
+    const highCount = report.pages.reduce((acc, p) => acc + p.recommendations.filter(r => r.impact === 'HIGH').length, 0);
+    const medCount = report.pages.reduce((acc, p) => acc + p.recommendations.filter(r => r.impact === 'MEDIUM').length, 0);
+    const lowCount = report.pages.reduce((acc, p) => acc + p.recommendations.filter(r => r.impact === 'LOW').length, 0);
+
+    const FILTERS: { label: string; value: ImpactFilter; count: number; color: string }[] = [
+        { label: 'All', value: 'ALL', count: report.pages.length, color: 'text-white border-white/20 hover:border-white/40' },
+        { label: 'High Impact', value: 'HIGH', count: highCount, color: 'text-rose-400 border-rose-500/20 hover:border-rose-500/40' },
+        { label: 'Medium', value: 'MEDIUM', count: medCount, color: 'text-amber-400 border-amber-500/20 hover:border-amber-500/40' },
+        { label: 'Low', value: 'LOW', count: lowCount, color: 'text-blue-400 border-blue-500/20 hover:border-blue-500/40' },
+    ];
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -30,14 +59,64 @@ export const PagesTab: React.FC<PagesTabProps> = ({ report }) => {
                 </div>
                 <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
                     <Info className="w-4 h-4 text-slate-500" />
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Real-Time Sync Active</span>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">{report.pages.length} Pages Analyzed</span>
+                </div>
+            </div>
+
+            {/* Filters */}
+            <div className="flex flex-col sm:flex-row gap-4">
+                {/* Search */}
+                <div className="relative flex-1 max-w-sm">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                    <input
+                        type="text"
+                        placeholder="Search pages..."
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                        className="w-full bg-white/[0.03] border border-white/[0.08] text-white text-sm rounded-xl pl-9 pr-4 py-2.5 placeholder:text-slate-600 focus:outline-none focus:border-primary/50 focus:bg-white/[0.05] transition-all"
+                    />
+                </div>
+
+                {/* Impact filter pills */}
+                <div className="flex items-center gap-2 flex-wrap">
+                    <Filter className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                    {FILTERS.map(f => (
+                        <button
+                            key={f.value}
+                            onClick={() => setImpactFilter(f.value)}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[11px] font-bold uppercase tracking-wider transition-all ${f.color} ${impactFilter === f.value ? 'bg-white/10' : 'bg-transparent'}`}
+                        >
+                            {f.label}
+                            <span className="bg-white/10 px-1.5 py-0.5 rounded text-[9px]">{f.count}</span>
+                        </button>
+                    ))}
                 </div>
             </div>
 
             <div className="space-y-8">
-                {report.pages.map((page, idx) => (
-                    <PageBreakdown key={idx} page={page} />
-                ))}
+                {filteredPages.length === 0 ? (
+                    <div className="text-center py-20 bg-slate-900/40 rounded-3xl border border-white/5">
+                        <Search className="w-12 h-12 text-slate-700 mx-auto mb-4" />
+                        {report.pages.length === 0 ? (
+                            <>
+                                <h3 className="text-lg font-bold text-white mb-2">No Pages Analyzed Yet</h3>
+                                <p className="text-sm text-slate-500 max-w-md mx-auto">Run an audit to see a page-level breakdown of how AI search engines perceive each page on your site.</p>
+                            </>
+                        ) : (
+                            <>
+                                <h3 className="text-lg font-bold text-white mb-2">No Matches</h3>
+                                <p className="text-sm text-slate-500 max-w-md mx-auto">Try adjusting your search or filter criteria.</p>
+                                <button onClick={() => { setSearchQuery(''); setImpactFilter('ALL'); }} className="mt-4 text-xs text-primary hover:text-white transition-colors">
+                                    Clear filters
+                                </button>
+                            </>
+                        )}
+                    </div>
+                ) : (
+                    filteredPages.map((page, idx) => (
+                        <PageBreakdown key={idx} page={page} auditId={report.id} />
+                    ))
+                )}
             </div>
         </motion.div>
     );

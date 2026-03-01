@@ -51,7 +51,8 @@ export const SSOConfig: React.FC = () => {
         try {
             const success = await registerSAMLIdP({
                 organizationId: organization.id,
-                metadataUrl: idpUrl
+                metadataUrl: idpUrl,
+                certFingerprint
             });
 
             if (success) {
@@ -80,7 +81,7 @@ export const SSOConfig: React.FC = () => {
                         Protect your data with bank-grade encryption and compliance logs.
                     </p>
                     <a
-                        href="/settings?tab=billing"
+                        href="/settings/billing"
                         className="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-400 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-blue-500/20 hover:scale-105"
                     >
                         <Lock className="w-5 h-5" />

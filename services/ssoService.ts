@@ -39,6 +39,7 @@ export async function signInWithSSO(domain: string): Promise<void> {
 export async function registerSAMLIdP(params: {
     organizationId: string;
     metadataUrl: string;
+    certFingerprint?: string;
 }): Promise<boolean> {
     // This typically requires Supabase CLI or Service Role Key via Edge Function
     // Here we simulate the registration and store metadata for visibility
@@ -47,6 +48,7 @@ export async function registerSAMLIdP(params: {
         .upsert({
             organization_id: params.organizationId,
             metadata_url: params.metadataUrl,
+            cert_fingerprint: params.certFingerprint || null,
             entity_id: `https://auth.cognition.ai/sso/${params.organizationId}`
         }, { onConflict: 'organization_id' });
 

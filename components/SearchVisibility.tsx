@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Report, AIPlatform } from '../types';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
 import { CheckCircle, XCircle, Search, Copy, Terminal, Activity, Hash, Zap, RefreshCw, ExternalLink, Info, Target } from 'lucide-react';
-import { checkVisibility } from '../services/geminiService';
+import { checkVisibility, checkVisibilityBatch } from '../services/geminiService';
 import { useToast } from './Toast';
 import { saveKeywordRanking, getKeywordRankings } from '../services/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,6 +15,7 @@ interface SearchVisibilityProps {
 export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, auditId }) => {
     const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
     const [checkingIndex, setCheckingIndex] = useState<number | null>(null);
+    const [batchChecking, setBatchChecking] = useState(false);
     const [visibilityResults, setVisibilityResults] = useState<Record<number, any>>({});
     const [loadingInitial, setLoadingInitial] = useState(false);
     const toast = useToast();
@@ -48,15 +50,12 @@ export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, audi
     };
 
     const handleCheckVisibility = async (query: string, platform: AIPlatform, index: number) => {
-        if (platform !== AIPlatform.PERPLEXITY && platform !== AIPlatform.GEMINI) {
-            toast.info("Coming Soon", `Real-time check for ${platform} is coming in the next update.`);
-            return;
-        }
+        // All platforms now supported via server-side routing
 
         setCheckingIndex(index);
         const domain = report.pages[0]?.url ? new URL(report.pages[0].url).hostname : "cognition.ai";
 
-        const result = await checkVisibility(query, domain);
+        const result = await checkVisibility(query, domain, platform);
 
         if (result) {
             setVisibilityResults(prev => ({ ...prev, [index]: result }));
@@ -89,6 +88,46 @@ export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, audi
         setTimeout(() => setCopiedIndex(null), 2000);
     };
 
+    const handleCheckAllVisibility = async () => {
+        if (!report.searchQueries?.length || batchChecking) return;
+
+        setBatchChecking(true);
+        const fallbackDomain = report.pages[0]?.url ? new URL(report.pages[0].url).hostname : "cognition.ai";
+
+        const checks = report.searchQueries.map((sq) => ({
+            query: sq.query,
+            domain: fallbackDomain,
+            platform: sq.platform,
+        }));
+
+        const results = await checkVisibilityBatch(checks);
+        if (!results) {
+            toast.error("Batch Check Failed", "Could not verify visibility right now.");
+            setBatchChecking(false);
+            return;
+        }
+
+        const mapped: Record<number, any> = {};
+        await Promise.all(results.map(async (result, index) => {
+            mapped[index] = result;
+            if (auditId && result) {
+                await saveKeywordRanking({
+                    audit_id: auditId,
+                    keyword: report.searchQueries[index].query,
+                    platform: report.searchQueries[index].platform,
+                    rank: result.rank,
+                    citation_found: result.citationFound,
+                    sentiment_score: result.sentiment
+                });
+            }
+        }));
+
+        setVisibilityResults(prev => ({ ...prev, ...mapped }));
+        const citedCount = results.filter(r => r?.citationFound).length;
+        toast.success("Batch Check Complete", `${citedCount}/${results.length} queries cited your brand.`);
+        setBatchChecking(false);
+    };
+
     const getPlatformColor = (platform: AIPlatform) => {
         switch (platform) {
             case AIPlatform.CHATGPT: return 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20 shadow-[0_0_10px_rgba(52,211,153,0.1)]';
@@ -104,7 +143,6 @@ export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, audi
 
             {/* Top Section: SEO Health & Keywords */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
                 {/* SEO Health Score */}
                 <motion.div
                     whileHover={{ y: -5 }}
@@ -113,7 +151,7 @@ export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, audi
                     <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
                         <Activity className="w-32 h-32 text-primary" />
                     </div>
-                    <h3 className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-6">Neural Health Metric</h3>
+                    <h3 className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-6">AI Visibility Score</h3>
                     <div className="flex items-end gap-3 mb-6">
                         <span className="text-7xl font-black text-white tracking-tighter">
                             {report.seoAudit?.technicalHealth || 0}
@@ -130,36 +168,56 @@ export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, audi
                     </div>
                     <p className="text-[10px] text-slate-500 mt-6 font-black uppercase tracking-widest flex items-center gap-2">
                         <Info className="w-3.5 h-3.5" />
-                        Semantic Clarity & Indexing Status
+                        Search Engine & AI Readiness
                     </p>
                 </motion.div>
 
-                {/* Target Keywords */}
+                {/* Platform Comparison Chart */}
                 <motion.div
                     whileHover={{ y: -5 }}
-                    className="lg:col-span-2 bg-slate-900/40 backdrop-blur-xl rounded-3xl p-6 sm:p-8 border border-white/5 shadow-2xl relative overflow-hidden"
+                    className="lg:col-span-2 bg-slate-900/40 backdrop-blur-xl rounded-3xl p-6 sm:p-8 border border-white/5 shadow-2xl relative overflow-hidden flex flex-col"
                 >
-                    <div className="flex items-center gap-3 mb-8">
+                    <div className="flex items-center gap-3 mb-6">
                         <div className="bg-primary/20 p-2 rounded-lg">
-                            <Hash className="w-4 h-4 text-primary" />
+                            <Zap className="w-4 h-4 text-primary" />
                         </div>
-                        <h3 className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em]">High-Impact Latent Entities</h3>
+                        <h3 className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em]">Platform Dominance</h3>
                     </div>
-                    <div className="flex flex-wrap gap-3">
-                        {report.keywords?.map((keyword, idx) => (
-                            <motion.span
-                                key={idx}
-                                whileHover={{ scale: 1.05 }}
-                                className="bg-white/[0.03] border border-white/5 text-slate-300 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:border-primary/50 transition-all cursor-default shadow-sm"
-                            >
-                                {keyword}
-                            </motion.span>
-                        ))}
-                    </div>
-                    <div className="mt-8 pt-6 border-t border-white/5">
-                        <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest leading-loose">
-                            These entities trigger high-confidence retrieval in RAG systems.
-                        </p>
+
+                    <div className="flex-1 w-full min-h-[200px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={report.platformScores || []}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                                <XAxis
+                                    dataKey="platform"
+                                    tick={{ fill: '#64748b', fontSize: 10, fontWeight: 900 }}
+                                    axisLine={false}
+                                    tickLine={false}
+                                />
+                                <YAxis hide />
+                                <Tooltip
+                                    contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '12px' }}
+                                    itemStyle={{ color: '#e2e8f0', fontSize: '12px', fontWeight: 'bold' }}
+                                    cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                                />
+                                <Bar
+                                    dataKey="score"
+                                    radius={[8, 8, 0, 0]}
+                                    barSize={40}
+                                >
+                                    {
+                                        (report.platformScores || []).map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={
+                                                entry.platform === 'ChatGPT' ? '#10a37f' :
+                                                    entry.platform === 'Claude' ? '#d97757' :
+                                                        entry.platform === 'Perplexity' ? '#3b82f6' :
+                                                            entry.platform === 'Gemini' ? '#4f46e5' : '#64748b'
+                                            } />
+                                        ))
+                                    }
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
                     </div>
                 </motion.div>
             </div>
@@ -204,8 +262,8 @@ export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, audi
                             <XCircle className="w-5 h-5 text-rose-400" />
                         </div>
                         <div>
-                            <h3 className="text-white font-black text-lg tracking-tight">Critical Retrieval Gaps</h3>
-                            <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Requires Immediate Sync</p>
+                            <h3 className="text-white font-black text-lg tracking-tight">Missing Optimizations</h3>
+                            <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Action Required</p>
                         </div>
                     </div>
                     <div className="space-y-4">
@@ -237,10 +295,17 @@ export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, audi
                             <div className="bg-primary/20 p-2 rounded-xl">
                                 <Terminal className="w-5 h-5 text-primary" />
                             </div>
-                            Live Agentic Visibility Matrix
+                            AI Platform Visibility Checks
                         </h2>
-                        <p className="text-xs text-slate-500 mt-2 font-medium">Real-time verification of brand citations across major LLM platforms.</p>
+                        <p className="text-xs text-slate-500 mt-2 font-medium">Verify how AI platforms cite your brand in their responses.</p>
                     </div>
+                    <button
+                        onClick={handleCheckAllVisibility}
+                        disabled={batchChecking || checkingIndex !== null || !report.searchQueries?.length}
+                        className="px-4 py-2 rounded-xl bg-primary/20 border border-primary/30 text-primary text-xs font-bold uppercase tracking-widest hover:bg-primary/30 transition-colors disabled:opacity-50"
+                    >
+                        {batchChecking ? 'Running all checks…' : 'Run all checks'}
+                    </button>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -263,7 +328,7 @@ export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, audi
                                     <Target className="w-3.5 h-3.5 text-slate-600" />
                                 </div>
                             </div>
-                            <div className="bg-black/40 p-6 rounded-2xl font-mono text-xs text-slate-400 mb-8 border border-white/5 group-hover:border-primary/30 transition-colors leading-relaxed">
+                            <div className="bg-black/40 p-6 rounded-2xl font-mono text-xs text-slate-400 mb-8 border border-white/5 group-hover:border-primary/30 transition-colors leading-relaxed break-words overflow-hidden">
                                 <span className="text-primary mr-3 opacity-50">$ cognition test --q</span>
                                 "{sq.query}"
                             </div>
@@ -271,11 +336,11 @@ export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, audi
                                 <motion.button
                                     whileTap={{ scale: 0.98 }}
                                     onClick={() => handleCheckVisibility(sq.query, sq.platform, idx)}
-                                    disabled={checkingIndex === idx}
+                                    disabled={checkingIndex === idx || batchChecking}
                                     className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-3 shadow-xl ${visibilityResults[idx]?.citationFound ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 shadow-emerald-500/10' : 'bg-primary hover:bg-primary/90 text-white shadow-primary/20 disabled:bg-primary/50'}`}
                                 >
                                     {checkingIndex === idx ? (
-                                        <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Analyzing Latent Space...</>
+                                        <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Checking visibility...</>
                                     ) : visibilityResults[idx] ? (
                                         visibilityResults[idx].citationFound ?
                                             <><CheckCircle className="w-3.5 h-3.5" /> Cited in Top-1 Response</> :
@@ -303,7 +368,7 @@ export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, audi
                                         className="mt-6 p-5 rounded-2xl bg-black/60 border border-white/5 text-[11px] text-slate-500 overflow-hidden"
                                     >
                                         <div className="font-black text-slate-400 mb-3 flex justify-between items-center text-[9px] uppercase tracking-widest">
-                                            <span>Engine Output Synchronized</span>
+                                            <span>Response Verified</span>
                                             {visibilityResults[idx].citationFound && <span className="text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-full border border-emerald-500/10">POSITIVE MATCH</span>}
                                         </div>
                                         <div className="line-clamp-4 italic font-medium text-slate-300 bg-white/[0.02] p-3 rounded-xl border-l-2 border-primary/30 leading-relaxed mb-4">

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { supabase } from '../services/supabase';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from './Toast';
+import { getTechnicalErrorMessage, toUserMessage } from '../utils/errors';
 import {
     Zap, ShoppingCart, Loader2, Check,
     CreditCard, Sparkles, X, ShieldCheck
@@ -9,6 +9,7 @@ import {
 import { Card } from './ui/Card';
 import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
+import { trapFocus } from '../utils/accessibility';
 
 interface TopUpOption {
     id: string;
@@ -20,38 +21,58 @@ interface TopUpOption {
 }
 
 const TOPUP_OPTIONS: TopUpOption[] = [
-    { id: 'small', credits: 10, rewrites: 100, price: '$9', priceId: 'price_topup_10_mock' },
-    { id: 'medium', credits: 50, rewrites: 500, price: '$39', priceId: 'price_topup_50_mock', popular: true },
-    { id: 'large', credits: 150, rewrites: 1500, price: '$99', priceId: 'price_topup_150_mock' },
+    { id: 'small', credits: 10, rewrites: 100, price: '$9', priceId: import.meta.env.VITE_PADDLE_TOPUP_10_PRICE_ID || '' },
+    { id: 'medium', credits: 50, rewrites: 500, price: '$39', priceId: import.meta.env.VITE_PADDLE_TOPUP_50_PRICE_ID || '', popular: true },
+    { id: 'large', credits: 150, rewrites: 1500, price: '$99', priceId: import.meta.env.VITE_PADDLE_TOPUP_150_PRICE_ID || '' },
 ];
 
 export const TopUpModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
     const { user } = useAuth();
     const toast = useToast();
     const [loading, setLoading] = useState<string | null>(null);
+    const modalRef = useRef<HTMLDivElement>(null);
+
+    const handleClose = useCallback(() => {
+        if (loading) return;
+        onClose();
+    }, [loading, onClose]);
+
+    useEffect(() => {
+        if (!isOpen || !modalRef.current) return;
+        const cleanup = trapFocus(modalRef.current);
+        const handleEsc = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') handleClose();
+        };
+        document.addEventListener('keydown', handleEsc);
+        return () => { cleanup(); document.removeEventListener('keydown', handleEsc); };
+    }, [isOpen, handleClose]);
 
     const handlePurchase = async (option: TopUpOption) => {
         if (!user) return;
+        if (!option.priceId) {
+            toast.info('Top-ups not configured', 'Please configure Paddle top-up price IDs.');
+            return;
+        }
         setLoading(option.id);
 
         try {
-            const { data, error } = await supabase.functions.invoke('create-checkout', {
-                body: {
-                    priceId: option.priceId,
-                    mode: 'payment',
+            const Paddle = (window as any).Paddle;
+            if (!Paddle) throw new Error('Paddle SDK not loaded. Please refresh the page.');
+
+            Paddle.Checkout.open({
+                items: [{ priceId: option.priceId, quantity: 1 }],
+                customer: user.email ? { email: user.email } : undefined,
+                customData: {
                     credits: option.credits,
                     rewrites: option.rewrites,
-                    successUrl: window.location.origin + '/dashboard?topup=success',
-                    cancelUrl: window.location.origin + '/dashboard'
-                }
+                    type: 'TOPUP',
+                },
             });
-
-            if (error) throw error;
-            if (data?.url) {
-                window.location.href = data.url;
-            }
         } catch (e: any) {
-            toast.error('Purchase Failed', e.message);
+            console.error('Top-up purchase failed:', getTechnicalErrorMessage(e));
+            const userMsg = toUserMessage(e);
+            toast.error(userMsg.title, userMsg.message);
+        } finally {
             setLoading(null);
         }
     };
@@ -59,21 +80,23 @@ export const TopUpModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-            <Card className="w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-300 p-0 shadow-2xl bg-surface border-border">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-300" role="presentation">
+            <div className="absolute inset-0" onClick={handleClose} aria-hidden="true" />
+            <Card ref={modalRef} role="dialog" aria-modal="true" aria-labelledby="topup-modal-title" className="relative w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-300 p-0 shadow-2xl bg-surface border-border">
                 <div className="relative p-8 sm:p-12">
                     <button
-                        onClick={onClose}
+                        onClick={handleClose}
+                        aria-label="Close credit top-up dialog"
                         className="absolute top-6 right-6 p-2 text-text-muted hover:text-white hover:bg-white/10 rounded-full transition-colors"
                     >
-                        <X className="w-6 h-6" />
+                        <X className="w-6 h-6" aria-hidden="true" />
                     </button>
 
                     <div className="text-center mb-10">
                         <Badge variant="default" className="mb-4">
                             <Sparkles className="w-3 h-3 mr-1" /> Credit Top-up
                         </Badge>
-                        <h2 className="text-3xl font-black text-white mb-2 font-display">Refuel Your Engine</h2>
+                        <h2 id="topup-modal-title" className="text-3xl font-black text-white mb-2 font-display">Refuel Your Engine</h2>
                         <p className="text-text-secondary">Add instant credits to your account. No subscription required.</p>
                     </div>
 
@@ -111,7 +134,7 @@ export const TopUpModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                                 </div>
                                 <Button
                                     onClick={() => handlePurchase(option)}
-                                    disabled={loading !== null}
+                                    disabled={loading !== null || !option.priceId}
                                     variant={option.popular ? 'primary' : 'secondary'}
                                     className="w-full"
                                 >
@@ -120,7 +143,7 @@ export const TopUpModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                                     ) : (
                                         <>
                                             <ShoppingCart className="w-4 h-4 mr-2" />
-                                            {option.price}
+                                            {option.priceId ? option.price : 'Not configured'}
                                         </>
                                     )}
                                 </Button>
@@ -141,3 +164,5 @@ export const TopUpModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
         </div>
     );
 };
+
+export default TopUpModal;

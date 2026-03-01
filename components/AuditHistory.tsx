@@ -1,12 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase, Audit } from '../services/supabase';
 import { useToast } from './Toast';
+import { useNavigate } from 'react-router-dom';
 import {
     History, TrendingUp, TrendingDown, Minus, Calendar, ExternalLink,
-    Loader2, ChevronRight, RefreshCw, Filter, ArrowUpRight
+    Loader2, ChevronRight, RefreshCw, Filter, ArrowUpRight, Search, Zap
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
+import { safeHostname } from '../utils/validation';
+import { getTechnicalErrorMessage, toUserMessage } from '../utils/errors';
+import { HistorySkeleton } from './ui/Skeleton';
 
 interface AuditWithDetails extends Audit {
     domain_name?: string;
@@ -41,37 +45,42 @@ const ScoreIndicator: React.FC<{ score: number; previousScore?: number }> = ({ s
     );
 };
 
-interface AuditHistoryProps {
-    onSelectAudit?: (audit: AuditWithDetails) => void;
-}
-
-export const AuditHistory: React.FC<AuditHistoryProps> = ({ onSelectAudit }) => {
-    const { organization } = useAuth();
+export const AuditHistory: React.FC = () => {
+    const { organization, currentWorkspace } = useAuth();
     const toast = useToast();
+    const navigate = useNavigate();
 
     const [audits, setAudits] = useState<AuditWithDetails[]>([]);
     const [trendData, setTrendData] = useState<TrendData[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedDomain, setSelectedDomain] = useState<string>('all');
     const [domains, setDomains] = useState<string[]>([]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [dateRange, setDateRange] = useState<'7d' | '30d' | '90d' | 'all'>('all');
 
     useEffect(() => {
         if (organization?.id) {
             loadAudits();
         }
-    }, [organization?.id]);
+    }, [organization?.id, currentWorkspace?.id]);
 
     const loadAudits = async () => {
         if (!organization?.id) return;
         setLoading(true);
 
         try {
-            const { data, error } = await supabase
+            let query = supabase
                 .from('audits')
                 .select('*')
                 .eq('organization_id', organization.id)
                 .order('created_at', { ascending: false })
                 .limit(50);
+
+            if (currentWorkspace?.id) {
+                query = query.eq('workspace_id', currentWorkspace.id);
+            }
+
+            const { data, error } = await query;
 
             if (error) throw error;
 
@@ -79,9 +88,7 @@ export const AuditHistory: React.FC<AuditHistoryProps> = ({ onSelectAudit }) => 
             setAudits(auditsData);
 
             // Extract unique domains
-            const uniqueDomains = [...new Set(auditsData.map(a =>
-                new URL(a.domain_url).hostname
-            ))];
+            const uniqueDomains = [...new Set(auditsData.map(a => safeHostname(a.domain_url)).filter(Boolean))];
             setDomains(uniqueDomains);
 
             // Build trend data (last 10 audits in chronological order)
@@ -97,16 +104,32 @@ export const AuditHistory: React.FC<AuditHistoryProps> = ({ onSelectAudit }) => 
             setTrendData(trends);
 
         } catch (error: any) {
-            console.error('Failed to load audits:', error);
-            toast.error('Failed to load history', error.message);
+            console.error('Failed to load audits:', getTechnicalErrorMessage(error));
+            const user = toUserMessage(error);
+            toast.error(user.title, user.message);
         } finally {
             setLoading(false);
         }
     };
 
-    const filteredAudits = selectedDomain === 'all'
-        ? audits
-        : audits.filter(a => new URL(a.domain_url).hostname === selectedDomain);
+    const filteredAudits = useMemo(() => {
+        const now = Date.now();
+        const rangeCutoff: Record<string, number> = {
+            '7d': now - 7 * 24 * 60 * 60 * 1000,
+            '30d': now - 30 * 24 * 60 * 60 * 1000,
+            '90d': now - 90 * 24 * 60 * 60 * 1000,
+            'all': 0,
+        };
+        const cutoff = rangeCutoff[dateRange] ?? 0;
+
+        return audits.filter(a => {
+            const hostname = safeHostname(a.domain_url) || a.domain_url;
+            const matchesDomain = selectedDomain === 'all' || hostname === selectedDomain;
+            const matchesSearch = searchQuery === '' || hostname.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesDate = dateRange === 'all' || new Date(a.created_at).getTime() >= cutoff;
+            return matchesDomain && matchesSearch && matchesDate;
+        });
+    }, [audits, selectedDomain, searchQuery, dateRange]);
 
     const getStatusBadge = (status: string) => {
         const styles = {
@@ -119,11 +142,7 @@ export const AuditHistory: React.FC<AuditHistoryProps> = ({ onSelectAudit }) => 
     };
 
     if (loading) {
-        return (
-            <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 text-primary animate-spin" />
-            </div>
-        );
+        return <HistorySkeleton />;
     }
 
     return (
@@ -198,42 +217,107 @@ export const AuditHistory: React.FC<AuditHistoryProps> = ({ onSelectAudit }) => 
                 </div>
             )}
 
-            {/* Domain Filter */}
-            {domains.length > 1 && (
-                <div className="flex items-center gap-3">
-                    <Filter className="w-4 h-4 text-slate-500" />
-                    <select
-                        value={selectedDomain}
-                        onChange={(e) => setSelectedDomain(e.target.value)}
-                        className="bg-slate-800 border border-slate-700 text-white rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
-                    >
-                        <option value="all">All Domains ({audits.length})</option>
-                        {domains.map(domain => (
-                            <option key={domain} value={domain}>
-                                {domain} ({audits.filter(a => new URL(a.domain_url).hostname === domain).length})
-                            </option>
+            {/* Filters */}
+            {audits.length > 0 && (
+                <div className="space-y-3">
+                    {/* Date Range Pills */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <Calendar className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                        {([
+                            { value: '7d', label: '7 Days' },
+                            { value: '30d', label: '30 Days' },
+                            { value: '90d', label: '90 Days' },
+                            { value: 'all', label: 'All Time' },
+                        ] as const).map(({ value, label }) => (
+                            <button
+                                key={value}
+                                onClick={() => setDateRange(value)}
+                                className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                                    dateRange === value
+                                        ? 'bg-primary text-white'
+                                        : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
+                                }`}
+                            >
+                                {label}
+                            </button>
                         ))}
-                    </select>
+                    </div>
+
+                    {/* Search + Domain Filter */}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <div className="relative flex-1 max-w-sm">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                            <input
+                                type="text"
+                                placeholder="Search by domain..."
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                className="w-full bg-slate-800 border border-slate-700 text-white rounded-lg pl-9 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none placeholder:text-slate-600"
+                            />
+                        </div>
+                        {domains.length > 1 && (
+                            <div className="flex items-center gap-3">
+                                <Filter className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                                <select
+                                    value={selectedDomain}
+                                    onChange={(e) => setSelectedDomain(e.target.value)}
+                                    className="bg-slate-800 border border-slate-700 text-white rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
+                                >
+                                    <option value="all">All Domains ({audits.length})</option>
+                                    {domains.map(domain => (
+                                        <option key={domain} value={domain}>
+                                            {domain} ({audits.filter(a => safeHostname(a.domain_url) === domain).length})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
 
             {/* Audits List */}
             {filteredAudits.length === 0 ? (
-                <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-8 text-center">
+                <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-12 text-center">
                     <History className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                    <h4 className="font-medium text-white mb-2">No Audits Yet</h4>
-                    <p className="text-sm text-slate-400">
-                        Run your first AI visibility audit to see it here.
-                    </p>
+                    {audits.length === 0 ? (
+                        <>
+                            <h4 className="font-semibold text-white mb-2 text-lg">No Audits Yet</h4>
+                            <p className="text-sm text-slate-400 mb-6 max-w-sm mx-auto">
+                                Run your first AI visibility audit to discover how AI search engines see your brand.
+                            </p>
+                            <button
+                                onClick={() => navigate('/dashboard')}
+                                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-6 py-2.5 rounded-xl font-semibold text-sm transition-colors"
+                            >
+                                <Zap className="w-4 h-4" /> Start Your First Audit
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <h4 className="font-medium text-white mb-2">No Matches</h4>
+                            <p className="text-sm text-slate-400">Try a different search term or domain filter.</p>
+                            <button onClick={() => { setSearchQuery(''); setSelectedDomain('all'); setDateRange('all'); }} className="mt-3 text-xs text-primary hover:text-white transition-colors">
+                                Clear filters
+                            </button>
+                        </>
+                    )}
                 </div>
             ) : (
                 <div className="space-y-3">
                     {filteredAudits.map((audit, index) => {
                         const previousAudit = filteredAudits[index + 1];
+                        const hostname = safeHostname(audit.domain_url) || audit.domain_url;
+                        const externalUrl = audit.domain_url.startsWith('http')
+                            ? audit.domain_url
+                            : audit.domain_url.includes('.')
+                                ? `https://${audit.domain_url}`
+                                : null;
                         return (
                             <div
                                 key={audit.id}
-                                className="bg-slate-900/50 border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-colors group"
+                                onClick={() => audit.status === 'complete' && navigate(`/results/${audit.id}`)}
+                                className={`bg-slate-900/50 border border-slate-800 rounded-xl p-4 transition-colors group ${audit.status === 'complete' ? 'hover:border-primary/40 cursor-pointer' : 'hover:border-slate-700'}`}
                             >
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-4">
@@ -241,10 +325,10 @@ export const AuditHistory: React.FC<AuditHistoryProps> = ({ onSelectAudit }) => 
                                             score={audit.overall_score || 0}
                                             previousScore={previousAudit?.overall_score ?? undefined}
                                         />
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <p className="font-medium text-white">
-                                                    {new URL(audit.domain_url).hostname}
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <p className="font-medium text-white truncate max-w-[200px] sm:max-w-xs">
+                                                    {hostname}
                                                 </p>
                                                 <span className={`text-xs px-2 py-0.5 rounded-full border ${getStatusBadge(audit.status)}`}>
                                                     {audit.status}
@@ -261,20 +345,22 @@ export const AuditHistory: React.FC<AuditHistoryProps> = ({ onSelectAudit }) => 
                                                         minute: '2-digit'
                                                     })}
                                                 </span>
-                                                <a
-                                                    href={audit.domain_url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="flex items-center gap-1 hover:text-primary transition-colors"
-                                                >
-                                                    <ExternalLink className="w-3 h-3" />
-                                                    View Site
-                                                </a>
+                                                {externalUrl && (
+                                                    <a
+                                                        href={externalUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="flex items-center gap-1 hover:text-primary transition-colors"
+                                                    >
+                                                        <ExternalLink className="w-3 h-3" />
+                                                        View Site
+                                                    </a>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
                                     <button
-                                        onClick={() => onSelectAudit?.(audit)}
+                                        onClick={() => navigate(`/results/${audit.id}`)}
                                         className="opacity-0 group-hover:opacity-100 flex items-center gap-1 text-primary text-sm font-medium transition-opacity"
                                     >
                                         View Report

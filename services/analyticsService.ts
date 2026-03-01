@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { apiCache } from '../utils/cache';
 
 /**
  * Analytics Service
@@ -8,7 +9,7 @@ import { supabase } from './supabase';
 export interface VisibilityDataPoint {
     date: string;
     score: number;
-    competitorAvg: number;
+    competitorAvg: number | null;
     timestamp: number;
 }
 
@@ -19,7 +20,17 @@ export type Timeframe = '7d' | '30d' | '90d' | 'all';
  */
 export async function getVisibilityTrends(
     organizationId: string,
-    timeframe: Timeframe = '30d'
+    timeframe: Timeframe = '30d',
+    workspaceId?: string | null
+): Promise<VisibilityDataPoint[]> {
+    const cacheKey = `visibility:${organizationId}:${workspaceId ?? 'all'}:${timeframe}`;
+    return apiCache.get(cacheKey, () => _fetchVisibilityTrends(organizationId, timeframe, workspaceId), { ttl: 60_000 });
+}
+
+async function _fetchVisibilityTrends(
+    organizationId: string,
+    timeframe: Timeframe,
+    workspaceId?: string | null
 ): Promise<VisibilityDataPoint[]> {
     const now = new Date();
     let startDate = new Date();
@@ -40,8 +51,8 @@ export async function getVisibilityTrends(
     }
 
     try {
-        // Fetch audit snapshots
-        const { data: audits, error: auditError } = await supabase
+        // Build base queries with optional workspace filter
+        const auditBase = supabase
             .from('audits')
             .select('created_at, overall_score')
             .eq('organization_id', organizationId)
@@ -49,10 +60,7 @@ export async function getVisibilityTrends(
             .gte('created_at', startDate.toISOString())
             .order('created_at', { ascending: true });
 
-        if (auditError) throw auditError;
-
-        // Fetch competitor benchmarks for the same period
-        const { data: benchmarks, error: benchmarkError } = await supabase
+        const benchmarkBase = supabase
             .from('competitor_benchmarks')
             .select('captured_at, score')
             .eq('organization_id', organizationId)
@@ -60,82 +68,75 @@ export async function getVisibilityTrends(
             .gte('captured_at', startDate.toISOString())
             .order('captured_at', { ascending: true });
 
+        // Fetch audit snapshots and competitor benchmarks in parallel
+        const [auditResult, benchmarkResult] = await Promise.all([
+            workspaceId ? auditBase.eq('workspace_id', workspaceId) : auditBase,
+            workspaceId ? benchmarkBase.eq('workspace_id', workspaceId) : benchmarkBase,
+        ]);
+
+        const { data: audits, error: auditError } = auditResult;
+        const { data: benchmarks, error: benchmarkError } = benchmarkResult;
+
+        if (auditError) throw auditError;
+
         if (benchmarkError) {
             console.warn('Could not fetch competitor benchmarks for trends:', benchmarkError);
         }
 
-        // Process data into daily buckets
-        const dailyBuckets: Record<string, { scores: number[], compScores: number[] }> = {};
+        const dailyBuckets: Record<string, { scores: number[]; compScores: number[] }> = {};
+
+        const dateKey = (iso: string) => {
+            try {
+                return new Date(iso).toISOString().slice(0, 10);
+            } catch {
+                return iso.slice(0, 10);
+            }
+        };
+
+        const labelForKey = (key: string) => {
+            const d = new Date(`${key}T00:00:00Z`);
+            return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        };
 
         // Process audits
         audits?.forEach(audit => {
-            const dateStr = new Date(audit.created_at).toLocaleDateString(undefined, {
-                month: 'short',
-                day: 'numeric'
-            });
+            const dateStr = dateKey(audit.created_at);
             if (!dailyBuckets[dateStr]) dailyBuckets[dateStr] = { scores: [], compScores: [] };
             dailyBuckets[dateStr].scores.push(audit.overall_score);
         });
 
         // Process benchmarks
         benchmarks?.forEach(bm => {
-            const dateStr = new Date(bm.captured_at).toLocaleDateString(undefined, {
-                month: 'short',
-                day: 'numeric'
-            });
+            const dateStr = dateKey(bm.captured_at);
             if (!dailyBuckets[dateStr]) dailyBuckets[dateStr] = { scores: [], compScores: [] };
             dailyBuckets[dateStr].compScores.push(bm.score);
         });
 
         // Convert buckets to data points
-        const results: VisibilityDataPoint[] = Object.entries(dailyBuckets).map(([date, data]) => {
+        const results: VisibilityDataPoint[] = Object.entries(dailyBuckets)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([key, data]) => {
             const avgScore = data.scores.length > 0
                 ? Math.round(data.scores.reduce((a, b) => a + b, 0) / data.scores.length)
                 : 0;
 
             const avgCompScore = data.compScores.length > 0
                 ? Math.round(data.compScores.reduce((a, b) => a + b, 0) / data.compScores.length)
-                : 65; // Fallback to market average
+                : null;
 
             return {
-                date,
+                date: labelForKey(key),
                 score: avgScore,
                 competitorAvg: avgCompScore,
-                timestamp: new Date(date).getTime()
+                timestamp: new Date(`${key}T00:00:00Z`).getTime()
             };
         });
-
-        // If no data, return mock for better initial UX or empty state handling
-        if (results.length === 0) {
-            return generateMockTrends(timeframe);
-        }
 
         return results;
     } catch (error) {
         console.error('Error fetching visibility trends:', error);
-        return generateMockTrends(timeframe);
+        return [];
     }
-}
-
-/**
- * Internal helper to generate mock data if no real data exists
- */
-function generateMockTrends(timeframe: Timeframe): VisibilityDataPoint[] {
-    const days = timeframe === '7d' ? 7 : timeframe === '30d' ? 30 : 90;
-    const data: VisibilityDataPoint[] = [];
-    const now = new Date();
-
-    for (let i = days; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(now.getDate() - i);
-        data.push({
-            date: d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-            score: 40 + Math.floor(Math.random() * 20) + (days - i),
-            competitorAvg: 60 + Math.floor(Math.random() * 10),
-            timestamp: d.getTime()
-        });
-    }
-    return data;
 }
 
 export default {

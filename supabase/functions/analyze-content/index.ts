@@ -20,6 +20,7 @@ import type {
     AnalyzePayload,
     RewritePayload,
     VisibilityPayload,
+    VisibilityBatchPayload,
     DiscoveredPage,
     AnalysisReport,
     RewriteResult,
@@ -37,12 +38,7 @@ import { withCache, CACHE_TTL } from "../_shared/redis.ts";
 import { syncHubSpotEvent } from "../_shared/hubspot.ts";
 import { initRateLimiter, checkRateLimit } from "../_shared/rateLimit.ts";
 import { withRetry, fetchWithRetry } from "../_shared/retry.ts";
-
-const corsHeaders: Record<string, string> = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-    "Access-Control-Expose-Headers": "X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset"
-};
+import { buildCorsHeaders } from "../_shared/cors.ts";
 
 // Initialize Rate Limiter once (outside handler for reuse)
 const rateLimiter = initRateLimiter();
@@ -74,7 +70,14 @@ function isRewritePayload(payload: unknown): payload is RewritePayload {
 }
 
 function isVisibilityPayload(payload: unknown): payload is VisibilityPayload {
-    return typeof payload === 'object' && payload !== null && 'query' in payload && 'domain' in payload;
+    return typeof payload === 'object' && payload !== null && 'platform' in payload && 'query' in payload && 'domain' in payload;
+}
+
+function isVisibilityBatchPayload(payload: unknown): payload is VisibilityBatchPayload {
+    return typeof payload === 'object'
+        && payload !== null
+        && 'checks' in payload
+        && Array.isArray((payload as VisibilityBatchPayload).checks);
 }
 
 function isSandboxPayload(payload: unknown): payload is SandboxComparePayload {
@@ -86,6 +89,12 @@ function isAutoAuditPayload(payload: unknown): payload is AutoAuditPayload {
 }
 
 serve(async (req: Request): Promise<Response> => {
+    const requestId = crypto.randomUUID();
+    const corsHeaders: Record<string, string> = {
+        ...buildCorsHeaders(req.headers.get("origin")),
+        "Access-Control-Expose-Headers": "X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-Request-Id",
+    };
+
     if (req.method === "OPTIONS") {
         return new Response("ok", { headers: corsHeaders });
     }
@@ -94,7 +103,14 @@ serve(async (req: Request): Promise<Response> => {
         const body = await req.json() as FunctionRequest;
         const { action, payload } = body;
 
+        const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+        const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
         const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+
+        if (!supabaseUrl || !anonKey || !serviceRoleKey) {
+            throw new Error("Server Misconfiguration: Missing Supabase environment variables");
+        }
+
         const supabaseAdmin: SupabaseClient = createClient(supabaseUrl, serviceRoleKey);
 
         let orgId: string | null = null;
@@ -102,12 +118,6 @@ serve(async (req: Request): Promise<Response> => {
 
         const authHeader = req.headers.get("Authorization") ?? "";
         const apiKeyHeader = req.headers.get("x-api-key");
-
-        const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-        const supabaseAdmin: SupabaseClient = createClient(supabaseUrl, serviceRoleKey);
-
-        let orgId: string | null = null;
-        let isServiceRole = false;
 
         // 1. API Key Auth (External)
         if (apiKeyHeader) {
@@ -190,14 +200,26 @@ serve(async (req: Request): Promise<Response> => {
                         "Content-Type": "application/json",
                         "X-RateLimit-Limit": limit.toString(),
                         "X-RateLimit-Remaining": remaining.toString(),
-                        "X-RateLimit-Reset": reset.toString()
+                        "X-RateLimit-Reset": reset.toString(),
+                        "X-Request-Id": requestId,
                     },
                     status: 429
                 });
             }
         }
 
-        // 4. Credit Management
+        // 4. Validate credit-billed payloads before charging
+        if (action === "ANALYZE" && !isAnalyzePayload(payload)) {
+            throw new Error("Invalid payload for ANALYZE action");
+        }
+        if (action === "REWRITE" && !isRewritePayload(payload)) {
+            throw new Error("Invalid payload for REWRITE action");
+        }
+        if (action === "SANDBOX_COMPARE" && !isSandboxPayload(payload)) {
+            throw new Error("Invalid payload for SANDBOX_COMPARE action");
+        }
+
+        // 5. Credit Management
         if (action === "ANALYZE" || action === "REWRITE" || action === "SANDBOX_COMPARE") {
             const { data: creditResult, error: creditError } = await supabaseAdmin.rpc('decrement_credits', {
                 p_org_id: orgId,
@@ -211,6 +233,7 @@ serve(async (req: Request): Promise<Response> => {
             }
             if (creditResult && !creditResult.success) {
                 return new Response(JSON.stringify({ error: creditResult.error }), {
+                    headers: { ...corsHeaders, "Content-Type": "application/json", "X-Request-Id": requestId },
                     status: 402,
                 });
             }
@@ -243,22 +266,58 @@ serve(async (req: Request): Promise<Response> => {
             if (jobError) throw jobError;
 
             return new Response(JSON.stringify({ success: true, message: "Job queued for AI processing" }), {
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
+                headers: { ...corsHeaders, "Content-Type": "application/json", "X-Request-Id": requestId },
                 status: 202
             });
         }
 
-        // 4. Init AI Models
-        const apiKey = Deno.env.get("GEMINI_API_KEY");
-        if (!apiKey) {
-            throw new Error("Server Misconfiguration: Missing GEMINI_API_KEY");
+        // 4. Init AI Providers (server-owned routing)
+        type Provider = 'gemini' | 'claude' | 'openai';
+        const providerPreference: Provider[] = ['gemini', 'claude', 'openai'];
+        const availableProviders: Provider[] = [];
+
+        const geminiKey = Deno.env.get("GEMINI_API_KEY") ?? "";
+        const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY") ?? Deno.env.get("CLAUDE_API_KEY") ?? "";
+        const openaiKey = Deno.env.get("OPENAI_API_KEY") ?? "";
+
+        if (geminiKey) availableProviders.push('gemini');
+        if (anthropicKey) availableProviders.push('claude');
+        if (openaiKey) availableProviders.push('openai');
+
+        const requiresAI = action === "ANALYZE"
+            || action === "REWRITE"
+            || action === "CHECK_VISIBILITY"
+            || action === "CHECK_VISIBILITY_BATCH"
+            || action === "SANDBOX_COMPARE"
+            || action === "AUTO_AUDIT";
+        const providerOrder = providerPreference.filter(p => availableProviders.includes(p));
+
+        if (requiresAI && providerOrder.length === 0) {
+            throw new Error("Server Misconfiguration: No AI provider configured");
         }
 
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model: GenerativeModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
-        const embeddingModel: GenerativeModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
+        const genAI = geminiKey ? new GoogleGenerativeAI(geminiKey) : null;
+        const geminiModel: GenerativeModel | null = genAI ? genAI.getGenerativeModel({ model: Deno.env.get("GEMINI_CHAT_MODEL") ?? "gemini-2.0-flash-exp" }) : null;
+        const geminiEmbeddingModel: GenerativeModel | null = genAI ? genAI.getGenerativeModel({ model: "text-embedding-004" }) : null;
 
-        let result: DiscoveredPage[] | AnalysisReport | RewriteResult | VisibilityResult | SandboxCompareResult | null;
+        const generateJson = async (prompt: string) => await generateWithFallback(providerOrder, prompt, geminiModel);
+        const embedText = async (text: string) => await embedWithFallback(text, geminiEmbeddingModel);
+        const generateForPlatform = async (platform: string, prompt: string) => {
+            const p = (platform || '').toLowerCase();
+            const preferred: Provider | null =
+                p === 'gemini' ? 'gemini'
+                    : p === 'claude' ? 'claude'
+                        : (p === 'chatgpt' || p === 'openai') ? 'openai'
+                            : null;
+
+            const order = preferred
+                ? [preferred, ...providerOrder.filter(x => x !== preferred)]
+                : providerOrder;
+
+            return await generateWithFallback(order, prompt, geminiModel);
+        };
+
+        let result: DiscoveredPage[] | AnalysisReport | RewriteResult | VisibilityResult | VisibilityResult[] | SandboxCompareResult | null;
 
         // 5. Route to handlers
         switch (action) {
@@ -286,7 +345,7 @@ serve(async (req: Request): Promise<Response> => {
                 result = await withCache(
                     cacheKeyAnalyze,
                     CACHE_TTL.ANALYSIS,
-                    async () => await handleAnalysis(model, payload)
+                    async () => await handleAnalysis(generateJson, embedText, payload)
                 );
                 // Add notification
                 await supabaseAdmin.from('audit_notifications').insert({
@@ -337,21 +396,28 @@ serve(async (req: Request): Promise<Response> => {
                 if (!isRewritePayload(payload)) {
                     throw new Error("Invalid payload for REWRITE action");
                 }
-                result = await handleRewrite(model, embeddingModel, payload);
+                result = await handleRewrite(generateJson, embedText, payload);
                 break;
 
             case "CHECK_VISIBILITY":
                 if (!isVisibilityPayload(payload)) {
                     throw new Error("Invalid payload for CHECK_VISIBILITY action");
                 }
-                result = await handleVisibilityCheck(payload);
+                result = await handleVisibilityCheck(generateForPlatform, payload);
+                break;
+
+            case "CHECK_VISIBILITY_BATCH":
+                if (!isVisibilityBatchPayload(payload)) {
+                    throw new Error("Invalid payload for CHECK_VISIBILITY_BATCH action");
+                }
+                result = await handleVisibilityBatch(generateForPlatform, payload);
                 break;
 
             case "SANDBOX_COMPARE":
                 if (!isSandboxPayload(payload)) {
                     throw new Error("Invalid payload for SANDBOX_COMPARE action");
                 }
-                result = await handleSandboxCompare(model, embeddingModel, payload);
+                result = await handleSandboxCompare(generateJson, embedText, payload);
                 break;
 
             case "AUTO_AUDIT":
@@ -361,7 +427,7 @@ serve(async (req: Request): Promise<Response> => {
                 if (!isServiceRole) {
                     throw new Error("AUTO_AUDIT can only be triggered by system scheduler");
                 }
-                result = await handleAutoAudit(supabaseAdmin, model, payload);
+                result = await handleAutoAudit(supabaseAdmin, generateJson, embedText, payload);
                 break;
 
             default:
@@ -369,15 +435,23 @@ serve(async (req: Request): Promise<Response> => {
         }
 
         return new Response(JSON.stringify(result), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            headers: { ...corsHeaders, "Content-Type": "application/json", "X-Request-Id": requestId },
             status: 200,
         });
 
     } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : "Unknown error";
         console.error("Error:", errorMessage);
-        return new Response(JSON.stringify({ error: errorMessage }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+        return new Response(JSON.stringify({
+            success: false,
+            error: errorMessage,
+            details: {
+                code: "ANALYZE_CONTENT_FAILED",
+                message: errorMessage,
+                requestId
+            }
+        }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json", "X-Request-Id": requestId },
             status: 500,
         });
     }
@@ -456,13 +530,14 @@ async function handleDiscovery(url: string): Promise<DiscoveredPage[]> {
 
 // --- Multi-Model Helper ---
 async function generateWithProvider(
-    provider: 'gemini' | 'claude' | 'openai' = 'gemini',
+    provider: 'gemini' | 'claude' | 'openai',
     prompt: string,
-    geminiModel: GenerativeModel
+    geminiModel: GenerativeModel | null
 ): Promise<string> {
     console.log(`Generating with provider: ${provider}`);
 
     if (provider === 'gemini') {
+        if (!geminiModel) throw new Error("Gemini provider not configured");
         const result = await withRetry(async () => {
             return await geminiModel.generateContent({
                 contents: [{ role: "user", parts: [{ text: prompt }] }],
@@ -473,8 +548,8 @@ async function generateWithProvider(
     }
 
     if (provider === 'claude') {
-        const apiKey = Deno.env.get("CLAUDE_API_KEY");
-        if (!apiKey) throw new Error("Missing CLAUDE_API_KEY");
+        const apiKey = Deno.env.get("ANTHROPIC_API_KEY") ?? Deno.env.get("CLAUDE_API_KEY");
+        if (!apiKey) throw new Error("Claude provider not configured");
 
         const response = await fetchWithRetry("https://api.anthropic.com/v1/messages", {
             method: "POST",
@@ -484,20 +559,20 @@ async function generateWithProvider(
                 "content-type": "application/json"
             },
             body: JSON.stringify({
-                model: "claude-3-5-sonnet-20240620",
+                model: Deno.env.get("ANTHROPIC_MODEL") ?? "claude-3-5-sonnet-20241022",
                 max_tokens: 4096,
                 messages: [{ role: "user", content: prompt + "\n\nReturn strict JSON." }]
             })
         });
 
-        if (!response.ok) throw new Error(`Claude API Error: ${response.status} ${await response.text()}`);
+        if (!response.ok) throw new Error(`Claude API Error: ${response.status}`);
         const data = await response.json();
         return data.content[0].text;
     }
 
     if (provider === 'openai') {
         const apiKey = Deno.env.get("OPENAI_API_KEY");
-        if (!apiKey) throw new Error("Missing OPENAI_API_KEY");
+        if (!apiKey) throw new Error("OpenAI provider not configured");
 
         const response = await fetchWithRetry("https://api.openai.com/v1/chat/completions", {
             method: "POST",
@@ -506,7 +581,7 @@ async function generateWithProvider(
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                model: "gpt-4o",
+                model: Deno.env.get("OPENAI_CHAT_MODEL") ?? "gpt-4o",
                 messages: [
                     { role: "system", content: "You are a helpful assistant that outputs strict JSON." },
                     { role: "user", content: prompt }
@@ -515,7 +590,7 @@ async function generateWithProvider(
             })
         });
 
-        if (!response.ok) throw new Error(`OpenAI API Error: ${response.status} ${await response.text()}`);
+        if (!response.ok) throw new Error(`OpenAI API Error: ${response.status}`);
         const data = await response.json();
         return data.choices[0].message.content;
     }
@@ -523,8 +598,273 @@ async function generateWithProvider(
     throw new Error(`Unsupported provider: ${provider}`);
 }
 
-async function handleAnalysis(model: GenerativeModel, payload: AnalyzePayload): Promise<AnalysisReport> {
-    const { websiteUrl, otherAssets, mainContent, competitors, llmProvider } = payload;
+function isRetryableAIError(error: unknown): boolean {
+    const message = error instanceof Error ? error.message : String(error);
+    const lower = message.toLowerCase();
+    if (lower.includes('429') || lower.includes('rate limit') || lower.includes('too many')) return true;
+    if (lower.includes('timeout') || lower.includes('timed out')) return true;
+    if (lower.includes('503') || lower.includes('502') || lower.includes('500') || lower.includes('overloaded')) return true;
+    if (lower.includes('failed to fetch') || lower.includes('network')) return true;
+    return false;
+}
+
+async function generateWithFallback(
+    providers: Array<'gemini' | 'claude' | 'openai'>,
+    prompt: string,
+    geminiModel: GenerativeModel | null
+): Promise<string> {
+    let lastError: unknown = null;
+
+    for (const provider of providers) {
+        try {
+            return await generateWithProvider(provider, prompt, geminiModel);
+        } catch (error) {
+            lastError = error;
+            if (isRetryableAIError(error)) {
+                console.warn(`Provider ${provider} failed, trying next provider…`, error instanceof Error ? error.message : error);
+                continue;
+            }
+            throw error;
+        }
+    }
+
+    throw lastError instanceof Error ? lastError : new Error("AI generation failed");
+}
+
+async function embedWithFallback(
+    text: string,
+    geminiEmbeddingModel: GenerativeModel | null
+): Promise<number[]> {
+    if (geminiEmbeddingModel) {
+        const result = await withRetry(async () => {
+            return await geminiEmbeddingModel.embedContent(text);
+        });
+        return (result.embedding.values as number[]) || [];
+    }
+
+    const apiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!apiKey) throw new Error("Embedding provider not configured");
+
+    const response = await fetchWithRetry("https://api.openai.com/v1/embeddings", {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${apiKey}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            model: Deno.env.get("OPENAI_EMBED_MODEL") ?? "text-embedding-3-small",
+            input: text
+        })
+    });
+
+    if (!response.ok) throw new Error(`OpenAI Embedding API Error: ${response.status}`);
+    const data = await response.json() as any;
+    return (data.data?.[0]?.embedding as number[]) || [];
+}
+
+/**
+ * Calculate content authority score (0-100) based on quality signals
+ * Higher scores indicate more authoritative, citation-worthy content
+ */
+function calculateContentAuthority(content: string, report: AnalysisReport): number {
+    let score = 50; // Base score
+
+    // 1. Content Depth (0-20 points)
+    const wordCount = content.split(/\s+/).length;
+    if (wordCount > 2000) score += 20;
+    else if (wordCount > 1000) score += 15;
+    else if (wordCount > 500) score += 10;
+    else if (wordCount > 200) score += 5;
+
+    // 2. Structured Data / Schema Markup (0-15 points)
+    const hasJsonLd = content.includes('application/ld+json') || content.includes('"@type"');
+    if (hasJsonLd) score += 15;
+
+    // 3. Statistical Authority (0-15 points)
+    const statPatterns = [
+        /\d+%/g, // Percentages
+        /\b\d{1,3}(,\d{3})*\b/g, // Numbers with commas
+        /(according to|research shows|studies indicate|data reveals)/gi, // Authority phrases
+    ];
+    const statCount = statPatterns.reduce((sum, pattern) => {
+        const matches = content.match(pattern);
+        return sum + (matches ? matches.length : 0);
+    }, 0);
+    if (statCount > 10) score += 15;
+    else if (statCount > 5) score += 10;
+    else if (statCount > 2) score += 5;
+
+    // 4. Entity Linking Density (0-15 points)
+    const entityMarkers = [
+        /"sameAs"/gi,
+        /"mentions"/gi,
+        /"@id"/gi,
+        /https?:\/\/[^\s"]+/g, // External links
+    ];
+    const entityCount = entityMarkers.reduce((sum, pattern) => {
+        const matches = content.match(pattern);
+        return sum + (matches ? matches.length : 0);
+    }, 0);
+    if (entityCount > 15) score += 15;
+    else if (entityCount > 8) score += 10;
+    else if (entityCount > 3) score += 5;
+
+    // 5. Content Structure (0-10 points)
+    const hasHeadings = /<h[1-6]>/i.test(content);
+    const hasList = /<(ul|ol)>/i.test(content);
+    const hasTable = /<table>/i.test(content);
+    if (hasHeadings) score += 4;
+    if (hasList) score += 3;
+    if (hasTable) score += 3;
+
+    // 6. Citation-Friendly Formatting (0-10 points)
+    const quotablePatterns = [
+        /<blockquote>/gi,
+        /^> /gm, // Markdown quotes
+        /"[^"]{30,}"/g, // Long quoted strings
+    ];
+    const quotableCount = quotablePatterns.reduce((sum, pattern) => {
+        const matches = content.match(pattern);
+        return sum + (matches ? matches.length : 0);
+    }, 0);
+    if (quotableCount > 3) score += 10;
+    else if (quotableCount > 1) score += 5;
+
+    // 7. SEO Technical Health Bonus (0-5 points)
+    if (report.seoAudit && report.seoAudit.technicalHealth > 80) {
+        score += 5;
+    } else if (report.seoAudit && report.seoAudit.technicalHealth > 60) {
+        score += 3;
+    }
+
+    // 8. Quote Likelihood Bonus (0-10 points)
+    // Average quote likelihood across pages
+    if (report.pages && report.pages.length > 0) {
+        const avgQuoteLikelihood = report.pages.reduce((sum, p) => sum + (p.quoteLikelihood || 0), 0) / report.pages.length;
+        if (avgQuoteLikelihood > 80) score += 10;
+        else if (avgQuoteLikelihood > 60) score += 7;
+        else if (avgQuoteLikelihood > 40) score += 4;
+    }
+
+    // Clamp to 0-100 range
+    return Math.max(0, Math.min(100, score));
+}
+
+async function generateVectorMap(
+    embedText: (text: string) => Promise<number[]>,
+    mainContent: string,
+    report: AnalysisReport,
+    competitors?: string[]
+): Promise<AnalysisReport['vectorMap']> {
+    try {
+        const topKeyword = report.keywords?.[0] || "SEO";
+
+        // 1. Generate Embeddings
+        const [vContent, vKeyword] = await Promise.all([
+            embedText(mainContent.slice(0, 8000)), // Limit context
+            embedText(topKeyword)
+        ]);
+
+        // 2. Calculate Similarity
+        const similarity = cosineSimilarity(vContent, vKeyword);
+
+        // 3. Project to 3D Visualization Space (Simplified)
+        // Target (Keyword) is always at top-right (90, 90)
+        // Content is positioned on the diagonal line towards Target based on similarity
+
+        const targetX = 90;
+        const targetY = 90;
+        const targetZ = 800;
+
+        // Map similarity (0.6 to 0.9 range typically) to 20-80 range on chart
+        // We boost the raw cosine similarity because typically embeddings are 0.7-0.8 for relevant text
+        const relevance = Math.max(10, Math.min(95, (similarity - 0.5) * 200));
+
+        const contentX = relevance;
+
+        // Calculate authority score based on content quality signals
+        const authority = calculateContentAuthority(mainContent || "", report);
+        const contentY = Math.min(100, relevance + (authority - 50) / 5); // Authority affects Y-axis position
+
+        // @ts-ignore
+        const map: AnalysisReport['vectorMap'] = [
+            { x: targetX, y: targetY, z: targetZ, label: `Target: ${topKeyword}`, type: 'gold_standard' },
+            { x: contentX, y: contentY, z: 400, label: 'Your Content', type: 'your_content' }
+        ];
+
+        // Add real competitor analysis
+        if (competitors && competitors.length > 0) {
+            // Fetch homepage content from top 3 competitors and position them on the map
+            const competitorPromises = competitors.slice(0, 3).map(async (compUrl, idx) => {
+                try {
+                    // Fetch competitor homepage
+                    const response = await fetchWithRetry(compUrl.startsWith('http') ? compUrl : `https://${compUrl}`, {
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (compatible; CognitionBot/1.0; +https://cognition.ai)'
+                        }
+                    }, 2, 3000); // 2 retries, 3s timeout
+
+                    if (!response.ok) {
+                        console.warn(`Failed to fetch competitor ${compUrl}: ${response.status}`);
+                        return null;
+                    }
+
+                    const html = await response.text();
+
+                    // Extract main content (simplified - strip scripts/styles)
+                    const compContent = html
+                        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+                        .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+                        .replace(/<[^>]+>/g, ' ')
+                        .replace(/\s+/g, ' ')
+                        .trim()
+                        .slice(0, 5000); // Limit to 5K chars for embedding
+
+                    // Embed competitor content
+                    const compEmbedding = await embedText(compContent);
+
+                    // Calculate similarity to target keyword
+                    const compSimilarity = cosineSimilarity(compEmbedding, vKeyword);
+                    const compRelevance = Math.max(10, Math.min(95, (compSimilarity - 0.5) * 200));
+
+                    // Calculate competitor authority
+                    const compAuthority = calculateContentAuthority(html, {
+                        seoAudit: { implemented: [], missing: [], technicalHealth: 50 },
+                        pages: [],
+                    } as any);
+
+                    return {
+                        x: compRelevance,
+                        y: Math.min(100, compRelevance + (compAuthority - 50) / 5),
+                        z: 600,
+                        label: compUrl.replace(/^https?:\/\/(www\.)?/, '').split('/')[0],
+                        type: 'competitor' as const
+                    };
+                } catch (error) {
+                    console.error(`Error analyzing competitor ${compUrl}:`, error);
+                    return null;
+                }
+            });
+
+            const competitorResults = await Promise.all(competitorPromises);
+            const validCompetitors = competitorResults.filter(c => c !== null);
+            map.push(...validCompetitors);
+        }
+
+        return map;
+
+    } catch (e) {
+        console.error("Vector map generation failed:", e);
+        return [];
+    }
+}
+
+async function handleAnalysis(
+    generateJson: (prompt: string) => Promise<string>,
+    embedText: (text: string) => Promise<number[]>,
+    payload: AnalyzePayload
+): Promise<AnalysisReport> {
+    const { websiteUrl, otherAssets, mainContent, competitors } = payload;
 
     const prompt = `
     Analyze this brand presence for Generative Engine Optimization (GEO).
@@ -537,18 +877,18 @@ async function handleAnalysis(model: GenerativeModel, payload: AnalyzePayload): 
     1. Identify if content uses the "According to [Source]" pattern or specific statistics (Statistical Authority).
     2. Check for modularity and LLM summarizability (Quotability).
     3. Evaluate Entity Linking: Does it provide JSON-LD ready entities like sameAs/mentions?
+    4. DO NOT generate vectorMap. It will be calculated separately.
 
     Return a JSON object with:
     - overallScore (0-100)
-    - platformScores (array of {platform, score, reasoning})
+    - platformScores (array of {platform, score, reasoning}) - MUST include ALL 8 platforms: ChatGPT, Gemini, Claude, Perplexity, Google AI Overviews, Microsoft Copilot, Meta AI, and Grok
     - pages (array of page analysis)
     - topicalDominance (array of strings)
-    - brandConsistnecyScore (0-100)
+    - brandConsistencyScore (0-100)
     - consistencyAnalysis (string)
     - keywords (array of strings)
     - searchQueries (array of {platform, query, intent})
     - seoAudit ({implemented: [], missing: [], technicalHealth: number})
-    - vectorMap (array of {x, y, label, type: 'brand'|'competitor'|'keyword'})
     - keywordRankings (array of {keyword, platform, rank, citationFound, sentiment})
     
     - citationProbability (0-100): likelihood of being cited by an LLM.
@@ -564,22 +904,31 @@ async function handleAnalysis(model: GenerativeModel, payload: AnalyzePayload): 
     Ensure strict JSON format.
     `;
 
-    const responseText = await generateWithProvider(llmProvider, prompt, model);
+    const responseText = await generateJson(prompt);
+    let report: AnalysisReport;
     try {
-        return JSON.parse(responseText) as AnalysisReport;
+        report = JSON.parse(responseText) as AnalysisReport;
     } catch (e) {
         // Fallback: try to clean markdown code blocks
         const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '');
-        return JSON.parse(cleanJson) as AnalysisReport;
+        report = JSON.parse(cleanJson) as AnalysisReport;
     }
+
+    // Enhance with Vector Map
+    try {
+        report.vectorMap = await generateVectorMap(embedText, mainContent || "", report, competitors);
+    } catch (vecErr) {
+        console.warn("Vector map generation failed, skipping:", vecErr);
+    }
+    return report;
 }
 
 async function handleRewrite(
-    model: GenerativeModel,
-    embeddingModel: GenerativeModel,
+    generateJson: (prompt: string) => Promise<string>,
+    embedText: (text: string) => Promise<number[]>,
     payload: RewritePayload
 ): Promise<RewriteResult> {
-    const { original, context, rewrite: userRewrite, goal, tone, llmProvider } = payload;
+    const { original, context, rewrite: userRewrite, goal, tone } = payload;
 
     let targetRewrite = userRewrite;
     let reasoning = "Analysis of provided rewrite.";
@@ -606,7 +955,7 @@ async function handleRewrite(
         Return strict JSON: { "rewrite": "string", "reasoning": "string" }
         `;
 
-        const responseText = await generateWithProvider(llmProvider, prompt, model);
+        const responseText = await generateJson(prompt);
         const genData = JSON.parse(responseText.replace(/```json/g, '').replace(/```/g, '')) as { rewrite: string; reasoning: string };
 
         targetRewrite = genData.rewrite;
@@ -620,21 +969,17 @@ async function handleRewrite(
         Return strict JSON: { "reasoning": "string" }
         `;
 
-        const responseText = await generateWithProvider(llmProvider, prompt, model);
+        const responseText = await generateJson(prompt);
         const genData = JSON.parse(responseText.replace(/```json/g, '').replace(/```/g, '')) as { reasoning: string };
         reasoning = genData.reasoning;
     }
 
-    // 2. Calculate Vector Shift (Always use Gemini for simplified vector space comparison)
-    const [contextEmb, originalEmb, rewriteEmb] = await Promise.all([
-        embeddingModel.embedContent(context),
-        embeddingModel.embedContent(original),
-        embeddingModel.embedContent(targetRewrite || original)
+    // 2. Calculate semantic shift using embeddings
+    const [vContext, vOriginal, vRewrite] = await Promise.all([
+        embedText(context),
+        embedText(original),
+        embedText(targetRewrite || original)
     ]);
-
-    const vContext = contextEmb.embedding.values as number[];
-    const vOriginal = originalEmb.embedding.values as number[];
-    const vRewrite = rewriteEmb.embedding.values as number[];
 
     const simOriginal = cosineSimilarity(vContext, vOriginal);
     const simRewrite = cosineSimilarity(vContext, vRewrite);
@@ -652,78 +997,152 @@ async function handleRewrite(
     };
 }
 
-async function handleVisibilityCheck(payload: VisibilityPayload): Promise<VisibilityResult> {
-    const { query, domain } = payload;
-    const apiKey = Deno.env.get("PERPLEXITY_API_KEY");
+async function handleVisibilityCheck(
+    generateForPlatform: (platform: string, prompt: string) => Promise<string>,
+    payload: VisibilityPayload
+): Promise<VisibilityResult> {
+    const { platform, query, domain } = payload;
+    const platformLabel = platform || 'Perplexity';
+    const cleanDomain = domain.toLowerCase().replace('www.', '').replace('https://', '').replace('http://', '').split('/')[0];
 
-    if (!apiKey) {
-        console.warn("Missing PERPLEXITY_API_KEY, using mock response");
-        return {
-            platform: "Perplexity",
-            rank: 0,
-            citationFound: false,
-            sentiment: 0,
-            answer: "Perplexity API key not configured."
-        };
+    // 1. Perplexity (Live Search)
+    if (platformLabel.toLowerCase() === 'perplexity') {
+        const apiKey = Deno.env.get("PERPLEXITY_API_KEY");
+        if (!apiKey) {
+            return {
+                platform: platformLabel,
+                rank: -1,
+                citationFound: false,
+                sentiment: 0,
+                error: "Perplexity API key not configured."
+            };
+        }
+
+        try {
+            const response = await fetchWithRetry("https://api.perplexity.ai/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${apiKey}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    model: "llama-3.1-sonar-small-128k-online",
+                    messages: [
+                        { role: "system", content: "You are a helpful search assistant. Include citations when available." },
+                        { role: "user", content: query }
+                    ]
+                })
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Perplexity API Error: ${response.status} ${errorText}`);
+            }
+
+            const data = await response.json() as {
+                choices: Array<{ message: { content: string } }>;
+                citations?: string[];
+            };
+
+            const retrievedAnswer = data.choices[0]?.message?.content || "";
+            const citations = data.citations || [];
+
+            const citationFound =
+                citations.some((c: string) => c.toLowerCase().includes(cleanDomain)) ||
+                retrievedAnswer.toLowerCase().includes(cleanDomain);
+
+            // Simple positive sentiment heuristic
+            const sentiment = retrievedAnswer.toLowerCase().includes('best') || retrievedAnswer.toLowerCase().includes('recommend') ? 80 : 50;
+
+            return {
+                platform: 'Perplexity',
+                rank: citationFound ? 1 : 0,
+                citationFound,
+                sentiment,
+                answer: retrievedAnswer
+            };
+
+        } catch (error: unknown) {
+            console.error("Perplexity Check Error:", error instanceof Error ? error.message : error);
+            return {
+                platform: 'Perplexity',
+                rank: -1,
+                citationFound: false,
+                sentiment: 0,
+                answer: "Could not retrieve live results.",
+                error: "API Error"
+            };
+        }
     }
 
+    // 2. ChatGPT / Claude / Gemini (Direct Knowledge Check)
     try {
-        const response = await fetchWithRetry("https://api.perplexity.ai/chat/completions", {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${apiKey}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                model: "llama-3.1-sonar-small-128k-online",
-                messages: [
-                    { role: "system", content: "You are a helpful search assistant." },
-                    { role: "user", content: query }
-                ]
-            })
-        });
+        const prompt = `
+        Answer this user query naturally as an AI assistant.
+        Do not use any external tools or search, just use your internal knowledge.
+        Query: "${query}"
+        
+        After your answer, add a separator "###METADATA###" and provide a JSON object with:
+        - "mentions": ["list", "of", "brands", "or", "websites", "mentioned"],
+        - "sentiment": number (0-100, where 50 is neutral),
+        
+        Keep the metadata strict JSON.
+        `;
 
-        if (!response.ok) {
-            throw new Error(`Perplexity API Error: ${response.status}`);
+        const rawResponse = await generateForPlatform(platformLabel, prompt);
+
+        const [answerPart, metadataPart] = rawResponse.split('###METADATA###');
+        const answer = answerPart ? answerPart.trim() : "";
+        let metadata = { mentions: [], sentiment: 50 };
+
+        if (metadataPart) {
+            try {
+                const cleanJson = metadataPart.replace(/```json/g, '').replace(/```/g, '').trim();
+                metadata = JSON.parse(cleanJson);
+            } catch (e) {
+                console.warn("Failed to parse visibility metadata", e);
+            }
         }
 
-        const data = await response.json() as {
-            choices: Array<{ message: { content: string } }>;
-            citations?: string[];
-        };
-
-        const content = data.choices[0]?.message?.content || "";
-        const citations = data.citations || [];
-
-        let citationFound = citations.some((c: string) => c.includes(domain));
-        if (!citationFound) {
-            citationFound = content.toLowerCase().includes(domain.toLowerCase());
-        }
+        const directMention = metadata.mentions?.some((m: string) => m.toLowerCase().includes(cleanDomain));
+        const textMention = answer.toLowerCase().includes(cleanDomain);
+        const citationFound = directMention || textMention;
 
         return {
-            platform: "Perplexity",
+            platform: platformLabel,
             rank: citationFound ? 1 : 0,
-            citationFound,
-            sentiment: 0.5,
-            answer: content
+            citationFound: citationFound,
+            sentiment: metadata.sentiment || 50,
+            answer: answer
         };
 
     } catch (error: unknown) {
-        const errorMessage = error instanceof Error ? error.message : "Unknown error";
-        console.error("Perplexity check failed:", errorMessage);
+        console.error(`${platformLabel} Check Error:`, error instanceof Error ? error.message : error);
         return {
-            platform: "Perplexity",
+            platform: platformLabel,
             rank: -1,
             citationFound: false,
             sentiment: 0,
-            error: errorMessage
+            answer: `Could not verify with ${platformLabel}.`,
+            error: "Platform Check Failed"
         };
     }
 }
 
+async function handleVisibilityBatch(
+    generateForPlatform: (platform: string, prompt: string) => Promise<string>,
+    payload: VisibilityBatchPayload
+): Promise<VisibilityResult[]> {
+    const checks = payload.checks.slice(0, 20);
+    const results = await Promise.all(
+        checks.map((check) => handleVisibilityCheck(generateForPlatform, check))
+    );
+    return results;
+}
+
 async function handleSandboxCompare(
-    model: GenerativeModel,
-    embeddingModel: GenerativeModel,
+    generateJson: (prompt: string) => Promise<string>,
+    embedText: (text: string) => Promise<number[]>,
     payload: SandboxComparePayload
 ): Promise<SandboxCompareResult> {
     const { goal, variantA, variantB } = payload;
@@ -746,43 +1165,17 @@ async function handleSandboxCompare(
     }
     `;
 
-    const [genResult, goalEmb, aEmb, bEmb] = await Promise.all([
-        model.generateContent({
-            contents: [{ role: "user", parts: [{ text: prompt }] }],
-            generationConfig: { responseMimeType: "application/json" }
-        }),
-        embeddingModel.embedContent(goal),
-        embeddingModel.embedContent(variantA),
-        embeddingModel.embedContent(variantB)
+    const responseText = await generateJson(prompt);
+    const comparison = JSON.parse(responseText.replace(/```json/g, '').replace(/```/g, '')) as { a: any, b: any };
+
+    const [vGoal, vA, vB] = await Promise.all([
+        embedText(goal),
+        embedText(variantA),
+        embedText(variantB)
     ]);
-
-    const responseText = genResult.response.text();
-    const comparison = JSON.parse(responseText) as { a: any, b: any };
-
-    // Calculate alignment via vector similarity using DB RPC (simulated for migration)
-    // In a real high-scale scenario, we would store these and search.
-    // For now, we use the RPC 'calculate_similarity' if we wanted to offload, 
-    // but to avoid network RTT for 2 vectors, we'll keep the JS for this specific function 
-    // BUT we will enable the saving of these vectors to the new table for future analysis.
-
-    const vGoal = goalEmb.embedding.values as number[];
-    const vA = aEmb.embedding.values as number[];
-    const vB = bEmb.embedding.values as number[];
 
     const alignmentA = cosineSimilarity(vGoal, vA);
     const alignmentB = cosineSimilarity(vGoal, vB);
-
-    // Save to Knowledge Base (New Feature enabled by Migration)
-    if (orgId) {
-        try {
-            await supabaseAdmin.from('content_embeddings').insert([
-                { organization_id: orgId, content: variantA, embedding: vA, metadata: { type: 'variant', goal } },
-                { organization_id: orgId, content: variantB, embedding: vB, metadata: { type: 'variant', goal } }
-            ]);
-        } catch (e) {
-            console.warn("Failed to store embeddings:", e);
-        }
-    }
 
     return {
         a: { ...comparison.a, alignment: alignmentA },
@@ -792,7 +1185,8 @@ async function handleSandboxCompare(
 
 async function handleAutoAudit(
     supabaseAdmin: SupabaseClient,
-    model: GenerativeModel,
+    generateJson: (prompt: string) => Promise<string>,
+    embedText: (text: string) => Promise<number[]>,
     payload: AutoAuditPayload
 ): Promise<{ success: boolean; auditId?: string }> {
     const { domainUrl, organizationId, frequency } = payload;
@@ -831,7 +1225,7 @@ async function handleAutoAudit(
     }
 
     // 3. Analysis
-    const report = await handleAnalysis(model, { websiteUrl: domainUrl, mainContent });
+    const report = await handleAnalysis(generateJson, embedText, { websiteUrl: domainUrl, mainContent });
 
     // 4. Save Audit
     const { data: audit, error: auditError } = await supabaseAdmin

@@ -36,13 +36,13 @@ export const ConsistencyTab: React.FC<ConsistencyTabProps> = ({ report }) => {
 
                         <div className="relative mb-6">
                             <div className="text-7xl font-black text-white tracking-tighter">
-                                {report.brandConsistnecyScore}
+                                {report.brandConsistencyScore}
                             </div>
                             <span className="absolute -top-1 -right-6 text-slate-500 text-xl font-bold opacity-30">/100</span>
                         </div>
 
                         <div className="bg-white/[0.03] rounded-2xl p-6 border border-white/[0.05] w-full">
-                            <p className="text-slate-400 text-sm italic font-medium leading-relaxed">
+                            <p className="text-slate-400 text-sm italic font-medium leading-relaxed line-clamp-4">
                                 "{report.consistencyAnalysis}"
                             </p>
                         </div>
@@ -50,12 +50,14 @@ export const ConsistencyTab: React.FC<ConsistencyTabProps> = ({ report }) => {
                         <div className="mt-8 pt-8 border-t border-white/5 w-full flex items-center justify-between">
                             <div className="flex flex-col items-start">
                                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Status</span>
-                                <span className="text-xs font-black text-emerald-400 uppercase tracking-widest">Optimized High</span>
+                                <span className={`text-xs font-black uppercase tracking-widest ${report.brandConsistencyScore >= 80 ? 'text-emerald-400' : report.brandConsistencyScore >= 60 ? 'text-amber-400' : 'text-rose-400'}`}>
+                                    {report.brandConsistencyScore >= 80 ? 'Optimized High' : report.brandConsistencyScore >= 60 ? 'Moderate' : 'Needs Attention'}
+                                </span>
                             </div>
                             <div className="h-8 w-px bg-white/10"></div>
                             <div className="flex flex-col items-end">
-                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Drift Δ</span>
-                                <span className="text-xs font-black text-white uppercase tracking-widest">+2.4%</span>
+                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Score</span>
+                                <span className="text-xs font-black text-white uppercase tracking-widest">{report.brandConsistencyScore}/100</span>
                             </div>
                         </div>
                     </motion.div>
@@ -67,7 +69,7 @@ export const ConsistencyTab: React.FC<ConsistencyTabProps> = ({ report }) => {
                             <h4 className="text-xs font-black text-white uppercase tracking-widest">AIE Insights</h4>
                         </div>
                         <p className="text-sm text-slate-300 font-medium leading-relaxed mb-6">
-                            Semantic consistency across your domain is currently high, preventing "Identity Dilution" in RAG systems.
+                            Semantic consistency across your domain is currently high, reducing brand voice drift across AI assistants.
                         </p>
                         <button className="flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest hover:text-white transition-colors group">
                             Full Analysis <ArrowUpRight className="w-3 h-3 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />

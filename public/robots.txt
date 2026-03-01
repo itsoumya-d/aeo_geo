@@ -1,16 +1,19 @@
 User-agent: *
 Allow: /
 
-# Sitemap
-Sitemap: https://cognition.ai/sitemap.xml
-
-# Disallow admin/private routes
+# Disallow private/authenticated app routes
 Disallow: /dashboard
 Disallow: /settings
 Disallow: /history
+Disallow: /onboarding
+Disallow: /analysis/
+Disallow: /results/
+Disallow: /reports/
 Disallow: /auth/callback
+Disallow: /accept-invite
 
-# Allow AI crawlers to index public content
+# Allow AI crawlers to index all public marketing content
+# This helps improve Cognition's own AI visibility — eating our own dog food!
 User-agent: GPTBot
 Allow: /
 
@@ -20,5 +23,17 @@ Allow: /
 User-agent: Google-Extended
 Allow: /
 
-User-agent: Perplexity-Bot
+User-agent: PerplexityBot
 Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+# Sitemap location
+Sitemap: https://cognition.ai/sitemap.xml

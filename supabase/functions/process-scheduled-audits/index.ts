@@ -1,36 +1,78 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4"
-
-const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, x-api-key, content-type',
-}
+import { buildCorsHeaders } from "../_shared/cors.ts";
 
 // @ts-ignore: Deno runtime
 declare const Deno: any;
 
+type JsonPayload = Record<string, unknown>;
+
+function jsonResponse(
+    req: Request,
+    requestId: string,
+    status: number,
+    body: JsonPayload
+) {
+    return new Response(JSON.stringify(body), {
+        status,
+        headers: {
+            ...buildCorsHeaders(req.headers.get("origin")),
+            "Content-Type": "application/json",
+            "X-Request-Id": requestId,
+        },
+    });
+}
+
 serve(async (req: Request) => {
+    const requestId = crypto.randomUUID();
+
     if (req.method === 'OPTIONS') {
-        return new Response('ok', { headers: corsHeaders })
+        return new Response('ok', { headers: buildCorsHeaders(req.headers.get("origin")) })
     }
 
     try {
         const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
         const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+        const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+        const cronSecret = Deno.env.get('CRON_SECRET') ?? ''
+
+        if (!supabaseUrl || !serviceRoleKey) {
+            throw new Error("Server Misconfiguration: Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+        }
+
+        const authHeader = req.headers.get('Authorization') ?? ''
+        const token = authHeader.replace(/^Bearer\s+/i, '').trim()
+        const isAuthorized =
+            token === serviceRoleKey
+            || (cronSecret.length > 0 && token === cronSecret)
+            || (cronSecret.length === 0 && token === anonKey)
+
+        if (!isAuthorized) {
+            return jsonResponse(req, requestId, 401, {
+                success: false,
+                error: "Unauthorized",
+                details: {
+                    code: "UNAUTHORIZED",
+                    message: "Missing or invalid scheduler token",
+                    requestId,
+                },
+            });
+        }
+
         const supabaseClient = createClient(supabaseUrl, serviceRoleKey)
 
         // 1. Find scheduled audits due for execution
         const { data: dueAudits, error: fetchError } = await supabaseClient
             .from('scheduled_audits')
             .select('*, organizations(audit_credits_remaining)')
-            .eq('status', 'active')
+            .eq('enabled', true)
             .lte('next_run_at', new Date().toISOString())
 
         if (fetchError) throw fetchError
 
         const results = []
 
-        for (const audit of dueAudits) {
+        for (const audit of (dueAudits || [])) {
             // 2. Check credits
             const credits = audit.organizations?.audit_credits_remaining ?? 0
             if (credits <= 0) {
@@ -39,7 +81,7 @@ serve(async (req: Request) => {
                     organization_id: audit.organization_id,
                     type: 'error',
                     title: 'Scheduled Audit Skipped',
-                    message: `Audit for ${audit.domain} skipped due to insufficient credits.`
+                    message: `Audit for ${audit.domain_url} skipped due to insufficient credits.`
                 })
 
                 // Pause scheduling or just wait for next run? Let's keep it active but update next_run
@@ -48,10 +90,10 @@ serve(async (req: Request) => {
                 console.log(`[Sentinel] Triggering AUTO_AUDIT for ${audit.domain_url} (Org: ${audit.organization_id})`);
 
                 try {
-                    const analyzeRes = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/analyze-content`, {
+                    const analyzeRes = await fetch(`${supabaseUrl}/functions/v1/analyze-content`, {
                         method: 'POST',
                         headers: {
-                            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+                            'Authorization': `Bearer ${serviceRoleKey}`,
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
@@ -98,17 +140,27 @@ serve(async (req: Request) => {
                 })
                 .eq('id', audit.id)
 
-            results.push({ id: audit.id, domain: audit.domain, next_run: nextRun.toISOString() })
+            results.push({ id: audit.id, domain: audit.domain_url, next_run: nextRun.toISOString() })
         }
 
-        return new Response(JSON.stringify({ processed: results.length, details: results }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+        return jsonResponse(req, requestId, 200, {
+            success: true,
+            data: {
+                processed: results.length,
+                details: results,
+            },
+        });
 
     } catch (error: any) {
-        return new Response(JSON.stringify({ error: error.message }), {
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+        const message = error?.message || "Unknown error";
+        return jsonResponse(req, requestId, 500, {
+            success: false,
+            error: message,
+            details: {
+                code: "SCHEDULED_AUDIT_PROCESSING_FAILED",
+                message,
+                requestId,
+            },
+        });
     }
 })

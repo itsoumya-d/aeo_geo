@@ -27,8 +27,9 @@ export interface Organization {
     id: string;
     name: string;
     plan: 'free' | 'starter' | 'pro' | 'agency' | 'enterprise';
-    stripe_customer_id: string | null;
-    stripe_subscription_id: string | null;
+    paddle_customer_id: string | null;
+    paddle_subscription_id: string | null;
+    subscription_status: string | null;
     audit_credits_remaining: number;
     rewrite_credits_remaining: number;
     created_at: string;
@@ -56,7 +57,7 @@ export interface Domain {
 
 export interface OnboardingStatus {
     organization_id: string;
-    persona: 'agency' | 'brand' | null;
+    persona: 'agency' | 'brand' | 'developer' | null;
     current_step: number;
     is_completed: boolean;
     onboarding_data: Record<string, any>;
@@ -66,11 +67,13 @@ export interface OnboardingStatus {
 export interface Audit {
     id: string;
     organization_id: string;
+    workspace_id?: string | null;
     domain_id: string | null;
     domain_url: string;
     status: 'pending' | 'processing' | 'complete' | 'failed';
     report: Record<string, unknown> | null;
     overall_score: number | null;
+    error_message?: string | null;
     created_at: string;
     completed_at: string | null;
 }
@@ -109,6 +112,30 @@ export interface KeywordRanking {
 }
 
 // Helper functions for database operations
+
+export async function bootstrapOrganization(name?: string): Promise<{
+    organization: Organization | null;
+    onboarding: OnboardingStatus | null;
+}> {
+    const { data, error } = await supabase.functions.invoke('bootstrap-org', {
+        body: { name }
+    });
+
+    if (error) {
+        console.error('Error bootstrapping organization:', error);
+        return { organization: null, onboarding: null };
+    }
+
+    if (!data?.success) {
+        console.error('Organization bootstrap failed:', data?.error || 'Unknown error');
+        return { organization: null, onboarding: null };
+    }
+
+    return {
+        organization: data.organization ?? null,
+        onboarding: data.onboarding ?? null
+    };
+}
 
 /**
  * Get the current user's profile
@@ -156,27 +183,8 @@ export async function getOrganization(): Promise<Organization | null> {
  * Create a new organization
  */
 export async function createOrganization(name: string): Promise<Organization | null> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
-
-    const { data, error } = await supabase
-        .from('organizations')
-        .insert({ name })
-        .select()
-        .single();
-
-    if (error) {
-        console.error('Error creating organization:', error);
-        return null;
-    }
-
-    // Update user's organization_id
-    await supabase
-        .from('users')
-        .update({ organization_id: data.id, role: 'owner' })
-        .eq('id', user.id);
-
-    return data;
+    const { organization } = await bootstrapOrganization(name);
+    return organization;
 }
 
 /**
@@ -224,9 +232,9 @@ export async function updateOnboardingStatus(updates: Partial<OnboardingStatus>)
 }
 
 /**
- * Create or Update Domain for the organization
+ * Create or Update Domain for the organization, optionally scoped to a workspace
  */
-export async function upsertDomain(domain: string): Promise<Domain | null> {
+export async function upsertDomain(domain: string, workspaceId?: string | null): Promise<Domain | null> {
     const org = await getOrganization();
     if (!org) return null;
 
@@ -238,6 +246,7 @@ export async function upsertDomain(domain: string): Promise<Domain | null> {
         .from('domains')
         .upsert({
             organization_id: org.id,
+            ...(workspaceId ? { workspace_id: workspaceId } : {}),
             domain: cleanDomain,
             verification_token: verificationToken,
             verified: false
@@ -254,17 +263,23 @@ export async function upsertDomain(domain: string): Promise<Domain | null> {
 }
 
 /**
- * Get all audits for the current organization
+ * Get all audits for the current organization, optionally filtered by workspace
  */
-export async function getAudits(): Promise<Audit[]> {
+export async function getAudits(workspaceId?: string | null): Promise<Audit[]> {
     const org = await getOrganization();
     if (!org) return [];
 
-    const { data, error } = await supabase
+    let query = supabase
         .from('audits')
         .select('*')
         .eq('organization_id', org.id)
         .order('created_at', { ascending: false });
+
+    if (workspaceId) {
+        query = query.eq('workspace_id', workspaceId);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
         console.error('Error fetching audits:', error);
@@ -293,9 +308,9 @@ export async function getAudit(auditId: string): Promise<Audit | null> {
 }
 
 /**
- * Create a new audit
+ * Create a new audit, optionally scoped to a workspace
  */
-export async function createAudit(domainUrl: string): Promise<Audit | null> {
+export async function createAudit(domainUrl: string, workspaceId?: string | null): Promise<Audit | null> {
     const org = await getOrganization();
     if (!org) return null;
 
@@ -303,6 +318,7 @@ export async function createAudit(domainUrl: string): Promise<Audit | null> {
         .from('audits')
         .insert({
             organization_id: org.id,
+            ...(workspaceId ? { workspace_id: workspaceId } : {}),
             domain_url: domainUrl,
             status: 'pending',
         })
@@ -346,7 +362,7 @@ export async function createAuditPage(auditId: string, url: string, type: string
  */
 export async function updateAudit(
     auditId: string,
-    updates: Partial<Pick<Audit, 'status' | 'report' | 'overall_score' | 'completed_at'>>
+    updates: Partial<Pick<Audit, 'status' | 'report' | 'overall_score' | 'completed_at' | 'error_message'>>
 ): Promise<boolean> {
     const { error } = await supabase
         .from('audits')
@@ -434,4 +450,57 @@ export async function getRewriteSimulations(organizationId: string): Promise<Rew
     }
 
     return data || [];
+}
+/**
+ * Update recommendation status in the audit report JSON
+ */
+export async function updateRecommendationStatus(auditId: string, pageUrl: string, recommendationId: string, status: 'OPEN' | 'DONE' | 'IGNORED'): Promise<boolean> {
+    // 1. Fetch current audit
+    const { data: audit, error: fetchError } = await supabase
+        .from('audits')
+        .select('report')
+        .eq('id', auditId)
+        .single();
+
+    if (fetchError || !audit || !audit.report) {
+        console.error('Error fetching audit:', fetchError);
+        return false;
+    }
+
+    const report = audit.report as any;
+
+    // 2. Find and update the recommendation
+    let updated = false;
+    if (report.pages) {
+        report.pages = report.pages.map((p: any) => {
+            if (p.url === pageUrl) {
+                p.recommendations = p.recommendations.map((r: any) => {
+                    if (r.id === recommendationId) {
+                        updated = true;
+                        return { ...r, status };
+                    }
+                    return r;
+                });
+            }
+            return p;
+        });
+    }
+
+    if (!updated) {
+        console.warn('Recommendation not found in report');
+        return false;
+    }
+
+    // 3. Save back the updated report
+    const { error: updateError } = await supabase
+        .from('audits')
+        .update({ report: report })
+        .eq('id', auditId);
+
+    if (updateError) {
+        console.error('Error updating audit report:', updateError);
+        return false;
+    }
+
+    return true;
 }

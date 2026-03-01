@@ -45,8 +45,8 @@ const organizationSchema = {
         'Generative Engine Optimization',
         'AI SEO',
         'Answer Engine Optimization',
-        'LLM Citation Tracking',
-        'Vector Analysis',
+        'Citation Tracking',
+        'Semantic Analysis',
         'Content Optimization'
     ]
 };
@@ -71,11 +71,11 @@ const softwareApplicationSchema = {
         ratingCount: '127'
     },
     featureList: [
-        'Real-time AI perception analysis',
-        'Multi-platform visibility scoring (ChatGPT, Gemini, Claude, Perplexity)',
-        'Vector-based content optimization',
-        'Rewrite simulation with semantic shift analysis',
-        'Scheduled monitoring (Sentinel)',
+        'AI visibility reporting',
+        'Multi-platform scoring (ChatGPT, Gemini, Claude, Perplexity)',
+        'Actionable recommendations',
+        'Rewrite simulation with measurable impact',
+        'Keyword visibility tracking',
         'Citation tracking and verification'
     ],
     screenshot: `${BASE_URL}/screenshots/dashboard.png`,
@@ -103,13 +103,15 @@ const websiteSchema = {
 
 export const SEOHead: React.FC<SEOHeadProps> = ({
     title = 'Cognition AI | AI Visibility Engine',
-    description = 'Discover how ChatGPT, Gemini, Claude, and Perplexity see your brand. The market-leading Generative Engine Optimization (GEO) platform with real-time crawling and vector analysis.',
+    description = 'Discover how ChatGPT, Gemini, Claude, and Perplexity see your brand. A premium AI visibility platform with real-time site discovery, scoring, and recommendations.',
     keywords = ['AI SEO', 'GEO', 'AEO', 'Generative Engine Optimization', 'AI Visibility', 'ChatGPT SEO', 'Answer Engine Optimization'],
     image = DEFAULT_IMAGE,
     url = BASE_URL,
     type = 'website',
     faqs,
-    noindex = false
+    noindex = false,
+    publishedTime,
+    modifiedTime,
 }) => {
     const fullTitle = title.includes(SITE_NAME) ? title : `${title} | ${SITE_NAME}`;
     const canonicalUrl = url.startsWith('http') ? url : `${BASE_URL}${url}`;
@@ -170,6 +172,11 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
             <meta property="og:image:height" content="630" />
             <meta property="og:site_name" content={SITE_NAME} />
             <meta property="og:locale" content="en_US" />
+
+            {/* Article timestamps — used when type="article" */}
+            {publishedTime && <meta property="article:published_time" content={publishedTime} />}
+            {modifiedTime && <meta property="article:modified_time" content={modifiedTime} />}
+            {(publishedTime || modifiedTime) && <meta property="article:author" content={SITE_NAME} />}
 
             {/* Twitter */}
             <meta name="twitter:card" content="summary_large_image" />

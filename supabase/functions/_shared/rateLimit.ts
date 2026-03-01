@@ -3,13 +3,28 @@ import { Ratelimit } from "https://esm.sh/@upstash/ratelimit@0.4.4";
 
 // Define Rate Limit Configurations
 export const RATE_LIMITS = {
-    ANALYZE: { limit: 5, window: "60 s" },
-    REWRITE: { limit: 10, window: "60 s" },
-    DISCOVER: { limit: 10, window: "60 s" },
-    CHECK_VISIBILITY: { limit: 5, window: "60 s" },
-    SANDBOX_COMPARE: { limit: 5, window: "60 s" },
-    DEFAULT: { limit: 20, window: "60 s" },
+    ANALYZE: { limit: 5, window: "60 s", windowMs: 60000 },
+    REWRITE: { limit: 10, window: "60 s", windowMs: 60000 },
+    DISCOVER: { limit: 10, window: "60 s", windowMs: 60000 },
+    CHECK_VISIBILITY: { limit: 5, window: "60 s", windowMs: 60000 },
+    CHECK_VISIBILITY_BATCH: { limit: 3, window: "60 s", windowMs: 60000 },
+    SANDBOX_COMPARE: { limit: 5, window: "60 s", windowMs: 60000 },
+    DEFAULT: { limit: 20, window: "60 s", windowMs: 60000 },
 };
+
+// In-memory rate limit store (fallback when Redis unavailable)
+// Maps identifier -> { count: number, resetAt: number }
+const inMemoryStore = new Map<string, { count: number; resetAt: number }>();
+
+// Cleanup old entries every 5 minutes to prevent memory leak
+setInterval(() => {
+    const now = Date.now();
+    for (const [key, value] of inMemoryStore.entries()) {
+        if (value.resetAt < now) {
+            inMemoryStore.delete(key);
+        }
+    }
+}, 5 * 60 * 1000);
 
 /**
  * Initializes the Rate Limiter
@@ -36,28 +51,81 @@ export function initRateLimiter() {
 }
 
 /**
+ * In-memory rate limit check (fallback when Redis unavailable)
+ * Uses conservative limits to prevent abuse
+ */
+function checkInMemoryRateLimit(identifier: string, action: string) {
+    const config = RATE_LIMITS[action as keyof typeof RATE_LIMITS] || RATE_LIMITS.DEFAULT;
+    const key = `${action}:${identifier}`;
+    const now = Date.now();
+
+    const entry = inMemoryStore.get(key);
+
+    // If no entry or window expired, create new window
+    if (!entry || entry.resetAt < now) {
+        inMemoryStore.set(key, {
+            count: 1,
+            resetAt: now + config.windowMs,
+        });
+
+        return {
+            success: true,
+            limit: config.limit,
+            remaining: config.limit - 1,
+            reset: now + config.windowMs,
+        };
+    }
+
+    // Increment count
+    entry.count++;
+
+    // Check if limit exceeded
+    if (entry.count > config.limit) {
+        return {
+            success: false,
+            limit: config.limit,
+            remaining: 0,
+            reset: entry.resetAt,
+        };
+    }
+
+    return {
+        success: true,
+        limit: config.limit,
+        remaining: config.limit - entry.count,
+        reset: entry.resetAt,
+    };
+}
+
+/**
  * Check Rate Limit for a specific identifier (User ID or IP)
+ * Uses Redis when available, falls back to in-memory store
  */
 export async function checkRateLimit(
     limiter: Ratelimit | null,
     identifier: string,
     action: string
 ) {
-    if (!limiter) return { success: true, limit: 0, remaining: 0, reset: 0 };
+    // Fallback to in-memory rate limiting when Redis unavailable
+    if (!limiter) {
+        console.warn(`[RateLimit] Using in-memory fallback for ${action} (${identifier})`);
+        return checkInMemoryRateLimit(identifier, action);
+    }
 
     const config = RATE_LIMITS[action as keyof typeof RATE_LIMITS] || RATE_LIMITS.DEFAULT;
 
-    // Create specific limiter for this action's config
-    // Note: In a real app with diverse limits, you might instantiate different Ratelimit instances
-    // or use a dynamic limiter if supported. For simplicity with @upstash/ratelimit, 
-    // we often reuse the redis connection but might need different algorithms.
-    // 
-    // Optimization: We can create a new Ratelimit instance reusing the redis client for specific config.
-    const actionLimiter = new Ratelimit({
-        redis: limiter.redis, // Reuse connection
-        limiter: Ratelimit.slidingWindow(config.limit, config.window as any),
-        prefix: `@upstash/ratelimit:${action}`,
-    });
+    try {
+        // Create specific limiter for this action's config
+        const actionLimiter = new Ratelimit({
+            redis: limiter.redis, // Reuse connection
+            limiter: Ratelimit.slidingWindow(config.limit, config.window as any),
+            prefix: `@upstash/ratelimit:${action}`,
+        });
 
-    return await actionLimiter.limit(identifier);
+        return await actionLimiter.limit(identifier);
+    } catch (error) {
+        // If Redis fails during runtime, fall back to in-memory
+        console.error(`[RateLimit] Redis error, falling back to in-memory: ${error}`);
+        return checkInMemoryRateLimit(identifier, action);
+    }
 }

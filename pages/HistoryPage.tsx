@@ -1,24 +1,28 @@
 import React, { useState } from 'react';
 import { AuditHistory } from '../components/AuditHistory';
 import { ScheduledAudits } from '../components/ScheduledAudits';
-import { BulkDomainManagement } from '../components/BulkDomainManagement';
-import { History, Clock, Files } from 'lucide-react';
+import { History, Clock } from 'lucide-react';
 import { Sidebar } from '../components/dashboard/Sidebar';
 import { TabType } from '../components/dashboard/DashboardTypes';
-import { Button } from '../components/ui/Button';
+import { useNavigate } from 'react-router-dom';
 
-type HistoryPageTab = 'history' | 'scheduled' | 'bulk';
+type HistoryPageTab = 'history' | 'scheduled';
 
-interface HistoryPageProps {
-    onSelectAudit?: (audit: any) => void;
-}
-
-export const HistoryPage: React.FC<HistoryPageProps> = ({ onSelectAudit }) => {
+export const HistoryPage: React.FC = () => {
+    const navigate = useNavigate();
     // Sidebar Navigation state
     const [dashboardTab, setDashboardTab] = useState<TabType>('history');
     const handleDashboardTabChange = (tab: TabType) => {
         if (tab !== 'history') {
-            window.location.href = `/dashboard?tab=${tab}`;
+            if (tab === 'settings') {
+                navigate('/settings');
+                return;
+            }
+            if (tab === 'integrations') {
+                navigate('/settings/integrations');
+                return;
+            }
+            navigate('/dashboard');
         }
     };
 
@@ -27,7 +31,6 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({ onSelectAudit }) => {
     const tabs: { id: HistoryPageTab; label: string; icon: React.ReactNode }[] = [
         { id: 'history', label: 'Audit History', icon: <History className="w-4 h-4" /> },
         { id: 'scheduled', label: 'Scheduled', icon: <Clock className="w-4 h-4" /> },
-        { id: 'bulk', label: 'Bulk Management', icon: <Files className="w-4 h-4" /> },
     ];
 
     return (
@@ -68,17 +71,12 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({ onSelectAudit }) => {
                 <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-8">
                     {activeTab === 'history' && (
                         <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                            <AuditHistory onSelectAudit={onSelectAudit} />
+                            <AuditHistory />
                         </div>
                     )}
                     {activeTab === 'scheduled' && (
                         <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                             <ScheduledAudits />
-                        </div>
-                    )}
-                    {activeTab === 'bulk' && (
-                        <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                            <BulkDomainManagement />
                         </div>
                     )}
                 </main>

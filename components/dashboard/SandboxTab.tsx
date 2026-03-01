@@ -5,6 +5,7 @@ import { simulateSandboxCompare } from '../../services/geminiService';
 import { SandboxCompareResult, SandboxCandidateResult } from '../../supabase/functions/_shared/types';
 import { supabase } from '../../services/supabase';
 import { useToast } from '../Toast';
+import { getTechnicalErrorMessage, toUserMessage } from '../../utils/errors';
 
 export const SandboxTab: React.FC = () => {
     const toast = useToast();
@@ -24,12 +25,14 @@ export const SandboxTab: React.FC = () => {
         try {
             const data = await simulateSandboxCompare(goal, variantA, variantB);
 
-            if (!data) throw new Error("Failed to generate comparative vectors.");
+            if (!data) throw new Error("Comparison unavailable");
 
             setResults(data);
-            toast.success("Simulation Complete", "Neural projections calculated for both variants.");
+            toast.success("Simulation complete", "Your variants have been compared successfully.");
         } catch (err: any) {
-            toast.error("Simulation Failed", err.message);
+            console.error('Sandbox simulation failed:', getTechnicalErrorMessage(err));
+            const user = toUserMessage(err);
+            toast.error(user.title, user.message);
         } finally {
             setLoading(false);
         }
@@ -55,15 +58,15 @@ export const SandboxTab: React.FC = () => {
                         <div className="bg-primary/20 p-2.5 rounded-xl border border-primary/20">
                             <Sparkles className="text-primary w-6 h-6" />
                         </div>
-                        Neural A/B Sandbox
+                        A/B Sandbox
                     </h2>
                     <p className="text-slate-500 mt-4 max-w-2xl font-medium leading-relaxed">
-                        The ultimate testing ground for AEO content. Project your brand's voice across neural vector spaces and determine which variant wins the citation.
+                        Compare two versions of your copy against a clear goal and see which one is more likely to perform better across AI platforms.
                     </p>
                 </div>
                 {results && (
                     <button onClick={clear} className="text-slate-500 hover:text-rose-500 transition-colors flex items-center gap-2 text-[10px] font-black uppercase tracking-widest px-4 py-2 border border-white/5 rounded-xl">
-                        <Trash2 className="w-4 h-4" /> Reset Arena
+                        <Trash2 className="w-4 h-4" /> Reset
                     </button>
                 )}
             </div>
@@ -75,7 +78,7 @@ export const SandboxTab: React.FC = () => {
                         <div className="space-y-4">
                             <div className="flex items-center gap-3">
                                 <Target className="w-5 h-5 text-primary" />
-                                <label className="text-xs font-black text-slate-300 uppercase tracking-widest">Neural Intent Goal</label>
+                                <label className="text-xs font-black text-slate-300 uppercase tracking-widest">Optimization goal</label>
                             </div>
                             <input
                                 value={goal}
@@ -133,7 +136,7 @@ export const SandboxTab: React.FC = () => {
                         className="bg-primary hover:bg-primary/90 text-white px-20 py-6 rounded-[2rem] font-black uppercase tracking-[0.2em] text-sm shadow-3xl shadow-primary/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-4 group"
                     >
                         {loading ? <Zap className="w-5 h-5 animate-pulse" /> : <Brain className="w-5 h-5 group-hover:rotate-12 transition-transform" />}
-                        {loading ? 'Projecting Vectors...' : 'Run Neural Simulation'}
+                        {loading ? 'Running simulation…' : 'Run simulation'}
                     </button>
                 </div>
             )}
@@ -149,7 +152,7 @@ const MetricCard = ({ result }: { result: SandboxCandidateResult }) => (
     >
         <div className="flex items-end justify-between">
             <div>
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">AEO Confidence</p>
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Visibility confidence</p>
                 <div className="flex items-baseline gap-2">
                     <span className="text-4xl font-black text-white tracking-tighter">{result.score}%</span>
                     <span className="text-xs font-bold text-slate-600">/ 100</span>
@@ -161,7 +164,7 @@ const MetricCard = ({ result }: { result: SandboxCandidateResult }) => (
                         <div key={i} className={`w-1.5 h-6 rounded-full ${i <= Math.round(result.score / 20) ? 'bg-primary' : 'bg-white/5'}`} />
                     ))}
                 </div>
-                <span className="text-[9px] font-black text-primary uppercase tracking-widest">Neural Power</span>
+                <span className="text-[9px] font-black text-primary uppercase tracking-widest">Signal strength</span>
             </div>
         </div>
 
@@ -177,7 +180,7 @@ const MetricCard = ({ result }: { result: SandboxCandidateResult }) => (
         <div className="bg-white/5 p-5 rounded-2xl border border-white/5">
             <div className="flex items-center gap-2 mb-2">
                 <Info className="w-3.5 h-3.5 text-slate-500" />
-                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Neural Reasoning</span>
+                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Why this scores</span>
             </div>
             <p className="text-xs text-slate-400 font-medium leading-relaxed">{result.reasoning}</p>
         </div>

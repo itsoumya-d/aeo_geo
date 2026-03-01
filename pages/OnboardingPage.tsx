@@ -1,280 +1,504 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowRight, CheckCircle2, Loader2, Rocket, Search, Sparkles } from 'lucide-react';
+import { Card } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
 import { useAuth } from '../contexts/AuthContext';
-import { Building2, Globe, ArrowRight, Loader2, CheckCircle, Sparkles } from 'lucide-react';
+import { bootstrapOrganization, createAudit, updateOnboardingStatus } from '../services/supabase';
+import { useToast } from '../components/Toast';
+import { AssetType, AnalysisStatus } from '../types';
+import { normalizeUrl, validateUrl } from '../utils/validation';
+import { saveAuditDraft } from '../utils/auditDraft';
+import { supabase } from '../services/supabase';
 
-type OnboardingStep = 'organization' | 'domain' | 'complete';
-
-interface OnboardingPageProps {
-    onComplete?: () => void;
+function getReturnTo(search: string) {
+    const params = new URLSearchParams(search);
+    return params.get('returnTo') || sessionStorage.getItem('returnTo') || '';
 }
 
-export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onComplete }) => {
-    const { user, createOrg, organization } = useAuth();
+const steps = [
+    { id: 1, label: 'Welcome' },
+    { id: 2, label: 'Tour' },
+    { id: 3, label: 'First Audit' }
+];
 
-    const [step, setStep] = useState<OnboardingStep>(organization ? 'domain' : 'organization');
-    const [orgName, setOrgName] = useState('');
-    const [domainUrl, setDomainUrl] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [error, setError] = useState('');
+const QUICK_AUDIT_PRESETS = [
+    'https://www.notion.so',
+    'https://www.figma.com',
+    'https://www.shopify.com',
+];
 
-    // If already has organization, skip to domain or complete
-    React.useEffect(() => {
-        if (organization) {
-            setStep('domain');
-        }
-    }, [organization]);
+export const OnboardingPage: React.FC = () => {
+    const auth = useAuth();
+    const toast = useToast();
+    const navigate = useNavigate();
+    const location = useLocation();
 
-    const handleCreateOrganization = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!orgName.trim()) {
-            setError('Please enter your company or project name');
+    const returnTo = useMemo(() => getReturnTo(location.search), [location.search]);
+
+    const [step, setStep] = useState(() => {
+        // Eagerly restore saved step from onboarding record if already loaded
+        const saved = auth.onboarding?.current_step;
+        return saved && saved >= 1 && saved <= 3 ? saved : 1;
+    });
+    const [bootstrapping, setBootstrapping] = useState(false);
+    const [bootstrapFailed, setBootstrapFailed] = useState(false);
+    const [bootstrapRetries, setBootstrapRetries] = useState(0);
+    const [retryCountdown, setRetryCountdown] = useState(0);
+    const [saving, setSaving] = useState(false);
+    const [websiteUrl, setWebsiteUrl] = useState('');
+    const [localError, setLocalError] = useState('');
+    const [selectedPersona, setSelectedPersona] = useState<'agency' | 'brand' | 'developer' | null>(null);
+
+    useEffect(() => {
+        if (auth.loading) return;
+        if (!auth.user) return;
+
+        if (auth.onboarding?.is_completed) {
+            navigate(returnTo || '/dashboard', { replace: true });
             return;
         }
 
-        setIsSubmitting(true);
-        setError('');
+        // Restore step from persisted onboarding state once auth loads
+        const saved = auth.onboarding?.current_step;
+        if (saved && saved >= 1 && saved <= 3) {
+            setStep(saved);
+        }
+    }, [auth.loading, auth.user, auth.onboarding?.is_completed, auth.onboarding?.current_step, navigate, returnTo]);
+
+    const attemptBootstrap = React.useCallback(async () => {
+        setBootstrapping(true);
+        setBootstrapFailed(false);
+        try {
+            const { organization } = await bootstrapOrganization();
+            if (!organization) {
+                setBootstrapFailed(true);
+                return;
+            }
+            await auth.refreshOrganization();
+        } catch {
+            setBootstrapFailed(true);
+        } finally {
+            setBootstrapping(false);
+        }
+    }, [auth]);
+
+    useEffect(() => {
+        if (auth.loading) return;
+        if (!auth.user) return;
+        if (auth.organization) return;
+        attemptBootstrap();
+    }, [auth.loading, auth.user, auth.organization, attemptBootstrap]);
+
+    const handleRetryBootstrap = () => {
+        const nextRetry = bootstrapRetries + 1;
+        setBootstrapRetries(nextRetry);
+        // Countdown before retry: 3s, 5s, 10s
+        const delay = nextRetry === 1 ? 3 : nextRetry === 2 ? 5 : 10;
+        setRetryCountdown(delay);
+        const interval = setInterval(() => {
+            setRetryCountdown(prev => {
+                if (prev <= 1) {
+                    clearInterval(interval);
+                    attemptBootstrap();
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+    };
+
+    const persistStep = async (nextStep: number) => {
+        await updateOnboardingStatus({ current_step: nextStep, ...(selectedPersona ? { persona: selectedPersona } : {}) });
+    };
+
+    const completeOnboarding = async () => {
+        await updateOnboardingStatus({
+            current_step: 3,
+            is_completed: true,
+            completed_at: new Date().toISOString(),
+        });
 
         try {
-            const org = await createOrg(orgName.trim());
-            if (org) {
-                setStep('domain');
-            } else {
-                setError('Failed to create organization. Please try again.');
-            }
-        } catch (err) {
-            setError('An unexpected error occurred');
+            await supabase.auth.updateUser({ data: { onboarding_completed: true } });
+        } catch {
+            // Ignore
+        }
+    };
+
+    const goNext = async () => {
+        const next = Math.min(step + 1, 3);
+        setStep(next);
+        try { await persistStep(next); } catch (e) { console.error('Step persist failed', e); }
+    };
+
+    const goBack = async () => {
+        const prev = Math.max(step - 1, 1);
+        setStep(prev);
+        try { await persistStep(prev); } catch (e) { console.error('Step persist failed', e); }
+    };
+
+    const handleSkipTour = async () => {
+        setStep(3);
+        try { await persistStep(3); } catch (e) { console.error('Step persist failed', e); }
+    };
+
+    // Route to the most relevant dashboard tab based on persona
+    const getPersonaDestination = () => {
+        if (returnTo) return returnTo;
+        if (selectedPersona === 'agency') return '/dashboard?tab=benchmark';
+        if (selectedPersona === 'developer') return '/settings?tab=api';
+        return '/dashboard';
+    };
+
+    const handleSkipForNow = async () => {
+        setSaving(true);
+        try {
+            await completeOnboarding();
+            sessionStorage.removeItem('returnTo');
+            navigate(getPersonaDestination(), { replace: true });
         } finally {
-            setIsSubmitting(false);
+            setSaving(false);
         }
     };
 
-    const handleAddDomain = async (e: React.FormEvent) => {
-        e.preventDefault();
-        // For now, just move to complete step
-        // In production, this would call an API to add the domain
-        setStep('complete');
-    };
+    const handleStartFirstAudit = async (quickUrl?: string) => {
+        setLocalError('');
 
-    const handleComplete = () => {
-        if (onComplete) {
-            onComplete();
-        } else {
-            // Redirect to main app
-            window.location.href = '/app';
+        const candidateUrl = quickUrl || websiteUrl;
+        const urlCheck = validateUrl(candidateUrl);
+        if (!urlCheck.isValid) {
+            setLocalError(urlCheck.error || 'Enter a valid website URL.');
+            return;
+        }
+
+        const normalizedWebsite = normalizeUrl(candidateUrl);
+
+        setSaving(true);
+        try {
+            await completeOnboarding();
+            await auth.refreshOrganization();
+
+            const audit = await createAudit(normalizedWebsite, auth.currentWorkspace?.id);
+            if (!audit) {
+                toast.error("Couldn't start audit", 'Please try again.');
+                return;
+            }
+
+            try {
+                localStorage.setItem('cognition:first-audit-started-at', String(Date.now()));
+            } catch {
+                // Ignore storage errors in private mode.
+            }
+
+            saveAuditDraft(audit.id, {
+                createdAt: Date.now(),
+                assets: [{
+                    id: `website-${audit.id}`,
+                    type: AssetType.WEBSITE,
+                    url: normalizedWebsite,
+                    status: AnalysisStatus.IDLE
+                }]
+            });
+
+            sessionStorage.removeItem('returnTo');
+            navigate(`/analysis/${audit.id}`, { replace: true });
+        } catch (err) {
+            console.error(err);
+            toast.error('Setup failed', 'Please try again.');
+        } finally {
+            setSaving(false);
         }
     };
 
-    const steps = [
-        { id: 'organization', label: 'Create Organization', number: 1 },
-        { id: 'domain', label: 'Add Domain', number: 2 },
-        { id: 'complete', label: 'Ready to Go', number: 3 },
-    ];
+    if (auth.loading || bootstrapping) {
+        return (
+            <div className="min-h-screen bg-background text-text-primary flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                    <p className="text-xs font-bold text-text-muted uppercase tracking-[0.25em]">Preparing your workspace…</p>
+                </div>
+            </div>
+        );
+    }
 
-    const currentStepIndex = steps.findIndex(s => s.id === step);
+    if (bootstrapFailed) {
+        return (
+            <div className="min-h-screen bg-background text-text-primary flex items-center justify-center p-6">
+                <div className="max-w-md w-full text-center space-y-4">
+                    <div className="w-14 h-14 mx-auto rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center">
+                        <Rocket className="w-7 h-7 text-rose-400" />
+                    </div>
+                    <h1 className="text-xl font-bold text-white">Account setup failed</h1>
+                    <p className="text-text-secondary text-sm leading-relaxed">
+                        We couldn't set up your workspace. This sometimes happens due to a slow connection.
+                        {bootstrapRetries >= 3 && (
+                            <span> If it keeps failing, <a href="mailto:support@cognition-ai.com" className="text-primary underline">contact support</a>.</span>
+                        )}
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                        <button
+                            onClick={handleRetryBootstrap}
+                            disabled={retryCountdown > 0}
+                            className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 disabled:opacity-60 text-white px-6 py-3 rounded-xl font-semibold text-sm transition-colors"
+                        >
+                            {retryCountdown > 0 ? (
+                                <>Retrying in {retryCountdown}s…</>
+                            ) : (
+                                <>Try again {bootstrapRetries > 0 ? `(attempt ${bootstrapRetries + 1})` : ''}</>
+                            )}
+                        </button>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="inline-flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-text-secondary hover:text-white px-6 py-3 rounded-xl font-semibold text-sm transition-colors"
+                        >
+                            Refresh page
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
-            <div className="w-full max-w-xl">
-                {/* Progress Steps */}
-                <div className="flex items-center justify-center mb-12">
-                    {steps.map((s, index) => (
-                        <React.Fragment key={s.id}>
-                            <div className="flex flex-col items-center">
-                                <div
-                                    className={`
-                    w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium
-                    transition-all duration-300
-                    ${index < currentStepIndex
-                                            ? 'bg-primary text-white'
-                                            : index === currentStepIndex
-                                                ? 'bg-primary/20 border-2 border-primary text-primary'
-                                                : 'bg-slate-800 text-slate-500 border border-slate-700'
-                                        }
-                  `}
-                                >
-                                    {index < currentStepIndex ? (
-                                        <CheckCircle className="w-5 h-5" />
-                                    ) : (
-                                        s.number
-                                    )}
-                                </div>
-                                <span className={`
-                  mt-2 text-xs font-medium
-                  ${index <= currentStepIndex ? 'text-white' : 'text-slate-500'}
-                `}>
-                                    {s.label}
-                                </span>
-                            </div>
-                            {index < steps.length - 1 && (
-                                <div className={`
-                  w-16 h-0.5 mx-2 mb-6
-                  ${index < currentStepIndex ? 'bg-primary' : 'bg-slate-700'}
-                `} />
-                            )}
-                        </React.Fragment>
-                    ))}
+        <div className="min-h-screen bg-background text-text-primary flex items-center justify-center px-6 py-14 relative overflow-hidden">
+            <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+                <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-primary/20 rounded-full blur-[150px]" />
+                <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-purple-600/10 rounded-full blur-[150px]" />
+            </div>
+
+            <div className="relative z-10 w-full max-w-2xl">
+                <div className="text-center mb-10">
+                    <motion.div
+                        initial={{ scale: 0.95, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 rounded-full text-primary text-xs font-bold uppercase tracking-wider mb-4"
+                    >
+                        <Sparkles className="w-3 h-3" />
+                        Onboarding
+                    </motion.div>
+                    <h1 className="text-4xl font-display font-bold text-white tracking-tight">
+                        Welcome to Cognition AI
+                    </h1>
+                    <p className="text-text-secondary mt-4 max-w-xl mx-auto leading-relaxed">
+                        We help you understand and improve how AI search engines perceive your brand.
+                    </p>
                 </div>
 
-                {/* Step Content */}
-                <div className="bg-surface border border-slate-700 rounded-2xl p-8 shadow-2xl">
-                    {/* Organization Step */}
-                    {step === 'organization' && (
-                        <div className="animate-in fade-in duration-500">
-                            <div className="text-center mb-8">
-                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-4">
-                                    <Building2 className="w-8 h-8 text-primary" />
-                                </div>
-                                <h2 className="text-2xl font-bold text-white mb-2">
-                                    Welcome, {user?.email?.split('@')[0]}!
-                                </h2>
-                                <p className="text-slate-400">
-                                    Let's set up your organization to get started with AI visibility audits.
-                                </p>
-                            </div>
-
-                            <form onSubmit={handleCreateOrganization}>
-                                <div className="mb-6">
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                                        Organization Name
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={orgName}
-                                        onChange={(e) => setOrgName(e.target.value)}
-                                        placeholder="Enter your company or project name"
-                                        className="w-full bg-slate-900 border border-slate-700 text-white rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none transition-all"
-                                        autoFocus
-                                    />
-                                    <p className="mt-2 text-xs text-slate-500">
-                                        This will be your workspace name. You can change it later.
-                                    </p>
-                                </div>
-
-                                {error && (
-                                    <div className="mb-4 text-rose-400 text-sm bg-rose-500/10 border border-rose-500/20 rounded-lg p-3">
-                                        {error}
+                <Card variant="glass" className="border-white/10 shadow-2xl">
+                    <div className="flex items-center justify-between gap-3 mb-8">
+                        <div className="flex items-center gap-2">
+                            {steps.map((s, idx) => (
+                                <React.Fragment key={s.id}>
+                                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold border transition-colors ${step === s.id ? 'bg-primary/20 border-primary/30 text-primary' : step > s.id ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-white/5 border-white/10 text-text-muted'}`}>
+                                        {step > s.id ? <CheckCircle2 className="w-4 h-4" /> : s.id}
                                     </div>
-                                )}
-
-                                <button
-                                    type="submit"
-                                    disabled={isSubmitting}
-                                    className="w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 px-4 rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                                >
-                                    {isSubmitting ? (
-                                        <>
-                                            <Loader2 className="w-5 h-5 animate-spin" />
-                                            Creating...
-                                        </>
-                                    ) : (
-                                        <>
-                                            Continue <ArrowRight className="w-5 h-5" />
-                                        </>
-                                    )}
-                                </button>
-                            </form>
+                                    {idx < steps.length - 1 ? (
+                                        <div className={`w-10 h-0.5 ${step > s.id ? 'bg-emerald-500/40' : 'bg-white/10'}`} />
+                                    ) : null}
+                                </React.Fragment>
+                            ))}
                         </div>
-                    )}
+                        <button
+                            onClick={handleSkipForNow}
+                            disabled={saving}
+                            className="text-xs text-text-muted hover:text-white transition-colors font-bold uppercase tracking-wider disabled:opacity-50"
+                        >
+                            Skip
+                        </button>
+                    </div>
 
-                    {/* Domain Step */}
-                    {step === 'domain' && (
-                        <div className="animate-in fade-in duration-500">
-                            <div className="text-center mb-8">
-                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-secondary/10 mb-4">
-                                    <Globe className="w-8 h-8 text-secondary" />
+                    <AnimatePresence mode="wait">
+                        {step === 1 && (
+                            <motion.div
+                                key="step1"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                transition={{ duration: 0.25 }}
+                                className="space-y-6"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                                        <Rocket className="w-6 h-6 text-primary" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h2 className="text-xl font-display font-bold text-white">Let's get you set up</h2>
+                                        <p className="text-sm text-text-secondary">
+                                            In under a minute, you'll be ready to run your first audit.
+                                        </p>
+                                    </div>
                                 </div>
-                                <h2 className="text-2xl font-bold text-white mb-2">
-                                    Add Your First Domain
-                                </h2>
-                                <p className="text-slate-400">
-                                    Enter the website you want to audit for AI visibility.
-                                </p>
-                            </div>
 
-                            <form onSubmit={handleAddDomain}>
-                                <div className="mb-6">
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                                        Website URL
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={domainUrl}
-                                        onChange={(e) => setDomainUrl(e.target.value)}
-                                        placeholder="e.g. example.com"
-                                        className="w-full bg-slate-900 border border-slate-700 text-white rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none transition-all"
-                                        autoFocus
-                                    />
-                                    <p className="mt-2 text-xs text-slate-500">
-                                        We'll analyze this domain for AI search visibility.
+                                {/* Persona Selector */}
+                                <div>
+                                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-text-muted mb-3">I'm a...</p>
+                                    <div className="grid grid-cols-3 gap-3">
+                                        {[
+                                            { id: 'agency' as const, label: 'Agency', desc: 'Managing multiple clients', icon: '🏢' },
+                                            { id: 'brand' as const, label: 'Brand', desc: 'Growing my company', icon: '🚀' },
+                                            { id: 'developer' as const, label: 'Developer', desc: 'Building with AI', icon: '💻' }
+                                        ].map((persona) => (
+                                            <button
+                                                key={persona.id}
+                                                onClick={() => setSelectedPersona(persona.id)}
+                                                className={`bg-white/5 border rounded-xl p-4 text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/50 ${selectedPersona === persona.id ? 'border-primary/50 bg-primary/10 ring-1 ring-primary/30' : 'border-white/10 hover:bg-primary/10 hover:border-primary/20'}`}
+                                            >
+                                                <span className="text-2xl mb-2 block">{persona.icon}</span>
+                                                <p className="text-white font-bold text-sm">{persona.label}</p>
+                                                <p className="text-text-muted text-xs mt-0.5">{persona.desc}</p>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="grid sm:grid-cols-2 gap-4">
+                                    {[
+                                        { title: 'Multi-platform scoring', desc: 'See performance across ChatGPT, Gemini, Claude, and Perplexity.' },
+                                        { title: 'Actionable recommendations', desc: 'Get prioritized fixes you can ship immediately.' },
+                                        { title: 'Schema & SEO checks', desc: 'Surface issues that reduce citation likelihood.' },
+                                        { title: 'Historical tracking', desc: 'Track progress over time with audit history.' }
+                                    ].map((item) => (
+                                        <div key={item.title} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                                            <p className="text-white font-bold text-sm">{item.title}</p>
+                                            <p className="text-text-secondary text-sm mt-1 leading-relaxed">{item.desc}</p>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="flex flex-col sm:flex-row gap-3 justify-end">
+                                    <Button onClick={goNext} size="lg" className="w-full sm:w-auto">
+                                        Next <ArrowRight className="w-4 h-4 ml-2" />
+                                    </Button>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {step === 2 && (
+                            <motion.div
+                                key="step2"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                transition={{ duration: 0.25 }}
+                                className="space-y-6"
+                            >
+                                <div>
+                                    <h2 className="text-xl font-display font-bold text-white">A quick tour</h2>
+                                    <p className="text-sm text-text-secondary mt-2">
+                                        Here’s what you’ll see after your first audit.
                                     </p>
                                 </div>
 
-                                <div className="flex gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => setStep('complete')}
-                                        className="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-medium py-3 px-4 rounded-xl transition-colors"
-                                    >
-                                        Skip for Now
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={!domainUrl.trim()}
-                                        className="flex-1 bg-primary hover:bg-primary/90 text-white font-medium py-3 px-4 rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                                    >
-                                        Continue <ArrowRight className="w-5 h-5" />
-                                    </button>
+                                <div className="bg-background/60 border border-white/5 rounded-2xl p-5">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <p className="text-xs font-bold uppercase tracking-[0.25em] text-text-muted">Preview</p>
+                                        <span className="text-xs text-text-secondary font-semibold">Dashboard</span>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-3">
+                                        {[
+                                            { label: 'Overall', value: '78' },
+                                            { label: 'Citations', value: '64' },
+                                            { label: 'Technical', value: '82' }
+                                        ].map((m) => (
+                                            <div key={m.label} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                                                <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted">{m.label}</p>
+                                                <p className="text-2xl font-display font-bold text-white mt-2">{m.value}</p>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                            </form>
-                        </div>
-                    )}
 
-                    {/* Complete Step */}
-                    {step === 'complete' && (
-                        <div className="animate-in fade-in duration-500 text-center">
-                            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary to-purple-500 mb-6">
-                                <Sparkles className="w-10 h-10 text-white" />
-                            </div>
-                            <h2 className="text-2xl font-bold text-white mb-2">
-                                You're All Set! 🎉
-                            </h2>
-                            <p className="text-slate-400 mb-8">
-                                Your workspace is ready. Start your first AI visibility audit to see how your content performs in AI search engines.
-                            </p>
+                                <div className="flex flex-col sm:flex-row gap-3 justify-between">
+                                    <Button variant="ghost" onClick={goBack} className="w-full sm:w-auto">
+                                        Back
+                                    </Button>
+                                    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                                        <Button variant="secondary" onClick={handleSkipTour} className="w-full sm:w-auto">
+                                            Skip tour
+                                        </Button>
+                                        <Button onClick={goNext} className="w-full sm:w-auto">
+                                            Next <ArrowRight className="w-4 h-4 ml-2" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
 
-                            <div className="bg-slate-900 rounded-xl p-6 mb-8 text-left">
-                                <h3 className="text-sm font-semibold text-white mb-4">What you can do now:</h3>
-                                <ul className="space-y-3 text-sm text-slate-400">
-                                    <li className="flex items-start gap-3">
-                                        <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                                        <span>Run your first AI visibility audit</span>
-                                    </li>
-                                    <li className="flex items-start gap-3">
-                                        <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                                        <span>Simulate content rewrites and see real-time score changes</span>
-                                    </li>
-                                    <li className="flex items-start gap-3">
-                                        <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                                        <span>Get AI-optimized recommendations for each page</span>
-                                    </li>
-                                </ul>
-                            </div>
-
-                            <button
-                                onClick={handleComplete}
-                                className="w-full bg-gradient-to-r from-primary via-indigo-500 to-purple-600 hover:shadow-2xl hover:shadow-primary/30 text-white font-bold py-4 px-6 rounded-xl transition-all flex items-center justify-center gap-2"
+                        {step === 3 && (
+                            <motion.div
+                                key="step3"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                transition={{ duration: 0.25 }}
+                                className="space-y-6"
                             >
-                                Start Auditing <ArrowRight className="w-5 h-5" />
-                            </button>
-                        </div>
-                    )}
-                </div>
+                                <div>
+                                    <h2 className="text-xl font-display font-bold text-white">Run your first audit</h2>
+                                    <p className="text-sm text-text-secondary mt-2">
+                                        Enter the website you want to analyze.
+                                    </p>
+                                </div>
 
-                {/* Free Plan Note */}
-                <p className="mt-6 text-center text-xs text-slate-500">
-                    You're on the <span className="text-primary">Free Plan</span> with 5 audits & 50 simulations/month.{' '}
-                    <a href="/pricing" className="text-primary hover:underline">Upgrade</a> for more.
-                </p>
+                                <Input
+                                    label="Website URL"
+                                    value={websiteUrl}
+                                    onChange={(e) => setWebsiteUrl(e.target.value)}
+                                    placeholder="e.g. example.com"
+                                    icon={<Search className="w-4 h-4" />}
+                                    error={localError || undefined}
+                                    disabled={saving}
+                                />
+
+                                <div>
+                                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-text-muted mb-2">Quick Audit Presets</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {QUICK_AUDIT_PRESETS.map((preset) => (
+                                            <button
+                                                key={preset}
+                                                type="button"
+                                                onClick={() => {
+                                                    setWebsiteUrl(preset);
+                                                    setLocalError('');
+                                                }}
+                                                disabled={saving}
+                                                className="text-xs px-3 py-1.5 rounded-full border border-white/10 bg-white/5 hover:bg-primary/10 hover:border-primary/30 text-text-secondary hover:text-white transition-colors disabled:opacity-50"
+                                                aria-label={`Use ${preset} as quick audit URL`}
+                                            >
+                                                {preset.replace('https://www.', '').replace('https://', '')}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-col sm:flex-row gap-3 justify-between">
+                                    <Button variant="ghost" onClick={goBack} className="w-full sm:w-auto" disabled={saving}>
+                                        Back
+                                    </Button>
+                                    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                                        <Button
+                                            variant="secondary"
+                                            onClick={() => handleStartFirstAudit(QUICK_AUDIT_PRESETS[0])}
+                                            className="w-full sm:w-auto"
+                                            isLoading={saving}
+                                        >
+                                            Quick audit
+                                        </Button>
+                                        <Button variant="secondary" onClick={handleSkipForNow} className="w-full sm:w-auto" isLoading={saving}>
+                                            Skip for now
+                                        </Button>
+                                        <Button onClick={() => handleStartFirstAudit()} className="w-full sm:w-auto" isLoading={saving}>
+                                            Start analysis <ArrowRight className="w-4 h-4 ml-2" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </Card>
             </div>
         </div>
     );

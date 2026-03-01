@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import {
     HelpCircle, Book, MessageCircle, ChevronDown, ChevronUp,
-    Zap, Shield, CreditCard, Users, Key, Clock, Search,
-    ExternalLink, Mail
+    Zap, Shield, CreditCard, Users, Key, Search,
+    Send, CheckCircle2, ArrowRight, Loader2, Hash
 } from 'lucide-react';
+import { sanitizeUiCopy } from '../utils/uiCopy';
+import { supabase } from '../services/supabase';
 
 interface FAQItem {
     question: string;
@@ -20,7 +22,7 @@ const FAQ_ITEMS: FAQItem[] = [
     {
         category: 'Getting Started',
         question: 'How does Cognition analyze my website?',
-        answer: 'We crawl your website using Firecrawl technology, extract your content, and use Gemini 2.0 to simulate how AI search engines perceive your brand. We analyze topical authority, citation likelihood, and semantic alignment.'
+        answer: sanitizeUiCopy('We discover key pages on your site, analyze publicly available content, and generate a visibility report across major AI assistants. You’ll see what AI understands, what it misses, and the highest-impact actions to improve.')
     },
     {
         category: 'Getting Started',
@@ -40,7 +42,7 @@ const FAQ_ITEMS: FAQItem[] = [
     {
         category: 'Billing',
         question: 'What payment methods do you accept?',
-        answer: 'We accept all major credit cards (Visa, Mastercard, American Express) through Stripe. Enterprise customers can request invoice billing.'
+        answer: sanitizeUiCopy('We accept major credit cards (Visa, Mastercard, American Express). Enterprise customers can request invoice billing.')
     },
     {
         category: 'Billing',
@@ -60,7 +62,7 @@ const FAQ_ITEMS: FAQItem[] = [
     {
         category: 'Security',
         question: 'How do you handle my data?',
-        answer: 'We only analyze publicly accessible pages. Your data is encrypted in transit and at rest. We never share or sell your data. API keys are stored as SHA-256 hashes.'
+        answer: 'We only analyze publicly accessible pages. Your data is encrypted in transit and at rest. We never share or sell your data. API keys are stored securely and can’t be viewed again after creation.'
     },
 ];
 
@@ -88,6 +90,175 @@ const FAQAccordion: React.FC<{ item: FAQItem; isOpen: boolean; onToggle: () => v
         )}
     </div>
 );
+
+const TOPICS = [
+    'Getting Started',
+    'Billing & Plans',
+    'Technical Issue',
+    'API & Integrations',
+    'Feature Request',
+    'Other',
+];
+
+const ContactForm: React.FC = () => {
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [topic, setTopic] = useState('');
+    const [message, setMessage] = useState('');
+    const [submitted, setSubmitted] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const [ticketId, setTicketId] = useState<string>('');
+    const [serverError, setServerError] = useState<string>('');
+    const [errors, setErrors] = useState<Record<string, string>>({});
+
+    const validate = () => {
+        const errs: Record<string, string> = {};
+        if (!name.trim()) errs.name = 'Name is required';
+        if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = 'Valid email required';
+        if (!topic) errs.topic = 'Please select a topic';
+        if (!message.trim() || message.trim().length < 20) errs.message = 'Please describe your issue (min. 20 characters)';
+        return errs;
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const errs = validate();
+        if (Object.keys(errs).length > 0) {
+            setErrors(errs);
+            return;
+        }
+        setSubmitting(true);
+        setServerError('');
+        try {
+            const { data, error } = await supabase.functions.invoke('support-ticket', {
+                body: { name: name.trim(), email: email.trim(), topic, message: message.trim() },
+            });
+            if (error) throw error;
+            setTicketId(data?.ticketId || '');
+            setSubmitted(true);
+        } catch (err: any) {
+            console.error('[HelpCenter] support-ticket error:', err);
+            setServerError('Failed to send your message. Please try again or email support@cognition-ai.com directly.');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    if (submitted) {
+        return (
+            <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-8 text-center">
+                <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-white mb-2">Message received!</h3>
+                {ticketId && (
+                    <div className="inline-flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-1.5 mb-3">
+                        <Hash className="w-3.5 h-3.5 text-emerald-400" />
+                        <span className="text-emerald-300 text-sm font-mono font-semibold">{ticketId}</span>
+                    </div>
+                )}
+                <p className="text-slate-400 mb-4">
+                    We've received your message and sent a confirmation to <span className="text-white">{email}</span>. We aim to respond within 24 hours.
+                </p>
+                <button
+                    onClick={() => { setSubmitted(false); setName(''); setEmail(''); setTopic(''); setMessage(''); setErrors({}); setTicketId(''); }}
+                    className="text-sm text-primary hover:underline"
+                >
+                    Send another message
+                </button>
+            </div>
+        );
+    }
+
+    return (
+        <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-8">
+            <div className="flex items-start gap-4 mb-8">
+                <div className="w-12 h-12 bg-purple-500/20 rounded-2xl flex items-center justify-center flex-shrink-0">
+                    <MessageCircle className="w-6 h-6 text-purple-400" />
+                </div>
+                <div>
+                    <h3 className="text-xl font-semibold text-white mb-1">Still have questions?</h3>
+                    <p className="text-slate-400 text-sm">
+                        Our team typically responds within <span className="text-white font-medium">24 hours</span>.
+                    </p>
+                </div>
+            </div>
+
+            <form onSubmit={handleSubmit} noValidate className="space-y-5">
+                <div className="grid sm:grid-cols-2 gap-5">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-1.5">Your name</label>
+                        <input
+                            type="text"
+                            value={name}
+                            onChange={e => { setName(e.target.value); setErrors(prev => ({ ...prev, name: '' })); }}
+                            placeholder="Jane Smith"
+                            className={`w-full bg-slate-800 border rounded-xl px-4 py-2.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary transition-colors ${errors.name ? 'border-rose-500' : 'border-slate-700'}`}
+                        />
+                        {errors.name && <p className="text-xs text-rose-400 mt-1">{errors.name}</p>}
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-1.5">Email address</label>
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={e => { setEmail(e.target.value); setErrors(prev => ({ ...prev, email: '' })); }}
+                            placeholder="jane@company.com"
+                            className={`w-full bg-slate-800 border rounded-xl px-4 py-2.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary transition-colors ${errors.email ? 'border-rose-500' : 'border-slate-700'}`}
+                        />
+                        {errors.email && <p className="text-xs text-rose-400 mt-1">{errors.email}</p>}
+                    </div>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-1.5">Topic</label>
+                    <select
+                        value={topic}
+                        onChange={e => { setTopic(e.target.value); setErrors(prev => ({ ...prev, topic: '' })); }}
+                        className={`w-full bg-slate-800 border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-primary transition-colors ${errors.topic ? 'border-rose-500' : 'border-slate-700'}`}
+                    >
+                        <option value="" disabled>Select a topic…</option>
+                        {TOPICS.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                    {errors.topic && <p className="text-xs text-rose-400 mt-1">{errors.topic}</p>}
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-1.5">Message</label>
+                    <textarea
+                        rows={4}
+                        value={message}
+                        onChange={e => { setMessage(e.target.value); setErrors(prev => ({ ...prev, message: '' })); }}
+                        placeholder="Describe your question or issue in detail…"
+                        className={`w-full bg-slate-800 border rounded-xl px-4 py-2.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary transition-colors resize-none ${errors.message ? 'border-rose-500' : 'border-slate-700'}`}
+                    />
+                    {errors.message && <p className="text-xs text-rose-400 mt-1">{errors.message}</p>}
+                </div>
+
+                {serverError && (
+                    <p className="text-sm text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-lg px-4 py-2.5">{serverError}</p>
+                )}
+
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-1">
+                    <a
+                        href="/docs/api"
+                        className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors"
+                    >
+                        <Book className="w-4 h-4" />
+                        View documentation
+                        <ArrowRight className="w-3 h-3" />
+                    </a>
+                    <button
+                        type="submit"
+                        disabled={submitting}
+                        className="flex items-center gap-2 bg-primary hover:bg-primary/90 disabled:opacity-60 text-white px-6 py-2.5 rounded-xl font-medium transition-colors"
+                    >
+                        {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                        {submitting ? 'Sending…' : 'Send message'}
+                    </button>
+                </div>
+            </form>
+        </div>
+    );
+};
 
 export const HelpCenter: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -188,32 +359,7 @@ export const HelpCenter: React.FC = () => {
                 </div>
 
                 {/* Contact Section */}
-                <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-8 text-center">
-                    <MessageCircle className="w-10 h-10 text-purple-400 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-white mb-2">Still have questions?</h3>
-                    <p className="text-slate-400 mb-6">
-                        Our team is here to help. Reach out and we'll get back to you within 24 hours.
-                    </p>
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                        <a
-                            href="mailto:support@cognition.ai"
-                            className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-xl font-medium transition-colors"
-                        >
-                            <Mail className="w-4 h-4" />
-                            Email Support
-                        </a>
-                        <a
-                            href="https://docs.cognition.ai"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-6 py-3 rounded-xl font-medium transition-colors"
-                        >
-                            <Book className="w-4 h-4" />
-                            Documentation
-                            <ExternalLink className="w-3 h-3" />
-                        </a>
-                    </div>
-                </div>
+                <ContactForm />
             </div>
         </div>
     );

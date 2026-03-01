@@ -1,3 +1,11 @@
+export interface VectorMapPoint {
+  x: number;
+  y: number;
+  z: number;
+  label: string;
+  type: 'brand' | 'competitor' | 'keyword' | 'your_content' | 'gold_standard' | 'optimization_target';
+}
+
 export enum AssetType {
   WEBSITE = 'WEBSITE',
   YOUTUBE = 'YOUTUBE',
@@ -34,7 +42,30 @@ export enum AIPlatform {
   CHATGPT = 'ChatGPT',
   GEMINI = 'Gemini',
   CLAUDE = 'Claude',
-  PERPLEXITY = 'Perplexity'
+  PERPLEXITY = 'Perplexity',
+  GOOGLE_AI_OVERVIEWS = 'Google AI Overviews',
+  MICROSOFT_COPILOT = 'Microsoft Copilot',
+  META_AI = 'Meta AI',
+  GROK = 'Grok'
+}
+
+export interface Workspace {
+  id: string;
+  organization_id: string;
+  name: string;
+  description?: string;
+  icon_url?: string;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WorkspaceMember {
+  workspace_id: string;
+  user_id: string;
+  role: 'admin' | 'member' | 'viewer';
+  added_at: string;
+  added_by?: string;
 }
 
 export interface Project {
@@ -63,6 +94,7 @@ export interface Recommendation {
   snippet?: string; // Original snippet
   suggested?: string; // AI Suggested rewrite
   generatedSchema?: string; // Valid JSON-LD code block if applicable
+  status?: 'OPEN' | 'DONE' | 'IGNORED';
 }
 
 export interface PageAnalysis {
@@ -89,10 +121,11 @@ export interface SeoAudit {
 
 export interface Report {
   id?: string;
+  createdAt?: string;
   overallScore: number;
   platformScores: PlatformScore[];
   pages: PageAnalysis[];
-  brandConsistnecyScore: number; // 0-100
+  brandConsistencyScore: number; // 0-100
   consistencyAnalysis: string;
   topicalDominance: string[]; // List of topics the brand owns
   // New Fields
@@ -105,10 +138,5 @@ export interface Report {
     rank: number;
     citationFound: boolean;
   }[];
-  vectorMap?: {
-    x: number;
-    y: number;
-    label: string;
-    type: 'brand' | 'competitor' | 'keyword';
-  }[];
+  vectorMap?: VectorMapPoint[];
 }

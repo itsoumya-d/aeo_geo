@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../services/supabase';
 import { useToast } from './Toast';
+import { getTechnicalErrorMessage, toUserMessage } from '../utils/errors';
 import {
     Clock, Plus, Trash2, Play, Pause, Calendar, Globe,
     Loader2, RefreshCw, Bell, ChevronDown
@@ -40,6 +41,14 @@ export const ScheduledAudits: React.FC = () => {
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [newDomain, setNewDomain] = useState('');
     const [newFrequency, setNewFrequency] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
+    const [newTime, setNewTime] = useState('09:00');
+    const [newTimezone, setNewTimezone] = useState(
+        Intl.DateTimeFormat().resolvedOptions().timeZone
+    );
+    const [emailNotifications, setEmailNotifications] = useState(true);
+    const [slackWebhookUrl, setSlackWebhookUrl] = useState('');
+    const [showSlackInput, setShowSlackInput] = useState(false);
+    const [savingNotifs, setSavingNotifs] = useState(false);
 
     const isPaidPlan = organization?.plan !== 'free';
     const isOwnerOrAdmin = profile?.role === 'owner' || profile?.role === 'admin';
@@ -47,8 +56,59 @@ export const ScheduledAudits: React.FC = () => {
     useEffect(() => {
         if (organization?.id) {
             loadSchedules();
+            loadNotificationPrefs();
         }
     }, [organization?.id]);
+
+    const loadNotificationPrefs = async () => {
+        if (!organization?.id) return;
+        try {
+            const { data } = await supabase
+                .from('organization_settings')
+                .select('audit_email_notifications, slack_webhook_url')
+                .eq('organization_id', organization.id)
+                .maybeSingle();
+            if (data) {
+                setEmailNotifications(data.audit_email_notifications ?? true);
+                setSlackWebhookUrl(data.slack_webhook_url ?? '');
+            }
+        } catch {
+            // Settings table may not exist yet — use defaults
+        }
+    };
+
+    const saveNotificationPrefs = async (updates: { audit_email_notifications?: boolean; slack_webhook_url?: string }) => {
+        if (!organization?.id) return;
+        setSavingNotifs(true);
+        try {
+            const { error } = await supabase
+                .from('organization_settings')
+                .upsert({
+                    organization_id: organization.id,
+                    ...updates,
+                    updated_at: new Date().toISOString(),
+                }, { onConflict: 'organization_id' });
+            if (error) throw error;
+            toast.success('Preferences saved');
+        } catch (error: any) {
+            console.error('Save notification prefs failed:', getTechnicalErrorMessage(error));
+            const user = toUserMessage(error);
+            toast.error(user.title, user.message);
+        } finally {
+            setSavingNotifs(false);
+        }
+    };
+
+    const handleToggleEmail = () => {
+        const newVal = !emailNotifications;
+        setEmailNotifications(newVal);
+        saveNotificationPrefs({ audit_email_notifications: newVal });
+    };
+
+    const handleSaveSlack = () => {
+        saveNotificationPrefs({ slack_webhook_url: slackWebhookUrl });
+        setShowSlackInput(false);
+    };
 
     const loadSchedules = async () => {
         if (!organization?.id) return;
@@ -64,10 +124,11 @@ export const ScheduledAudits: React.FC = () => {
             if (error) throw error;
             setSchedules(data || []);
         } catch (error: any) {
-            console.error('Failed to load schedules:', error);
+            console.error('Failed to load schedules:', getTechnicalErrorMessage(error));
             // Don't show error if table doesn't exist yet
             if (!error.message?.includes('relation')) {
-                toast.error('Failed to load schedules', error.message);
+                const user = toUserMessage(error);
+                toast.error(user.title, user.message);
             }
             setSchedules([]);
         } finally {
@@ -88,18 +149,23 @@ export const ScheduledAudits: React.FC = () => {
             }
             new URL(url); // Validate
 
-            // Calculate next run time
+            // Calculate next run time using preferred time
+            const [hours, minutes] = newTime.split(':').map(Number);
             const now = new Date();
-            let nextRun: Date;
+            const nextRun = new Date(now);
+            nextRun.setHours(hours, minutes, 0, 0);
+            // If the selected time is already past today, start from tomorrow
+            if (nextRun <= now) {
+                nextRun.setDate(nextRun.getDate() + 1);
+            }
             switch (newFrequency) {
-                case 'daily':
-                    nextRun = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-                    break;
                 case 'weekly':
-                    nextRun = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+                    if (nextRun.getTime() - now.getTime() < 24 * 60 * 60 * 1000) {
+                        nextRun.setDate(nextRun.getDate() + 7);
+                    }
                     break;
                 case 'monthly':
-                    nextRun = new Date(now.setMonth(now.getMonth() + 1));
+                    nextRun.setMonth(nextRun.getMonth() + 1);
                     break;
             }
 
@@ -109,6 +175,8 @@ export const ScheduledAudits: React.FC = () => {
                     organization_id: organization.id,
                     domain_url: url,
                     frequency: newFrequency,
+                    preferred_time: newTime,
+                    timezone: newTimezone,
                     next_run_at: nextRun.toISOString(),
                     enabled: true,
                 });
@@ -120,7 +188,9 @@ export const ScheduledAudits: React.FC = () => {
             setShowCreateForm(false);
             loadSchedules();
         } catch (error: any) {
-            toast.error('Failed to create schedule', error.message);
+            console.error('Create schedule failed:', getTechnicalErrorMessage(error));
+            const user = toUserMessage(error);
+            toast.error(user.title, user.message);
         } finally {
             setCreating(false);
         }
@@ -137,7 +207,9 @@ export const ScheduledAudits: React.FC = () => {
             toast.success(currentState ? 'Schedule paused' : 'Schedule resumed');
             loadSchedules();
         } catch (error: any) {
-            toast.error('Failed to update', error.message);
+            console.error('Update schedule failed:', getTechnicalErrorMessage(error));
+            const user = toUserMessage(error);
+            toast.error(user.title, user.message);
         }
     };
 
@@ -154,7 +226,9 @@ export const ScheduledAudits: React.FC = () => {
             toast.success('Schedule deleted');
             loadSchedules();
         } catch (error: any) {
-            toast.error('Failed to delete', error.message);
+            console.error('Delete schedule failed:', getTechnicalErrorMessage(error));
+            const user = toUserMessage(error);
+            toast.error(user.title, user.message);
         }
     };
 
@@ -167,7 +241,7 @@ export const ScheduledAudits: React.FC = () => {
                     Automate recurring audits on Pro and Agency plans.
                 </p>
                 <a
-                    href="/settings?tab=billing"
+                    href="/settings/billing"
                     className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors"
                 >
                     Upgrade to Pro
@@ -178,8 +252,28 @@ export const ScheduledAudits: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            <div className="space-y-6 animate-pulse">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-slate-800 rounded-xl" />
+                        <div>
+                            <div className="h-5 w-36 bg-slate-800 rounded-lg mb-2" />
+                            <div className="h-3 w-24 bg-slate-800 rounded-lg" />
+                        </div>
+                    </div>
+                    <div className="h-10 w-32 bg-slate-800 rounded-lg" />
+                </div>
+                {[1, 2, 3].map(i => (
+                    <div key={i} className="bg-slate-900/50 border border-slate-800 rounded-xl p-4">
+                        <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-slate-800 rounded-lg" />
+                            <div>
+                                <div className="h-4 w-40 bg-slate-800 rounded-lg mb-2" />
+                                <div className="h-3 w-28 bg-slate-800 rounded-lg" />
+                            </div>
+                        </div>
+                    </div>
+                ))}
             </div>
         );
     }
@@ -233,13 +327,42 @@ export const ScheduledAudits: React.FC = () => {
                                         type="button"
                                         onClick={() => setNewFrequency(freq)}
                                         className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${newFrequency === freq
-                                                ? 'bg-primary text-white'
-                                                : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                                            ? 'bg-primary text-white'
+                                            : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                                             }`}
                                     >
                                         {freq}
                                     </button>
                                 ))}
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-sm text-slate-400 mb-2">Run at</label>
+                                <input
+                                    type="time"
+                                    value={newTime}
+                                    onChange={e => setNewTime(e.target.value)}
+                                    className="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm text-slate-400 mb-2">Timezone</label>
+                                <select
+                                    value={newTimezone}
+                                    onChange={e => setNewTimezone(e.target.value)}
+                                    className="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none text-sm"
+                                >
+                                    {[
+                                        'America/New_York', 'America/Chicago', 'America/Denver',
+                                        'America/Los_Angeles', 'America/Sao_Paulo',
+                                        'Europe/London', 'Europe/Berlin', 'Europe/Paris',
+                                        'Asia/Dubai', 'Asia/Kolkata', 'Asia/Shanghai',
+                                        'Asia/Tokyo', 'Australia/Sydney', 'Pacific/Auckland',
+                                    ].map(tz => (
+                                        <option key={tz} value={tz}>{tz.replace(/_/g, ' ')}</option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
                         <div className="flex gap-3 pt-2">
@@ -268,9 +391,18 @@ export const ScheduledAudits: React.FC = () => {
                 <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-8 text-center">
                     <Clock className="w-12 h-12 text-slate-600 mx-auto mb-4" />
                     <h4 className="font-medium text-white mb-2">No Schedules Yet</h4>
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-slate-400 mb-5">
                         Set up automated audits to track your AI visibility over time.
                     </p>
+                    {isOwnerOrAdmin && (
+                        <button
+                            onClick={() => setShowCreateForm(true)}
+                            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Schedule Your First Audit
+                        </button>
+                    )}
                 </div>
             ) : (
                 <div className="space-y-3">
@@ -278,8 +410,8 @@ export const ScheduledAudits: React.FC = () => {
                         <div
                             key={schedule.id}
                             className={`bg-slate-900/50 border rounded-xl p-4 transition-colors ${schedule.enabled
-                                    ? 'border-slate-800 hover:border-slate-700'
-                                    : 'border-slate-800/50 opacity-60'
+                                ? 'border-slate-800 hover:border-slate-700'
+                                : 'border-slate-800/50 opacity-60'
                                 }`}
                         >
                             <div className="flex items-center justify-between">
@@ -319,10 +451,11 @@ export const ScheduledAudits: React.FC = () => {
                                         <button
                                             onClick={() => handleToggleSchedule(schedule.id, schedule.enabled)}
                                             className={`p-2 rounded-lg transition-colors ${schedule.enabled
-                                                    ? 'text-amber-400 hover:bg-amber-500/10'
-                                                    : 'text-slate-500 hover:bg-slate-800'
+                                                ? 'text-amber-400 hover:bg-amber-500/10'
+                                                : 'text-slate-500 hover:bg-slate-800'
                                                 }`}
                                             title={schedule.enabled ? 'Pause' : 'Resume'}
+                                            aria-label={schedule.enabled ? 'Pause schedule' : 'Resume schedule'}
                                         >
                                             {schedule.enabled ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                                         </button>
@@ -330,6 +463,7 @@ export const ScheduledAudits: React.FC = () => {
                                             onClick={() => handleDeleteSchedule(schedule.id, new URL(schedule.domain_url).hostname)}
                                             className="text-slate-400 hover:text-rose-400 transition-colors p-2"
                                             title="Delete"
+                                            aria-label="Delete schedule"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>
@@ -340,14 +474,88 @@ export const ScheduledAudits: React.FC = () => {
                     ))}
                 </div>
             )}
-
-            {/* Info Notice */}
-            <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-4 flex items-start gap-3">
-                <Bell className="w-5 h-5 text-blue-400 flex-shrink-0" />
-                <div className="text-sm text-slate-400">
-                    <p className="font-medium text-slate-300 mb-1">Email Notifications</p>
-                    <p>You'll receive an email when scheduled audits complete with a summary of the results.</p>
+            {/* Notification Settings */}
+            <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                        <Bell className="w-5 h-5 text-blue-400" />
+                        <div>
+                            <p className="font-medium text-white text-sm">Notification Preferences</p>
+                            <p className="text-xs text-slate-500">Get notified when audits complete</p>
+                        </div>
+                    </div>
                 </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button
+                        onClick={handleToggleEmail}
+                        disabled={savingNotifs}
+                        className="flex items-center justify-between bg-slate-800/50 rounded-lg p-3 border border-slate-700/50 hover:border-primary/30 transition-colors text-left"
+                    >
+                        <div className="flex items-center gap-2">
+                            <span className="text-lg">📧</span>
+                            <span className="text-sm text-slate-300">Email Reports</span>
+                        </div>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${emailNotifications
+                            ? 'bg-emerald-500/20 text-emerald-400'
+                            : 'bg-slate-700 text-slate-400'
+                        }`}>
+                            {emailNotifications ? 'Active' : 'Off'}
+                        </span>
+                    </button>
+                    <button
+                        onClick={() => setShowSlackInput(!showSlackInput)}
+                        className="flex items-center justify-between bg-slate-800/50 rounded-lg p-3 border border-slate-700/50 hover:border-primary/30 transition-colors text-left"
+                    >
+                        <div className="flex items-center gap-2">
+                            <span className="text-lg">💬</span>
+                            <span className="text-sm text-slate-300">Slack Alerts</span>
+                        </div>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${slackWebhookUrl
+                            ? 'bg-emerald-500/20 text-emerald-400'
+                            : 'bg-slate-700 text-slate-400'
+                        }`}>
+                            {slackWebhookUrl ? 'Connected' : 'Connect'}
+                        </span>
+                    </button>
+                </div>
+                {showSlackInput && (
+                    <div className="mt-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700/50 space-y-3">
+                        <label className="block text-xs text-slate-400">
+                            Slack Incoming Webhook URL
+                        </label>
+                        <input
+                            type="url"
+                            value={slackWebhookUrl}
+                            onChange={e => setSlackWebhookUrl(e.target.value)}
+                            placeholder="https://hooks.slack.com/services/..."
+                            className="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none placeholder:text-slate-600"
+                        />
+                        <div className="flex gap-2">
+                            <button
+                                onClick={handleSaveSlack}
+                                disabled={savingNotifs}
+                                className="bg-primary hover:bg-primary/90 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+                            >
+                                {savingNotifs ? 'Saving...' : 'Save'}
+                            </button>
+                            {slackWebhookUrl && (
+                                <button
+                                    onClick={() => {
+                                        setSlackWebhookUrl('');
+                                        saveNotificationPrefs({ slack_webhook_url: '' });
+                                        setShowSlackInput(false);
+                                    }}
+                                    className="text-rose-400 hover:text-rose-300 px-3 py-1.5 text-xs font-medium transition-colors"
+                                >
+                                    Disconnect
+                                </button>
+                            )}
+                        </div>
+                        <p className="text-[10px] text-slate-600 leading-relaxed">
+                            Create an Incoming Webhook in your Slack workspace settings, then paste the URL here.
+                        </p>
+                    </div>
+                )}
             </div>
         </div>
     );

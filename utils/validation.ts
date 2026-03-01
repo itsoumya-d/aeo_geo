@@ -32,17 +32,9 @@ export function normalizeUrl(url: string): string {
 
     let normalized = url.trim();
 
-    // Remove leading/trailing whitespace
-    normalized = normalized.trim();
-
     // Add protocol if missing
     if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
-        // Handle www. prefix
-        if (normalized.startsWith('www.')) {
-            normalized = `https://${normalized}`;
-        } else {
-            normalized = `https://${normalized}`;
-        }
+        normalized = `https://${normalized}`;
     }
 
     // Remove trailing slash for consistency
@@ -74,7 +66,7 @@ export function extractRootDomain(url: string): string {
     const parts = domain.split('.');
 
     // Handle cases like co.uk, com.au
-    const twoPartTLDs = ['co.uk', 'com.au', 'co.nz', 'com.br', 'co.jp'];
+    const twoPartTLDs = ['co.uk', 'com.au', 'co.nz', 'com.br', 'co.jp', 'co.in', 'org.uk', 'com.sg', 'co.za', 'com.mx', 'co.kr', 'com.cn', 'com.tw', 'com.hk', 'co.id', 'com.my', 'co.th', 'com.ph', 'com.vn', 'com.ar', 'com.co', 'com.pe', 'co.il', 'com.tr', 'com.ua', 'org.au', 'net.au', 'gov.uk', 'ac.uk'];
     const lastTwo = parts.slice(-2).join('.');
 
     if (twoPartTLDs.includes(lastTwo) && parts.length > 2) {
@@ -89,6 +81,25 @@ export function extractRootDomain(url: string): string {
  */
 export function isSameDomain(url1: string, url2: string): boolean {
     return extractDomain(url1) === extractDomain(url2);
+}
+
+/**
+ * Extracts a clean hostname from a URL, stripping www prefix.
+ * Handles malformed input gracefully with a regex fallback.
+ */
+export function safeHostname(input: string): string {
+    if (!input) return '';
+    try {
+        const normalized = input.startsWith('http://') || input.startsWith('https://')
+            ? input
+            : `https://${input}`;
+        return new URL(normalized).hostname.replace(/^www\./i, '');
+    } catch {
+        return input
+            .replace(/^(?:https?:\/\/)?(?:www\.)?/i, '')
+            .split('/')[0]
+            .trim();
+    }
 }
 
 /**
@@ -135,4 +146,19 @@ export function validateUrl(url: string): { isValid: boolean; error?: string } {
 export function isDuplicateUrl(url: string, existingUrls: string[]): boolean {
     const normalizedNew = normalizeUrl(url);
     return existingUrls.some(existing => normalizeUrl(existing) === normalizedNew);
+}
+
+export function validateEmail(email: string): { isValid: boolean; error?: string } {
+    if (!email || !email.trim()) {
+        return { isValid: false, error: 'Email is required' };
+    }
+
+    const normalized = email.trim().toLowerCase();
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!re.test(normalized)) {
+        return { isValid: false, error: 'Invalid email format' };
+    }
+
+    return { isValid: true };
 }

@@ -99,6 +99,6 @@ This app is configured for **Vercel** deployment (see `vercel.json`).
  Remember to add the `VITE_` environment variables in Vercel.
 
 ## Documentation
-- [Project Walkthrough & Architecture](./walkthrough.md)
-- [Deployment Guide](./DEPLOYMENT.md)
-- [Implementation Task List](./task.md)
+- [Project Walkthrough & Architecture](./docs/production-readiness/route-inventory.md)
+- [Deployment Checklist](./docs/deployment-checklist.md)
+- [Implementation Task List](./docs/production-readiness/task.md)

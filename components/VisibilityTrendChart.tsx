@@ -13,7 +13,7 @@ import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
 
 export const VisibilityTrendChart: React.FC = () => {
-    const { organization } = useAuth();
+    const { organization, currentWorkspace } = useAuth();
     const [timeframe, setTimeframe] = useState<Timeframe>('30d');
     const [data, setData] = useState<VisibilityDataPoint[]>([]);
     const [loading, setLoading] = useState(true);
@@ -23,13 +23,13 @@ export const VisibilityTrendChart: React.FC = () => {
         if (organization?.id) {
             fetchData();
         }
-    }, [organization?.id, timeframe]);
+    }, [organization?.id, currentWorkspace?.id, timeframe]);
 
     const fetchData = async () => {
         setLoading(true);
         setError(null);
         try {
-            const result = await getVisibilityTrends(organization!.id, timeframe);
+            const result = await getVisibilityTrends(organization!.id, timeframe, currentWorkspace?.id);
             setData(result);
         } catch (err) {
             setError('Failed to load visibility data');
@@ -48,6 +48,7 @@ export const VisibilityTrendChart: React.FC = () => {
     };
 
     const momentum = calculateMomentum();
+    const hasBenchmarks = data.some((d) => typeof d.competitorAvg === 'number' && d.competitorAvg !== null);
 
     if (loading && data.length === 0) {
         return (
@@ -63,6 +64,21 @@ export const VisibilityTrendChart: React.FC = () => {
                     </div>
                 </div>
                 <Skeleton height={280} className="w-full" rounded="2xl" />
+            </div>
+        );
+    }
+
+    if (!loading && data.length === 0 && !error) {
+        return (
+            <div className="bg-surface/40 border border-border rounded-2xl p-8">
+                <h3 className="text-white font-display font-bold text-xl">Visibility momentum</h3>
+                <p className="text-sm text-text-secondary mt-2 max-w-xl">
+                    Run your first audit to start tracking trendlines over time. Momentum updates automatically as you add more audits.
+                </p>
+                <div className="mt-6 flex flex-wrap gap-3">
+                    <Badge variant="secondary">No trend data yet</Badge>
+                    <Badge variant="secondary">Timeframe: {timeframe}</Badge>
+                </div>
             </div>
         );
     }
@@ -105,13 +121,31 @@ export const VisibilityTrendChart: React.FC = () => {
                             <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-primary shadow-glow" />
                             <span className="text-[9px] sm:text-[10px] uppercase font-bold text-text-secondary tracking-wider">Your Brand</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-slate-700" />
-                            <span className="text-[9px] sm:text-[10px] uppercase font-bold text-text-muted tracking-wider">Market Avg</span>
-                        </div>
+                        {hasBenchmarks ? (
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-slate-700" />
+                                <span className="text-[9px] sm:text-[10px] uppercase font-bold text-text-muted tracking-wider">Benchmark</span>
+                            </div>
+                        ) : null}
                     </div>
                 </div>
             </div>
+
+            {/* Period Stats */}
+            {data.length > 0 && (
+                <div className="mb-6 grid grid-cols-3 gap-4">
+                    {[
+                        { label: 'High', value: Math.max(...data.map(d => d.score)), color: 'text-emerald-400' },
+                        { label: 'Low', value: Math.min(...data.map(d => d.score)), color: 'text-rose-400' },
+                        { label: 'Average', value: Math.round(data.reduce((sum, d) => sum + d.score, 0) / data.length), color: 'text-primary' }
+                    ].map((stat) => (
+                        <div key={stat.label} className="bg-surface/50 border border-border rounded-xl p-4 text-center">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted mb-1">{stat.label}</p>
+                            <p className={`text-xl font-bold ${stat.color}`}>{stat.value}</p>
+                        </div>
+                    ))}
+                </div>
+            )}
 
             <div className={`h-72 w-full transition-opacity duration-300 ${loading ? 'opacity-50' : 'opacity-100'}`}>
                 {error ? (
@@ -173,14 +207,17 @@ export const VisibilityTrendChart: React.FC = () => {
                                 animationDuration={1000}
                                 activeDot={{ r: 6, stroke: '#3B82F6', strokeWidth: 2, fill: '#fff' }}
                             />
-                            <Line
-                                type="monotone"
-                                dataKey="competitorAvg"
-                                stroke="#475569"
-                                strokeWidth={2}
-                                strokeDasharray="6 6"
-                                dot={false}
-                            />
+                            {hasBenchmarks ? (
+                                <Line
+                                    type="monotone"
+                                    dataKey="competitorAvg"
+                                    stroke="#475569"
+                                    strokeWidth={2}
+                                    strokeDasharray="6 6"
+                                    dot={false}
+                                    connectNulls={false}
+                                />
+                            ) : null}
                         </AreaChart>
                     </ResponsiveContainer>
                 )}

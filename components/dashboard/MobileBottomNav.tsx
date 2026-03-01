@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, FileText, Search, ShieldCheck, Zap, Users, History as HistoryIcon, Sparkles, TrendingUp, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, FileText, Search, ShieldCheck, Zap, Users, History as HistoryIcon, Sparkles, Settings, ChevronLeft, ChevronRight, Link2 } from 'lucide-react';
 import { TabType } from './DashboardTypes';
 
 interface MobileBottomNavProps {
@@ -20,10 +20,10 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, set
         { id: 'search' as const, label: 'SEO', icon: Search },
         { id: 'reports' as const, label: 'Reports', icon: FileText },
         { id: 'consistency' as const, label: 'Align', icon: ShieldCheck },
-        { id: 'optimization' as const, label: 'Forge', icon: Zap },
+        { id: 'optimization' as const, label: 'Optimize', icon: Zap },
+        { id: 'integrations' as const, label: 'Integrations', icon: Link2 },
         { id: 'history' as const, label: 'History', icon: HistoryIcon },
         { id: 'sandbox' as const, label: 'Sandbox', icon: Sparkles },
-        { id: 'correlation' as const, label: 'Trend', icon: TrendingUp },
         { id: 'settings' as const, label: 'Settings', icon: Settings },
     ];
 
@@ -62,7 +62,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, set
     }, [activeTab]);
 
     return (
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-[60] bg-slate-900/95 backdrop-blur-2xl border-t border-white/5 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+        <nav aria-label="Mobile navigation" className="lg:hidden fixed bottom-0 left-0 right-0 z-[60] bg-slate-900/95 backdrop-blur-2xl border-t border-white/5 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
             {/* Scroll indicators */}
             {showLeftArrow && (
                 <button
@@ -98,6 +98,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, set
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex-shrink-0 flex flex-col items-center gap-1 py-2 px-3 rounded-xl transition-all relative min-w-[60px] ${isActive ? 'text-primary' : 'text-slate-500'
                                 }`}
+                            aria-label={tab.label}
+                            aria-current={isActive ? 'page' : undefined}
                         >
                             {isActive && (
                                 <motion.div
@@ -106,8 +108,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, set
                                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                                 />
                             )}
-                            <Icon className={`w-5 h-5 relative z-10 ${isActive ? 'scale-110' : ''} transition-transform`} />
-                            <span className={`text-[9px] font-bold uppercase tracking-wide relative z-10 ${isActive ? 'opacity-100' : 'opacity-60'}`}>
+                            <Icon className={`w-5 h-5 relative z-10 ${isActive ? 'scale-110' : ''} transition-transform`} aria-hidden="true" />
+                            <span className={`text-[9px] font-bold uppercase tracking-wide relative z-10 ${isActive ? 'opacity-100' : 'opacity-60'}`} aria-hidden="true">
                                 {tab.label}
                             </span>
                         </button>

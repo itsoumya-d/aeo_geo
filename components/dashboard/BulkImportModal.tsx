@@ -1,8 +1,10 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Upload, X, FileText, Check, AlertCircle, Loader2 } from 'lucide-react';
 import { supabase } from '../../services/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../Toast';
+import { getTechnicalErrorMessage, toUserMessage } from '../../utils/errors';
+import { trapFocus } from '../../utils/accessibility';
 
 interface BulkImportModalProps {
     isOpen: boolean;
@@ -13,11 +15,29 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
     const { organization } = useAuth();
     const toast = useToast();
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const modalRef = useRef<HTMLDivElement>(null);
 
     const [file, setFile] = useState<File | null>(null);
     const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+    const [allUrls, setAllUrls] = useState<string[]>([]);
     const [uploading, setUploading] = useState(false);
     const [dragActive, setDragActive] = useState(false);
+    const parsedUrlCount = allUrls.length;
+
+    const handleClose = useCallback(() => {
+        if (uploading) return;
+        onClose();
+    }, [uploading, onClose]);
+
+    useEffect(() => {
+        if (!isOpen || !modalRef.current) return;
+        const cleanup = trapFocus(modalRef.current);
+        const handleEsc = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') handleClose();
+        };
+        document.addEventListener('keydown', handleEsc);
+        return () => { cleanup(); document.removeEventListener('keydown', handleEsc); };
+    }, [isOpen, handleClose]);
 
     if (!isOpen) return null;
 
@@ -54,6 +74,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
             return;
         }
 
+        setAllUrls(validUrls);
         setPreviewUrls(validUrls.slice(0, 10)); // Preview first 10
         setFile(file);
     };
@@ -81,7 +102,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
 
     const handleSubmit = async () => {
         if (!file || !organization?.id) return;
-        if (previewUrls.length > 50) { // Limit for Sprint 1
+        if (allUrls.length > 50) { // Limit for Sprint 1
             toast.warning("Limit Exceeded", "Bulk processing is currently limited to 50 domains per batch.");
             return;
         }
@@ -96,35 +117,38 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
                     job_type: 'ANALYZE_BATCH',
                     status: 'PENDING',
                     payload: {
-                        urls: previewUrls, // Ideally send all, here we rely on what we parsed
+                        urls: allUrls,
                         organizationId: organization.id
                     }
                 });
 
             if (error) throw error;
 
-            toast.success("Batch Queued", `${previewUrls.length} domains have been queued for analysis.`);
+            toast.success("Batch Queued", `${allUrls.length} domains have been queued for analysis.`);
             onClose();
             setFile(null);
             setPreviewUrls([]);
+            setAllUrls([]);
         } catch (error: any) {
-            console.error(error);
-            toast.error("Upload Failed", error.message);
+            console.error('Bulk import failed:', getTechnicalErrorMessage(error));
+            const user = toUserMessage(error);
+            toast.error(user.title, user.message);
         } finally {
             setUploading(false);
         }
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" role="presentation">
+            <div className="absolute inset-0" onClick={handleClose} aria-hidden="true" />
+            <div ref={modalRef} role="dialog" aria-modal="true" aria-labelledby="bulk-import-title" className="relative bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
                 <div className="p-6 border-b border-white/5 flex justify-between items-center bg-slate-950/50">
-                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <h3 id="bulk-import-title" className="text-lg font-bold text-white flex items-center gap-2">
                         <Upload className="w-5 h-5 text-primary" />
                         Bulk Domain Import
                     </h3>
-                    <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
-                        <X className="w-5 h-5" />
+                    <button onClick={handleClose} aria-label="Close bulk import dialog" className="text-slate-400 hover:text-white transition-colors">
+                        <X className="w-5 h-5" aria-hidden="true" />
                     </button>
                 </div>
 
@@ -190,8 +214,8 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
                                             <span className="text-slate-600">{i + 1}.</span> {url}
                                         </li>
                                     ))}
-                                    {previewUrls.length < 5 && (
-                                        <li className="text-xs text-slate-600 italic">...</li>
+                                    {previewUrls.length < parsedUrlCount && (
+                                        <li className="text-xs text-slate-600 italic">...and {parsedUrlCount - previewUrls.length} more</li>
                                     )}
                                 </ul>
                             </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../services/supabase';
 import { useToast } from './Toast';
+import { getTechnicalErrorMessage, toUserMessage } from '../utils/errors';
 import {
     Key, Plus, Trash2, Copy, Check, Eye, EyeOff,
     Loader2, AlertTriangle, Clock, RefreshCw, BarChart2
@@ -40,6 +41,13 @@ export const APIKeyManager: React.FC = () => {
         }
     }, [organization?.id]);
 
+    const getInvokeErrorMessage = (data: any, error: any): string => {
+        if (data?.error && typeof data.error === 'string') return data.error;
+        if (data?.details?.message) return data.details.message;
+        if (error?.message) return error.message;
+        return 'Request failed';
+    };
+
     const loadKeys = async () => {
         if (!organization?.id) return;
         setLoading(true);
@@ -50,14 +58,15 @@ export const APIKeyManager: React.FC = () => {
             });
 
             if (error) throw error;
-            if (!data.success) throw new Error(data.error);
+            if (!data.success) throw new Error(getInvokeErrorMessage(data, error));
 
-            setKeys(data.keys || []);
+            setKeys(data.keys || data?.data?.keys || []);
         } catch (error: any) {
-            console.error('Failed to load API keys:', error);
+            console.error('Failed to load API keys:', getTechnicalErrorMessage(error));
             // Don't show error toast if table doesn't exist yet
             if (!error.message?.includes('relation') && !error.message?.includes('does not exist')) {
-                toast.error('Failed to load API keys', error.message);
+                const user = toUserMessage(error);
+                toast.error(user.title, user.message);
             }
             setKeys([]);
         } finally {
@@ -76,15 +85,17 @@ export const APIKeyManager: React.FC = () => {
             });
 
             if (error) throw error;
-            if (!data.success) throw new Error(data.error);
+            if (!data.success) throw new Error(getInvokeErrorMessage(data, error));
 
             toast.success('API Key Created', 'Copy it now - you won\'t be able to see it again.');
-            setNewlyCreatedKey(data.apiKey);
+            setNewlyCreatedKey(data.apiKey || data?.data?.apiKey);
             setNewKeyName('');
             setShowCreateForm(false);
             loadKeys(); // Refresh list
         } catch (error: any) {
-            toast.error('Failed to create key', error.message);
+            console.error('Create API key failed:', getTechnicalErrorMessage(error));
+            const user = toUserMessage(error);
+            toast.error(user.title, user.message);
         } finally {
             setCreating(false);
         }
@@ -99,12 +110,14 @@ export const APIKeyManager: React.FC = () => {
             });
 
             if (error) throw error;
-            if (!data.success) throw new Error(data.error);
+            if (!data.success) throw new Error(getInvokeErrorMessage(data, error));
 
             toast.success('Key revoked', `"${keyName}" has been revoked.`);
             loadKeys();
         } catch (error: any) {
-            toast.error('Failed to revoke', error.message);
+            console.error('Revoke API key failed:', getTechnicalErrorMessage(error));
+            const user = toUserMessage(error);
+            toast.error(user.title, user.message);
         }
     };
 
@@ -118,13 +131,15 @@ export const APIKeyManager: React.FC = () => {
             });
 
             if (error) throw error;
-            if (!data.success) throw new Error(data.error);
+            if (!data.success) throw new Error(getInvokeErrorMessage(data, error));
 
             toast.success('Key Rotated', 'New key generated successfully. Copy it now.');
-            setNewlyCreatedKey(data.apiKey);
+            setNewlyCreatedKey(data.apiKey || data?.data?.apiKey);
             loadKeys();
         } catch (error: any) {
-            toast.error('Rotation failed', error.message);
+            console.error('Rotate API key failed:', getTechnicalErrorMessage(error));
+            const user = toUserMessage(error);
+            toast.error(user.title, user.message);
         } finally {
             setLoading(false);
         }
@@ -150,7 +165,7 @@ export const APIKeyManager: React.FC = () => {
                     API access is available on Pro and Agency plans.
                 </p>
                 <a
-                    href="/settings?tab=billing"
+                    href="/settings/billing"
                     className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors"
                 >
                     Upgrade to Pro
@@ -272,8 +287,8 @@ export const APIKeyManager: React.FC = () => {
                                     <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
                                         <Key className="w-5 h-5 text-slate-400" />
                                     </div>
-                                    <div className="text-left">
-                                        <p className="font-medium text-white">{key.name}</p>
+                                    <div className="min-w-0 flex-1 text-left">
+                                        <p className="font-medium text-white truncate">{key.name}</p>
                                         <div className="flex items-center gap-3 text-xs text-slate-500">
                                             <span className="font-mono">cog_•••{key.key_preview}</span>
                                             <span className="flex items-center gap-1">
@@ -316,7 +331,7 @@ export const APIKeyManager: React.FC = () => {
                                 <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
                                     <div
                                         className={`h-full rounded-full transition-all duration-500 ${(key.usage_count / key.rate_limit) > 0.9 ? 'bg-rose-500' :
-                                                (key.usage_count / key.rate_limit) > 0.7 ? 'bg-amber-500' : 'bg-primary'
+                                            (key.usage_count / key.rate_limit) > 0.7 ? 'bg-amber-500' : 'bg-primary'
                                             }`}
                                         style={{ width: `${Math.min(100, (key.usage_count / key.rate_limit) * 100)}%` }}
                                     />

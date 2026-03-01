@@ -71,7 +71,7 @@ export const ProgressSteps: React.FC<ProgressStepsProps> = ({
                                 <div className="mt-3 text-center">
                                     <p
                                         className={`
-                      text-sm font-medium transition-colors duration-300
+                      text-xs sm:text-sm font-medium transition-colors duration-300 whitespace-nowrap
                       ${isCompleted || isCurrent ? 'text-white' : 'text-slate-500'}
                     `}
                                     >
@@ -80,7 +80,7 @@ export const ProgressSteps: React.FC<ProgressStepsProps> = ({
                                     {step.description && (
                                         <p
                                             className={`
-                        text-xs mt-0.5 transition-colors duration-300
+                        text-[10px] sm:text-xs mt-0.5 transition-colors duration-300 hidden sm:block
                         ${isCurrent ? 'text-primary' : 'text-slate-600'}
                       `}
                                         >
@@ -115,9 +115,10 @@ export function getStepFromStatus(statusMessage: string): number {
 
     const lower = statusMessage.toLowerCase();
 
-    if (lower.includes('initializing') || lower.includes('knowledge graph')) return 0;
-    if (lower.includes('crawling') || lower.includes('discovering') || lower.includes('structure')) return 1;
-    if (lower.includes('analyzing') || lower.includes('retrieval') || lower.includes('vector')) return 2;
+    if (lower.includes('preparing') || lower.includes('initializing')) return 0;
+    if (lower.includes('discovering') || lower.includes('key pages') || lower.includes('structure')) return 1;
+    if (lower.includes('collecting') || lower.includes('crawling') || lower.includes('content')) return 2;
+    if (lower.includes('analyzing') || lower.includes('brand presence')) return 2;
     if (lower.includes('generating') || lower.includes('report') || lower.includes('complete')) return 3;
 
     return 0;

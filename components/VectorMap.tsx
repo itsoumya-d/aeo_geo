@@ -6,8 +6,9 @@ import { motion } from 'framer-motion';
 interface VectorData {
     x: number;
     y: number;
+    z?: number;
     label: string;
-    type: 'brand' | 'competitor' | 'keyword';
+    type: 'brand' | 'competitor' | 'keyword' | 'your_content' | 'gold_standard' | 'optimization_target';
 }
 
 interface VectorMapProps {
@@ -25,11 +26,17 @@ export const VectorMap: React.FC<VectorMapProps> = ({ data }) => {
                 <div className="w-20 h-20 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center justify-center mb-6 shadow-inner">
                     <Target className="w-10 h-10 text-slate-700" />
                 </div>
-                <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Neural Data Pending</p>
-                <p className="text-slate-600 text-xs mt-2 max-w-[200px] leading-relaxed">No vector data available for this audit cycle.</p>
+                <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Semantic map unavailable</p>
+                <p className="text-slate-600 text-xs mt-2 max-w-[240px] leading-relaxed">
+                    This report doesn’t include semantic mapping yet. Run another audit once mapping is enabled for your plan.
+                </p>
             </motion.div>
         );
     }
+
+    const brandCount = data.filter((d) => d.type === 'brand').length;
+    const competitorCount = data.filter((d) => d.type === 'competitor').length;
+    const keywordCount = data.filter((d) => d.type === 'keyword').length;
 
     const CustomTooltip = ({ active, payload }: any) => {
         if (active && payload && payload.length) {
@@ -41,16 +48,9 @@ export const VectorMap: React.FC<VectorMapProps> = ({ data }) => {
                         <span className="text-[10px] font-black text-white uppercase tracking-widest">{item.type}</span>
                     </div>
                     <p className="text-sm font-black text-white tracking-tight">{item.label}</p>
-                    <div className="mt-3 pt-3 border-t border-white/5 flex gap-4">
-                        <div className="flex flex-col">
-                            <span className="text-[9px] text-slate-500 font-bold uppercase tracking-tighter">Latent X</span>
-                            <span className="text-xs font-mono text-slate-300">{item.x.toFixed(2)}</span>
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="text-[9px] text-slate-500 font-bold uppercase tracking-tighter">Latent Y</span>
-                            <span className="text-xs font-mono text-slate-300">{item.y.toFixed(2)}</span>
-                        </div>
-                    </div>
+                    <p className="mt-2 text-xs text-slate-400">
+                        Relative position based on this audit’s semantic signals.
+                    </p>
                 </div>
             );
         }
@@ -67,28 +67,33 @@ export const VectorMap: React.FC<VectorMapProps> = ({ data }) => {
                 <Target className="w-48 h-48 text-primary" />
             </div>
 
-            <div className="flex items-center justify-between mb-12">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-12">
                 <div>
                     <h3 className="text-white font-black text-xl tracking-tight flex items-center gap-3">
                         <Target className="w-6 h-6 text-primary" />
-                        Latent Knowledge Space
+                        Semantic map
                     </h3>
                     <p className="text-xs text-slate-500 mt-2 font-medium flex items-center gap-2">
                         <Info className="w-3.5 h-3.5" />
-                        Semantic positioning of your brand vs competitors in neural search models.
+                        Relative positioning of your brand, competitors, and keywords.
                     </p>
                 </div>
-                <div className="flex gap-6 text-[10px] font-black uppercase tracking-[0.2em]">
+                <div className="flex flex-wrap gap-4 sm:gap-6 text-[10px] font-black uppercase tracking-[0.2em]">
                     <span className="flex items-center gap-2 text-primary">
-                        <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(99,102,241,0.5)]" /> Reach
+                        <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(99,102,241,0.5)]" /> Brand
                     </span>
                     <span className="flex items-center gap-2 text-rose-400">
                         <div className="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]" /> Competitors
                     </span>
+                    {keywordCount > 0 && (
+                        <span className="flex items-center gap-2 text-blue-400">
+                            <div className="w-2 h-2 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.5)]" /> Keywords
+                        </span>
+                    )}
                 </div>
             </div>
 
-            <div className="h-[450px] w-full relative">
+            <div className="h-[280px] sm:h-[380px] lg:h-[450px] w-full relative">
                 {/* Background Grid */}
                 <div className="absolute inset-0 border border-white/[0.03] rounded-3xl pointer-events-none overflow-hidden">
                     <div className="absolute top-1/2 left-0 w-full h-px bg-white/[0.05]" />
@@ -99,9 +104,9 @@ export const VectorMap: React.FC<VectorMapProps> = ({ data }) => {
                 </div>
 
                 <ResponsiveContainer width="100%" height="100%">
-                    <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                        <XAxis type="number" dataKey="x" hide domain={[-110, 110]} />
-                        <YAxis type="number" dataKey="y" hide domain={[-110, 110]} />
+                    <ScatterChart margin={{ top: 30, right: 30, bottom: 20, left: 30 }}>
+                        <XAxis type="number" dataKey="x" hide domain={[-120, 120]} />
+                        <YAxis type="number" dataKey="y" hide domain={[-120, 120]} />
                         <ZAxis type="number" range={[200, 600]} />
                         <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '4 4', stroke: 'rgba(255,255,255,0.1)' }} />
                         <Scatter name="Vectors" data={data}>
@@ -129,26 +134,30 @@ export const VectorMap: React.FC<VectorMapProps> = ({ data }) => {
                     className="bg-white/[0.02] p-6 rounded-2xl border border-white/5 flex items-center justify-between"
                 >
                     <div>
-                        <span className="text-[10px] text-slate-600 uppercase font-black tracking-widest block mb-1.5 opacity-60">Semantic Diffusion</span>
+                        <span className="text-[10px] text-slate-600 uppercase font-black tracking-widest block mb-1.5 opacity-60">Mapped items</span>
                         <div className="flex items-center gap-3">
                             <Shield className="w-5 h-5 text-emerald-400" />
-                            <span className="text-white font-black text-lg tracking-tight">12.4% Drift</span>
+                            <span className="text-white font-black text-lg tracking-tight">{data.length}</span>
                         </div>
                     </div>
-                    <div className="text-[9px] font-black text-emerald-500 bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/10 uppercase">Stable</div>
+                    <div className="text-[9px] font-black text-emerald-500 bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/10 uppercase">
+                        {brandCount} brand
+                    </div>
                 </motion.div>
                 <motion.div
                     whileHover={{ y: -2 }}
                     className="bg-white/[0.02] p-6 rounded-2xl border border-white/5 flex items-center justify-between"
                 >
                     <div>
-                        <span className="text-[10px] text-slate-600 uppercase font-black tracking-widest block mb-1.5 opacity-60">Engine Sensitivity</span>
+                        <span className="text-[10px] text-slate-600 uppercase font-black tracking-widest block mb-1.5 opacity-60">Competitor set</span>
                         <div className="flex items-center gap-3">
                             <Zap className="w-5 h-5 text-amber-400" />
-                            <span className="text-white font-black text-lg tracking-tight">Retrieval: High</span>
+                            <span className="text-white font-black text-lg tracking-tight">{competitorCount}</span>
                         </div>
                     </div>
-                    <div className="text-[9px] font-black text-primary bg-primary/10 px-3 py-1.5 rounded-full border border-primary/10 uppercase">Optimized</div>
+                    <div className="text-[9px] font-black text-primary bg-primary/10 px-3 py-1.5 rounded-full border border-primary/10 uppercase">
+                        {keywordCount} keywords
+                    </div>
                 </motion.div>
             </div>
         </motion.div>

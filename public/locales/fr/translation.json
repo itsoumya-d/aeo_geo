@@ -1,0 +1,51 @@
+{
+    "sidebar": {
+        "dashboard": "Tableau de bord",
+        "pages": "Pages",
+        "search": "Visibilité de recherche",
+        "benchmark": "Référence",
+        "consistency": "Cohérence",
+        "optimization": "Optimisation",
+        "competitors": "Concurrents",
+        "reports": "Rapports",
+        "integrations": "Intégrations",
+        "settings": "Paramètres",
+        "history": "Historique des audits",
+        "sandbox": "Bac à sable"
+    },
+    "header": {
+        "credits_remaining": "crédits restants",
+        "get_more": "En obtenir plus",
+        "export_pdf": "Exporter PDF",
+        "export_csv": "Exporter CSV",
+        "new_audit": "Nouvel audit"
+    },
+    "common": {
+        "loading": "Chargement…",
+        "retry": "Réessayer",
+        "cancel": "Annuler",
+        "save": "Enregistrer les modifications",
+        "delete": "Supprimer",
+        "confirm": "Confirmer",
+        "close": "Fermer",
+        "back": "Retour",
+        "next": "Suivant",
+        "done": "Terminé",
+        "or": "ou"
+    },
+    "audit": {
+        "start": "Démarrer l'analyse approfondie",
+        "running": "Audit IA en cours…",
+        "credits_label": "crédit d'audit",
+        "credits_label_plural": "crédits d'audit",
+        "credits_remaining": "restants · 1 crédit par audit",
+        "no_credits": "Plus de crédits — rechargez pour continuer",
+        "top_up": "Recharger pour continuer"
+    },
+    "errors": {
+        "generic": "Une erreur s'est produite. Veuillez réessayer.",
+        "rate_limit": "Vous avez atteint une limite d'utilisation. Mettez à niveau votre plan pour des limites plus élevées.",
+        "network": "Connexion perdue. Veuillez vérifier votre connexion internet.",
+        "not_found": "Nous n'avons pas trouvé ce que vous cherchiez."
+    }
+}

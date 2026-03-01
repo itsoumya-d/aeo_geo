@@ -1,11 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { crypto } from "https://deno.land/std@0.168.0/crypto/mod.ts";
-
-const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { buildCorsHeaders } from "../_shared/cors.ts";
 
 // Generate a secure random API key
 function generateApiKey(): string {
@@ -25,19 +21,41 @@ async function hashApiKey(key: string): Promise<string> {
 }
 
 serve(async (req) => {
+    const requestId = crypto.randomUUID();
+    const corsHeaders = buildCorsHeaders(req.headers.get("origin"));
+
     if (req.method === "OPTIONS") {
         return new Response("ok", { headers: corsHeaders });
     }
 
     try {
         const { action, name, keyId } = await req.json();
+        const authHeader = req.headers.get("Authorization");
+
+        if (!authHeader) {
+            return new Response(
+                JSON.stringify({
+                    success: false,
+                    error: "Unauthorized",
+                    details: {
+                        code: "UNAUTHORIZED",
+                        message: "Missing Authorization header",
+                        requestId,
+                    },
+                }),
+                {
+                    headers: { ...corsHeaders, "Content-Type": "application/json", "X-Request-Id": requestId },
+                    status: 401,
+                }
+            );
+        }
 
         const supabaseClient = createClient(
             Deno.env.get("SUPABASE_URL") ?? "",
             Deno.env.get("SUPABASE_ANON_KEY") ?? "",
             {
                 global: {
-                    headers: { Authorization: req.headers.get("Authorization")! },
+                    headers: { Authorization: authHeader },
                 },
             }
         );
@@ -102,9 +120,13 @@ serve(async (req) => {
                         success: true,
                         apiKey: apiKey, // Only returned once
                         preview: keyPreview,
+                        data: {
+                            apiKey,
+                            preview: keyPreview,
+                        },
                     }),
                     {
-                        headers: { ...corsHeaders, "Content-Type": "application/json" },
+                        headers: { ...corsHeaders, "Content-Type": "application/json", "X-Request-Id": requestId },
                         status: 200,
                     }
                 );
@@ -121,9 +143,13 @@ serve(async (req) => {
                 if (error) throw error;
 
                 return new Response(
-                    JSON.stringify({ success: true, keys: data }),
+                    JSON.stringify({
+                        success: true,
+                        keys: data,
+                        data: { keys: data },
+                    }),
                     {
-                        headers: { ...corsHeaders, "Content-Type": "application/json" },
+                        headers: { ...corsHeaders, "Content-Type": "application/json", "X-Request-Id": requestId },
                         status: 200,
                     }
                 );
@@ -169,10 +195,15 @@ serve(async (req) => {
                         success: true,
                         apiKey: newApiKey,
                         preview: newKeyPreview,
-                        message: "Key rotated successfully"
+                        message: "Key rotated successfully",
+                        data: {
+                            apiKey: newApiKey,
+                            preview: newKeyPreview,
+                            message: "Key rotated successfully",
+                        },
                     }),
                     {
-                        headers: { ...corsHeaders, "Content-Type": "application/json" },
+                        headers: { ...corsHeaders, "Content-Type": "application/json", "X-Request-Id": requestId },
                         status: 200,
                     }
                 );
@@ -192,9 +223,13 @@ serve(async (req) => {
                 if (error) throw error;
 
                 return new Response(
-                    JSON.stringify({ success: true, message: "Key revoked" }),
+                    JSON.stringify({
+                        success: true,
+                        message: "Key revoked",
+                        data: { message: "Key revoked" },
+                    }),
                     {
-                        headers: { ...corsHeaders, "Content-Type": "application/json" },
+                        headers: { ...corsHeaders, "Content-Type": "application/json", "X-Request-Id": requestId },
                         status: 200,
                     }
                 );
@@ -204,10 +239,19 @@ serve(async (req) => {
                 throw new Error(`Unknown action: ${action}`);
         }
     } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
         return new Response(
-            JSON.stringify({ success: false, error: error.message }),
+            JSON.stringify({
+                success: false,
+                error: message,
+                details: {
+                    code: "MANAGE_API_KEYS_FAILED",
+                    message,
+                    requestId,
+                },
+            }),
             {
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
+                headers: { ...corsHeaders, "Content-Type": "application/json", "X-Request-Id": requestId },
                 status: 400,
             }
         );

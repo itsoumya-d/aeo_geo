@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FileText, Download, ShieldCheck, Layout, Search, BarChart3, Users, Palette, CheckCircle2, AlertCircle } from 'lucide-react';
+import { FileText, Download, ShieldCheck, Layout, Search, BarChart3, Users, Palette, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
 import { Report } from '../../types';
 import { useToast } from '../Toast';
 import { supabase } from '../../services/supabase';
@@ -23,7 +23,7 @@ const SectionSummary = ({ report, branding }: { report: Report, branding: any })
         </h2>
         <div className="grid grid-cols-2 gap-10">
             <div className="bg-white/[0.03] p-10 rounded-3xl border border-white/5">
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-4">Neural Impact Score</span>
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-4">Overall Visibility Score</span>
                 <div className="flex items-end gap-3">
                     <span className="text-6xl font-black text-white">{report.overallScore}</span>
                     <span className="text-xl text-slate-600 mb-2 font-black">/100</span>
@@ -35,10 +35,10 @@ const SectionSummary = ({ report, branding }: { report: Report, branding: any })
             <div className="bg-white/[0.03] p-10 rounded-3xl border border-white/5">
                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-4">Brand Consistency</span>
                 <div className="flex items-end gap-3">
-                    <span className="text-6xl font-black text-white">{report.brandConsistnecyScore}</span>
+                    <span className="text-6xl font-black text-white">{report.brandConsistencyScore}</span>
                     <span className="text-xl text-slate-600 mb-2 font-black">%</span>
                 </div>
-                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-6">Alignment across {report.pages.length} audited nodes</p>
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-6">Alignment across {report.pages.length} audited pages</p>
             </div>
         </div>
     </div>
@@ -48,7 +48,7 @@ const SectionRecommendations = ({ report }: { report: Report }) => (
     <div className="mb-20">
         <h2 className="text-xs font-black uppercase tracking-[0.3em] text-slate-500 mb-8 flex items-center gap-4">
             <div className="h-px flex-1 bg-white/5"></div>
-            Priority Retrieval Actions
+            Priority Actions
             <div className="h-px flex-1 bg-white/5"></div>
         </h2>
         <div className="space-y-6">
@@ -85,10 +85,10 @@ const SectionTrends = ({ report }: { report: Report }) => (
             Visibility Trends (30d)
             <div className="h-px flex-1 bg-white/5"></div>
         </h2>
-        <div className="h-32 flex items-end justify-between gap-2 px-4">
-            {[...Array(10)].map((_, i) => (
-                <div key={i} className="w-full bg-slate-800/50 rounded-t-sm" style={{ height: `${30 + Math.random() * 50}%` }}></div>
-            ))}
+        <div className="p-10 rounded-3xl bg-white/[0.02] border border-white/5 text-center">
+            <p className="text-slate-500 text-sm">
+                Trendlines appear after you run multiple audits over time.
+            </p>
         </div>
     </div>
 );
@@ -117,15 +117,17 @@ export const ReportTab: React.FC<ReportTabProps> = ({ report }) => {
         logoUrl: '',
         includeBenchmarks: true,
         includeOptimizations: true,
-        includePages: true
+        includePages: true,
+        hideCognitionBranding: false
     });
 
-    // Fetch Template
+    // Fetch Template & Branding
     React.useEffect(() => {
         if (!organization) return;
 
-        const fetchTemplate = async () => {
-            const { data } = await supabase
+        const fetchData = async () => {
+            // Fetch Template
+            const { data: templateData } = await supabase
                 .from('report_templates')
                 .select('layout')
                 .eq('organization_id', organization.id)
@@ -133,19 +135,83 @@ export const ReportTab: React.FC<ReportTabProps> = ({ report }) => {
                 .limit(1)
                 .maybeSingle();
 
-            if (data?.layout && Array.isArray(data.layout)) {
-                setTemplate(data.layout);
+            if (templateData?.layout && Array.isArray(templateData.layout)) {
+                setTemplate(templateData.layout);
             } else {
-                // Default Layout
                 setTemplate([
                     { type: 'summary' },
                     { type: 'recommendations' }
                 ]);
             }
+
+            // Fetch Branding
+            const { data: brandingData } = await supabase
+                .from('organization_branding')
+                .select('*')
+                .eq('organization_id', organization.id)
+                .single();
+
+            if (brandingData) {
+                setBranding(prev => ({
+                    ...prev,
+                    primaryColor: brandingData.primary_color || prev.primaryColor,
+                    companyName: brandingData.company_name || organization.name || prev.companyName,
+                    logoUrl: brandingData.logo_url || prev.logoUrl,
+                    hideCognitionBranding: brandingData.hide_cognition_branding || false
+                }));
+            } else {
+                setBranding(prev => ({
+                    ...prev,
+                    companyName: organization.name || 'Your Company'
+                }));
+            }
         };
 
-        fetchTemplate();
+        fetchData();
     }, [organization]);
+
+    const handleExportCSV = () => {
+        const rows: string[][] = [['Page URL', 'Title', 'Type', 'Quote Likelihood', 'AI Understanding', 'AI Missed']];
+        report.pages.forEach(page => {
+            rows.push([page.url, page.title, page.pageType, String(page.quoteLikelihood), page.aiUnderstanding, page.aiMissed]);
+        });
+        const csv = rows.map(r => r.map(cell => `"${(cell || '').replace(/"/g, '""')}"`).join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Cognition_Report_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.success("CSV Exported", "Report data downloaded as CSV.");
+    };
+
+    const handleExportJSON = () => {
+        const exportData = {
+            id: report.id,
+            overallScore: report.overallScore,
+            brandConsistencyScore: report.brandConsistencyScore,
+            platformScores: report.platformScores,
+            pages: report.pages.map(p => ({
+                url: p.url,
+                title: p.title,
+                pageType: p.pageType,
+                quoteLikelihood: p.quoteLikelihood,
+                aiUnderstanding: p.aiUnderstanding,
+                aiMissed: p.aiMissed,
+                recommendations: p.recommendations.map(r => ({ issue: r.issue, instruction: r.instruction, impact: r.impact, effort: r.effort }))
+            })),
+            exportedAt: new Date().toISOString()
+        };
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Cognition_Report_${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.success("JSON Exported", "Report data downloaded as JSON.");
+    };
 
     const handleExportPDF = async () => {
         if (!printableRef.current) return;
@@ -177,7 +243,7 @@ export const ReportTab: React.FC<ReportTabProps> = ({ report }) => {
     };
 
     return (
-        <div className="space-y-12 animate-in fade-in duration-700">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-12">
             {/* Report Builder Interface */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
 
@@ -219,6 +285,25 @@ export const ReportTab: React.FC<ReportTabProps> = ({ report }) => {
                         </div>
                     </div>
 
+                    <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-3xl p-8 shadow-2xl">
+                        <h3 className="text-white font-black text-lg mb-6 flex items-center gap-3">
+                            <Download className="w-5 h-5 text-emerald-400" /> Export Format
+                        </h3>
+                        <div className="grid grid-cols-3 gap-3">
+                            {[
+                                { id: 'pdf', label: 'PDF', icon: <FileText className="w-4 h-4" />, desc: 'Branded report', handler: handleExportPDF },
+                                { id: 'csv', label: 'CSV', icon: <BarChart3 className="w-4 h-4" />, desc: 'Data export', handler: handleExportCSV },
+                                { id: 'json', label: 'JSON', icon: <Search className="w-4 h-4" />, desc: 'API format', handler: handleExportJSON }
+                            ].map((fmt) => (
+                                <button key={fmt.id} onClick={fmt.handler} className="p-4 rounded-xl bg-white/[0.03] border border-white/10 hover:border-primary/30 transition-all text-center group">
+                                    <div className="text-primary mb-2 flex justify-center">{fmt.icon}</div>
+                                    <p className="text-xs font-bold text-white">{fmt.label}</p>
+                                    <p className="text-[9px] text-slate-500 mt-1">{fmt.desc}</p>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
                     <button
                         onClick={handleExportPDF}
                         disabled={generating}
@@ -253,9 +338,17 @@ export const ReportTab: React.FC<ReportTabProps> = ({ report }) => {
                             <div className="flex justify-between items-start mb-20">
                                 <div>
                                     <div className="flex items-center gap-4 mb-4">
-                                        <div className="w-12 h-12 rounded-xl flex items-center justify-center border border-white/10 overflow-hidden" style={{ backgroundColor: branding.primaryColor + '20' }}>
-                                            <ShieldCheck style={{ color: branding.primaryColor }} className="w-8 h-8" />
-                                        </div>
+                                        {branding.logoUrl ? (
+                                            <img
+                                                src={branding.logoUrl}
+                                                className="h-12 w-auto object-contain rounded-lg"
+                                                alt="Logo"
+                                            />
+                                        ) : (
+                                            <div className="w-12 h-12 rounded-xl flex items-center justify-center border border-white/10 overflow-hidden" style={{ backgroundColor: branding.primaryColor + '20' }}>
+                                                <ShieldCheck style={{ color: branding.primaryColor }} className="w-8 h-8" />
+                                            </div>
+                                        )}
                                         <h1 className="text-3xl font-black tracking-tighter uppercase">{branding.companyName}</h1>
                                     </div>
                                     <p className="text-slate-500 font-bold uppercase tracking-[0.3em] text-[10px]">AI Search Visibility Audit</p>
@@ -277,7 +370,7 @@ export const ReportTab: React.FC<ReportTabProps> = ({ report }) => {
 
                             {/* Footer - Fixed */}
                             <div className="mt-auto pt-10 border-t border-white/[0.05] flex justify-between items-center text-[10px] font-black text-slate-600 uppercase tracking-widest">
-                                <span>Powered by Cognition AI Visibility Engine</span>
+                                <span>{!branding.hideCognitionBranding && "Powered by Cognition AI Visibility Engine"}</span>
                                 <span>Report Ref: {report.id?.slice(0, 8) || 'AUDIT-X'}</span>
                                 <span>Confidential & Proprietary</span>
                             </div>
@@ -285,14 +378,6 @@ export const ReportTab: React.FC<ReportTabProps> = ({ report }) => {
                     </div>
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 };
-
-const RefreshCw = ({ className }: { className?: string }) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M3 21v-5h5" /></svg>
-);
-
-const Zap = ({ className }: { className?: string }) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" /><path d="M16 14l-4 4-4-4" /><path d="M12 12v6" /></svg>
-);

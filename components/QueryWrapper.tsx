@@ -107,7 +107,8 @@ export const APIErrorState: React.FC<APIErrorStateProps> = ({
     const errorType = detectErrorType(error);
     const config = errorConfig[errorType];
     const Icon = config.icon;
-    const errorMessage = typeof error === 'string' ? error : error?.message || config.description;
+    const rawMessage = typeof error === 'string' ? error : error?.message || '';
+    const errorMessage = import.meta.env.DEV && rawMessage ? rawMessage : config.description;
 
     if (compact) {
         return (

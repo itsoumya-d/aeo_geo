@@ -17,11 +17,12 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { motion } from 'framer-motion';
-import { FileText, BarChart, TrendingUp, Users, List, GripVertical, Plus, Save, ArrowLeft } from 'lucide-react';
+import { FileText, BarChart, TrendingUp, Users, List, GripVertical, Plus, Save, ArrowLeft, X, Monitor } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../services/supabase';
 import { useToast } from '../Toast';
 import { useAuth } from '../../contexts/AuthContext';
+import { getTechnicalErrorMessage, toUserMessage } from '../../utils/errors';
 
 interface ReportSection {
     id: string;
@@ -38,7 +39,7 @@ const AVAILABLE_SECTIONS: ReportSection[] = [
     { id: 'recommendations', type: 'recommendations', title: 'Key Recommendations', icon: List },
 ];
 
-function SortableItem(props: { id: string, section: ReportSection }) {
+function SortableItem(props: { id: string, section: ReportSection, onRemove: (id: string) => void }) {
     const {
         attributes,
         listeners,
@@ -63,6 +64,12 @@ function SortableItem(props: { id: string, section: ReportSection }) {
                 </div>
                 <span className="text-white font-medium">{props.section.title}</span>
             </div>
+            <button
+                onClick={() => props.onRemove(props.id)}
+                className="p-1.5 hover:bg-rose-500/10 rounded-lg text-slate-500 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-all"
+            >
+                <X className="w-4 h-4" />
+            </button>
         </div>
     );
 }
@@ -103,6 +110,10 @@ export const ReportBuilder: React.FC = () => {
         setSections([...sections, { ...section, id: newId }]);
     };
 
+    const removeSection = (id: string) => {
+        setSections(sections.filter(s => s.id !== id));
+    };
+
     const handleSave = async () => {
         if (!organization) return;
         setIsSaving(true);
@@ -120,15 +131,22 @@ export const ReportBuilder: React.FC = () => {
             toast.success("Template Saved", "Your custom report layout has been created.");
             navigate('/settings'); // Or back to list
         } catch (error: any) {
-            toast.error("Save Failed", error.message);
+            console.error('Save report template failed:', getTechnicalErrorMessage(error));
+            const user = toUserMessage(error);
+            toast.error(user.title, user.message);
         }
         setIsSaving(false);
     };
 
     return (
-        <div className="min-h-screen bg-[#020617] p-8 font-inter">
+        <div className="min-h-screen bg-[#020617] p-4 lg:p-8 font-inter">
+            {/* Mobile Warning */}
+            <div className="lg:hidden mb-6 bg-amber-900/20 border border-amber-500/30 rounded-xl p-4 flex items-center gap-3">
+                <Monitor className="w-5 h-5 text-amber-400 shrink-0" />
+                <p className="text-xs text-amber-200/80">Report Builder works best on desktop. Some features may be limited on smaller screens.</p>
+            </div>
             {/* Header */}
-            <div className="max-w-5xl mx-auto mb-8 flex items-center justify-between">
+            <div className="max-w-5xl mx-auto mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                     <button onClick={() => navigate(-1)} className="p-2 hover:bg-white/5 rounded-full text-slate-400 hover:text-white transition-colors">
                         <ArrowLeft className="w-6 h-6" />
@@ -156,7 +174,7 @@ export const ReportBuilder: React.FC = () => {
                 </div>
             </div>
 
-            <div className="max-w-5xl mx-auto grid grid-cols-3 gap-8">
+            <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Available Modules */}
                 <div className="col-span-1 space-y-4">
                     <h3 className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4">Available Modules</h3>
@@ -176,7 +194,7 @@ export const ReportBuilder: React.FC = () => {
                 </div>
 
                 {/* Canvas */}
-                <div className="col-span-2 bg-slate-950 border border-white/10 rounded-2xl p-8 min-h-[600px] shadow-2xl">
+                <div className="lg:col-span-2 bg-slate-950 border border-white/10 rounded-2xl p-4 lg:p-8 min-h-[400px] lg:min-h-[600px] shadow-2xl">
                     <div className="mb-8 p-6 bg-white rounded-lg shadow-sm">
                         <div className="flex justify-between items-center opacity-50">
                             <div className="w-32 h-8 bg-slate-200 rounded"></div>
@@ -194,7 +212,7 @@ export const ReportBuilder: React.FC = () => {
                             strategy={verticalListSortingStrategy}
                         >
                             {sections.map((section) => (
-                                <SortableItem key={section.id} id={section.id} section={section} />
+                                <SortableItem key={section.id} id={section.id} section={section} onRemove={removeSection} />
                             ))}
                         </SortableContext>
                     </DndContext>

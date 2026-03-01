@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Zap, RefreshCw, Check, Copy, AlertCircle, Quote, TrendingUp, ChevronDown } from 'lucide-react';
+import { Sparkles, Zap, RefreshCw, Check, Copy, AlertCircle, Quote, TrendingUp, ChevronDown, Clock, Download, History } from 'lucide-react';
 import { simulateRewriteAnalysis } from '../services/geminiService';
 import { useAuth } from '../contexts/AuthContext';
 import { saveRewriteSimulation } from '../services/supabase';
@@ -9,34 +9,69 @@ import { useToast } from './Toast';
 type Goal = 'SNIPPET' | 'AUTHORITY' | 'CLARITY' | 'CONVERSION';
 type Tone = 'PROFESSIONAL' | 'AUTHORITATIVE' | 'CONVERSATIONAL' | 'TECHNICAL';
 
+interface HistoryEntry {
+    id: string;
+    timestamp: number;
+    original: string;
+    optimized: string;
+    scoreDelta: number;
+    vectorShift: number;
+    goal: Goal;
+}
+
+// Convert raw vectorShift (0–1 cosine similarity delta) to intuitive percentage label
+function describeSemanticShift(vectorShift: number): { label: string; pct: number; color: string } {
+    const pct = Math.min(100, Math.round(Math.abs(vectorShift) * 100));
+    if (pct >= 70) return { label: 'Major semantic shift', pct, color: 'text-blue-400' };
+    if (pct >= 40) return { label: 'Significant reframing', pct, color: 'text-indigo-400' };
+    if (pct >= 20) return { label: 'Moderate refinement', pct, color: 'text-violet-400' };
+    return { label: 'Subtle polish', pct, color: 'text-slate-400' };
+}
+
 export const AEOForge: React.FC = () => {
     const [original, setOriginal] = useState("");
     const [optimized, setOptimized] = useState("");
     const [goal, setGoal] = useState<Goal>('AUTHORITY');
     const [tone, setTone] = useState<Tone>('PROFESSIONAL');
+    const [targetKeyword, setTargetKeyword] = useState("");
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<{ scoreDelta: number, reasoning: string, vectorShift: number } | null>(null);
+    const [copied, setCopied] = useState(false);
+    const [history, setHistory] = useState<HistoryEntry[]>([]);
+    const [showHistory, setShowHistory] = useState(false);
     const { organization } = useAuth();
     const toast = useToast();
 
     const forgeOptimization = async () => {
-        if (!original.trim()) {
-            toast.error("Input Required", "Please enter some content to optimize.");
+        if (original.trim().length < 50) {
+            toast.error("Too short", "Please enter at least 50 characters of content to optimize.");
             return;
         }
 
         setLoading(true);
         try {
-            const res = await simulateRewriteAnalysis(original, "", "General Optimization", goal, tone);
-            setOptimized(res.rewrite || "");
+            const res = await simulateRewriteAnalysis(original, "", targetKeyword || "General Optimization", goal, tone);
+            const rewriteText = res.rewrite || "";
+            setOptimized(rewriteText);
             setResult(res);
+
+            // Add to history (keep last 5)
+            setHistory(prev => [{
+                id: crypto.randomUUID(),
+                timestamp: Date.now(),
+                original,
+                optimized: rewriteText,
+                scoreDelta: res.scoreDelta,
+                vectorShift: res.vectorShift || 0,
+                goal,
+            }, ...prev].slice(0, 5));
 
             if (organization?.id) {
                 await saveRewriteSimulation({
                     organization_id: organization.id,
                     audit_page_id: null,
                     original_text: original,
-                    rewrite_text: res.rewrite || "",
+                    rewrite_text: rewriteText,
                     score_delta: res.scoreDelta,
                     vector_shift: res.vectorShift || 0,
                     reasoning: res.reasoning
@@ -50,16 +85,90 @@ export const AEOForge: React.FC = () => {
         }
     };
 
-    const copyToClipboard = () => {
-        navigator.clipboard.writeText(optimized);
+    const copyToClipboard = async () => {
+        await navigator.clipboard.writeText(optimized);
+        setCopied(true);
         toast.info("Copied", "Optimized content copied to clipboard.");
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    const exportAsMarkdown = () => {
+        const md = `# Original\n\n${original}\n\n---\n\n# Optimized (${goal})\n\n${optimized}`;
+        const blob = new Blob([md], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `aeo-forge-${Date.now()}.md`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    const loadFromHistory = (entry: HistoryEntry) => {
+        setOriginal(entry.original);
+        setOptimized(entry.optimized);
+        setResult({ scoreDelta: entry.scoreDelta, vectorShift: entry.vectorShift, reasoning: '' });
+        setGoal(entry.goal);
+        setShowHistory(false);
     };
 
     return (
         <div className="space-y-8 animate-in fade-in duration-700">
+            {/* History Panel */}
+            <AnimatePresence>
+                {showHistory && history.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        className="bg-slate-900/60 border border-white/10 rounded-2xl overflow-hidden"
+                    >
+                        <div className="flex items-center justify-between px-6 py-3 border-b border-white/5">
+                            <div className="flex items-center gap-2">
+                                <History className="w-4 h-4 text-slate-400" />
+                                <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Recent Optimizations</span>
+                            </div>
+                            <button onClick={() => setShowHistory(false)} className="text-xs text-slate-500 hover:text-white transition-colors">Close</button>
+                        </div>
+                        <div className="divide-y divide-white/5">
+                            {history.map(entry => (
+                                <button
+                                    key={entry.id}
+                                    onClick={() => loadFromHistory(entry)}
+                                    className="w-full flex items-center justify-between px-6 py-3 hover:bg-white/5 transition-colors text-left group"
+                                >
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-sm text-white font-medium truncate">{entry.original.slice(0, 60)}…</p>
+                                        <div className="flex items-center gap-3 mt-0.5">
+                                            <span className="text-[10px] text-slate-500 flex items-center gap-1">
+                                                <Clock className="w-3 h-3" />
+                                                {new Date(entry.timestamp).toLocaleTimeString()}
+                                            </span>
+                                            <span className="text-[10px] font-bold text-slate-600 uppercase">{entry.goal}</span>
+                                        </div>
+                                    </div>
+                                    <span className={`text-sm font-bold ml-4 flex-shrink-0 ${entry.scoreDelta > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                        {entry.scoreDelta > 0 ? '+' : ''}{entry.scoreDelta}%
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Control Bar */}
             <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-3xl p-6 sm:p-8 flex flex-col lg:flex-row items-center gap-6 shadow-2xl">
-                <div className="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex-1 w-full grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Target Keyword</label>
+                        <input
+                            type="text"
+                            value={targetKeyword}
+                            onChange={(e) => setTargetKeyword(e.target.value)}
+                            placeholder="e.g., AI visibility"
+                            className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 text-sm text-white font-bold outline-none focus:border-primary/50 transition-all placeholder:text-slate-600"
+                        />
+                    </div>
                     <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Optimization Goal</label>
                         <div className="relative group">
@@ -93,14 +202,25 @@ export const AEOForge: React.FC = () => {
                         </div>
                     </div>
                 </div>
-                <button
-                    onClick={forgeOptimization}
-                    disabled={loading}
-                    className="w-full lg:w-auto bg-primary hover:bg-primary/90 text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-3 shrink-0"
-                >
-                    {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                    {loading ? 'Forging...' : 'Forge Optimization'}
-                </button>
+                <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto shrink-0">
+                    {history.length > 0 && (
+                        <button
+                            onClick={() => setShowHistory(v => !v)}
+                            className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-400 hover:text-white px-5 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all"
+                        >
+                            <History className="w-4 h-4" />
+                            History ({history.length})
+                        </button>
+                    )}
+                    <button
+                        onClick={forgeOptimization}
+                        disabled={loading}
+                        className="w-full lg:w-auto bg-primary hover:bg-primary/90 text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-3"
+                    >
+                        {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                        {loading ? 'Forging...' : 'Forge Optimization'}
+                    </button>
+                </div>
             </div>
 
             {/* Editor Grid */}
@@ -131,13 +251,36 @@ export const AEOForge: React.FC = () => {
                         </div>
                         <div className="flex items-center gap-4">
                             {optimized && (
-                                <button
-                                    onClick={copyToClipboard}
-                                    className="p-2 rounded-lg bg-white/[0.03] border border-white/5 text-slate-400 hover:text-white hover:bg-white/[0.05] transition-all"
-                                    title="Copy to Clipboard"
-                                >
-                                    <Copy className="w-3.5 h-3.5" />
-                                </button>
+                                <>
+                                    <div className="flex items-center gap-2 text-[9px] font-bold text-slate-500">
+                                        <span>{optimized.split(/\s+/).filter(Boolean).length} words</span>
+                                        {original && (() => {
+                                            const origWords = original.split(/\s+/).filter(Boolean).length;
+                                            const optWords = optimized.split(/\s+/).filter(Boolean).length;
+                                            const diff = optWords - origWords;
+                                            if (diff === 0) return null;
+                                            return (
+                                                <span className={diff > 0 ? 'text-emerald-400' : 'text-amber-400'}>
+                                                    ({diff > 0 ? '+' : ''}{diff})
+                                                </span>
+                                            );
+                                        })()}
+                                    </div>
+                                    <button
+                                        onClick={exportAsMarkdown}
+                                        className="p-2 rounded-lg bg-white/[0.03] border border-white/5 text-slate-400 hover:text-white hover:bg-white/[0.05] transition-all"
+                                        title="Export as Markdown"
+                                    >
+                                        <Download className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                        onClick={copyToClipboard}
+                                        className="p-2 rounded-lg bg-white/[0.03] border border-white/5 text-slate-400 hover:text-white hover:bg-white/[0.05] transition-all"
+                                        title="Copy to Clipboard"
+                                    >
+                                        {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                                    </button>
+                                </>
                             )}
                         </div>
                     </div>
@@ -171,35 +314,49 @@ export const AEOForge: React.FC = () => {
                         )}
                     </div>
 
-                    {/* Impact Widget */}
+                    {/* Impact Widget — rendered in normal flow below the textarea */}
                     <AnimatePresence>
                         {result && !loading && (
                             <motion.div
-                                initial={{ y: 50, opacity: 0 }}
+                                initial={{ y: 20, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
-                                className="absolute bottom-6 left-6 right-6 p-6 bg-slate-900/90 backdrop-blur-2xl border border-primary/20 rounded-2xl shadow-[0_10px_30px_rgba(99,102,241,0.2)]"
+                                className="p-6 bg-slate-900/90 backdrop-blur-2xl border-t border-primary/20 shadow-[0_-4px_20px_rgba(99,102,241,0.15)]"
                             >
-                                <div className="flex items-center justify-between mb-4">
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex flex-col">
-                                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Visibility Index Δ</span>
-                                            <span className={`text-2xl font-black ${result.scoreDelta > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                                {result.scoreDelta > 0 ? '+' : ''}{result.scoreDelta}%
-                                            </span>
+                                {(() => {
+                                    const shift = describeSemanticShift(result.vectorShift);
+                                    return (
+                                        <div className="mb-4 space-y-3">
+                                            <div className="flex items-center gap-4">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Visibility Index Δ</span>
+                                                    <span className={`text-2xl font-black ${result.scoreDelta > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                                        {result.scoreDelta > 0 ? '+' : ''}{result.scoreDelta}%
+                                                    </span>
+                                                </div>
+                                                <div className="w-px h-8 bg-white/10" />
+                                                <div className="flex flex-col flex-1 min-w-0">
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Semantic Shift</span>
+                                                        <span className={`text-[10px] font-bold ${shift.color}`}>{shift.label}</span>
+                                                    </div>
+                                                    <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                                                        <motion.div
+                                                            initial={{ width: 0 }}
+                                                            animate={{ width: `${shift.pct}%` }}
+                                                            transition={{ duration: 0.8, ease: 'easeOut' }}
+                                                            className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-blue-400"
+                                                        />
+                                                    </div>
+                                                    <span className="text-[9px] text-slate-600 mt-0.5">{shift.pct}% semantic distance from original</span>
+                                                </div>
+                                                <div className="bg-emerald-500/10 px-3 py-2 rounded-xl border border-emerald-500/10 flex items-center gap-2 flex-shrink-0">
+                                                    <TrendingUp className="w-4 h-4 text-emerald-400" />
+                                                    <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest hidden sm:block">Enhanced</span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="w-px h-8 bg-white/10" />
-                                        <div className="flex flex-col">
-                                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Semantic Shift</span>
-                                            <span className="text-2xl font-black text-blue-400">
-                                                {result.vectorShift.toFixed(3)}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div className="bg-emerald-500/10 px-4 py-2 rounded-xl border border-emerald-500/10 flex items-center gap-2">
-                                        <TrendingUp className="w-4 h-4 text-emerald-400" />
-                                        <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Enhanced Citation</span>
-                                    </div>
-                                </div>
+                                    );
+                                })()}
                                 <div className="text-xs text-slate-400 font-medium leading-relaxed border-t border-white/5 pt-4 flex gap-3">
                                     <AlertCircle className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                                     <span>

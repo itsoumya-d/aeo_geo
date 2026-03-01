@@ -44,7 +44,7 @@ export const ExecutiveSummary: React.FC<ExecutiveSummaryProps> = ({
                     AI Visibility Executive Summary
                 </h1>
                 <p className="text-text-secondary">
-                    {companyName} • Generated {new Date().toLocaleDateString()}
+                    {companyName} • Generated {report.createdAt ? new Date(report.createdAt).toLocaleDateString() : new Date().toLocaleDateString()}
                 </p>
             </div>
 
@@ -59,7 +59,7 @@ export const ExecutiveSummary: React.FC<ExecutiveSummaryProps> = ({
                 />
                 <KPICard
                     label="Brand Consistency"
-                    value={report.brandConsistnecyScore}
+                    value={report.brandConsistencyScore}
                     suffix="%"
                     color="primary"
                     icon={<CheckCircle2 className="w-5 h-5" />}

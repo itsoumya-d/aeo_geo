@@ -16,6 +16,8 @@ export const CACHE_TTL = {
     DISCOVERY: 60 * 60 * 24, // 24 Hours
     ANALYSIS: 60 * 60 * 4,   // 4 Hours (High Volatility)
     REWRITE: 60 * 60 * 24 * 7, // 7 Days (Stable)
+    API_USAGE: 60 * 5,       // 5 Minutes
+    API_LIST: 60 * 2,        // 2 Minutes
 };
 
 /**

@@ -1,0 +1,51 @@
+{
+    "sidebar": {
+        "dashboard": "ダッシュボード",
+        "pages": "ページ",
+        "search": "検索可視性",
+        "benchmark": "ベンチマーク",
+        "consistency": "一貫性",
+        "optimization": "最適化",
+        "competitors": "競合他社",
+        "reports": "レポート",
+        "integrations": "インテグレーション",
+        "settings": "設定",
+        "history": "監査履歴",
+        "sandbox": "サンドボックス"
+    },
+    "header": {
+        "credits_remaining": "クレジット残高",
+        "get_more": "追加取得",
+        "export_pdf": "PDFエクスポート",
+        "export_csv": "CSVエクスポート",
+        "new_audit": "新規監査"
+    },
+    "common": {
+        "loading": "読み込み中…",
+        "retry": "再試行",
+        "cancel": "キャンセル",
+        "save": "変更を保存",
+        "delete": "削除",
+        "confirm": "確認",
+        "close": "閉じる",
+        "back": "戻る",
+        "next": "次へ",
+        "done": "完了",
+        "or": "または"
+    },
+    "audit": {
+        "start": "詳細分析を開始",
+        "running": "AI監査実行中…",
+        "credits_label": "監査クレジット",
+        "credits_label_plural": "監査クレジット",
+        "credits_remaining": "残り · 1監査につき1クレジット",
+        "no_credits": "クレジットがありません — 続けるにはチャージしてください",
+        "top_up": "続けるにはチャージ"
+    },
+    "errors": {
+        "generic": "問題が発生しました。もう一度お試しください。",
+        "rate_limit": "使用制限に達しました。より高い制限のためにプランをアップグレードしてください。",
+        "network": "接続が失われました。インターネット接続を確認してください。",
+        "not_found": "お探しのものが見つかりませんでした。"
+    }
+}

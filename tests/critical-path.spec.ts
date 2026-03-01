@@ -4,19 +4,12 @@ test.describe('Critical Path', () => {
     test('should load the landing page successfully', async ({ page }) => {
         await page.goto('/');
         await expect(page).toHaveTitle(/Cognition/);
-        // "The AI Visibility Command Center" is split across lines/spans, so matching "The AI Visibility" is safer.
-        await expect(page.getByText('The AI Visibility')).toBeVisible();
+        await expect(page.getByRole('heading', { level: 1, name: /Discover How AI Search Engines See Your Brand/i })).toBeVisible();
     });
 
-    test('should start discovery process', async ({ page }) => {
+    test('should navigate to signup from primary CTA', async ({ page }) => {
         await page.goto('/');
-
-        // Find input and type domain
-        const input = page.getByPlaceholder('e.g. cognition-labs.com');
-        await input.fill('example.com');
-        await input.press('Enter');
-
-        // After adding asset, the "Start Deep Analysis" button should be available
-        await expect(page.getByRole('button', { name: /Start Deep Analysis/i })).toBeVisible();
+        await page.getByRole('link', { name: /Start free audit/i }).first().click();
+        await expect(page).toHaveURL(/\/signup$/);
     });
 });

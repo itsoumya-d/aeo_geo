@@ -17,9 +17,9 @@ test.describe('Dashboard Navigation', () => {
         // Click on pricing link
         await page.click('a[href="#pricing"]');
 
-        // Verify pricing cards are visible
-        await expect(page.getByText('Simple, Transparent Pricing')).toBeVisible();
-        await expect(page.getByText('$49')).toBeVisible();
+        // Verify pricing cards are visible (Free, Pro, Agency tiers)
+        await expect(page.getByRole('heading', { name: /Start free, then scale/i })).toBeVisible();
+        await expect(page.getByText('$0')).toBeVisible();
         await expect(page.getByText('$149')).toBeVisible();
         await expect(page.getByText('$399')).toBeVisible();
     });
@@ -27,16 +27,15 @@ test.describe('Dashboard Navigation', () => {
     test('should show features section when clicking features', async ({ page }) => {
         await page.click('a[href="#features"]');
 
-        // Use specific headings to avoid duplicate text matching
-        await expect(page.getByRole('heading', { name: 'Why Global Brands' })).toBeVisible();
-        await expect(page.getByRole('heading', { name: 'Real-Time Crawling' })).toBeVisible();
-        await expect(page.getByRole('heading', { name: 'Vector Space Analysis' })).toBeVisible();
+        await expect(page.getByRole('heading', { name: /Everything you need to improve AI visibility/i })).toBeVisible();
+        await expect(page.getByRole('heading', { name: /Real-time site discovery/i })).toBeVisible();
+        await expect(page.getByRole('heading', { name: /Multi-platform scoring/i })).toBeVisible();
     });
 });
 
 test.describe('Input Layer Validation', () => {
     test.beforeEach(async ({ page }) => {
-        await page.goto('/');
+        await page.goto('/dashboard');
     });
 
     test('should show error for empty URL submission', async ({ page }) => {
@@ -102,7 +101,7 @@ test.describe('Accessibility', () => {
     });
 
     test('should have accessible form labels', async ({ page }) => {
-        await page.goto('/');
+        await page.goto('/dashboard');
 
         // Check that the select has an accessible label
         const select = page.locator('#asset-type');

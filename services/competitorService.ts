@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import { auditLog, getCurrentActor } from './auditService';
 import { sendSlackNotification } from './slackService';
+import { apiCache } from '../utils/cache';
 
 /**
  * Competitor Tracking Service
@@ -30,6 +31,7 @@ export interface CompetitorBenchmark {
 }
 
 export interface CompetitorSummary {
+    id: string;
     domain: string;
     name?: string;
     latestScore: number;
@@ -42,14 +44,29 @@ export interface CompetitorSummary {
 }
 
 /**
- * Get all tracked competitors for the current organization
+ * Get all tracked competitors for the current organization, optionally filtered by workspace
  */
-export async function getCompetitors(): Promise<CompetitorDomain[]> {
-    const { data, error } = await supabase
+export async function getCompetitors(workspaceId?: string | null): Promise<CompetitorDomain[]> {
+    const { data: orgData } = await supabase
+        .from('users')
+        .select('organization_id')
+        .eq('id', (await supabase.auth.getUser()).data.user?.id)
+        .single();
+
+    if (!orgData?.organization_id) return [];
+
+    let query = supabase
         .from('competitor_domains')
         .select('*')
+        .eq('organization_id', orgData.organization_id)
         .eq('is_active', true)
         .order('created_at', { ascending: false });
+
+    if (workspaceId) {
+        query = query.eq('workspace_id', workspaceId);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
         console.error('Error fetching competitors:', error);
@@ -60,9 +77,9 @@ export async function getCompetitors(): Promise<CompetitorDomain[]> {
 }
 
 /**
- * Add a new competitor to track
+ * Add a new competitor to track, optionally scoped to a workspace
  */
-export async function addCompetitor(domain: string, name?: string): Promise<CompetitorDomain | null> {
+export async function addCompetitor(domain: string, name?: string, workspaceId?: string | null): Promise<CompetitorDomain | null> {
     // Clean domain
     const cleanDomain = domain
         .replace(/^(?:https?:\/\/)?(?:www\.)?/i, '')
@@ -81,6 +98,7 @@ export async function addCompetitor(domain: string, name?: string): Promise<Comp
         .from('competitor_domains')
         .upsert({
             organization_id: orgData.organization_id,
+            ...(workspaceId ? { workspace_id: workspaceId } : {}),
             domain: cleanDomain,
             name: name || cleanDomain,
             is_active: true
@@ -92,6 +110,9 @@ export async function addCompetitor(domain: string, name?: string): Promise<Comp
         console.error('Error adding competitor:', error);
         return null;
     }
+
+    // Invalidate cached benchmarks so next fetch reflects the new competitor
+    apiCache.invalidatePrefix('competitor:benchmarks:');
 
     // Log the event
     const actor = await getCurrentActor();
@@ -132,6 +153,9 @@ export async function removeCompetitor(competitorId: string): Promise<boolean> {
         return false;
     }
 
+    // Invalidate cached benchmarks so next fetch reflects the change
+    apiCache.invalidatePrefix('competitor:benchmarks:');
+
     // Log the event
     const actor = await getCurrentActor();
     if (actor) {
@@ -147,8 +171,15 @@ export async function removeCompetitor(competitorId: string): Promise<boolean> {
 
 /**
  * Get latest benchmarks for all competitors
+ * Uses batched queries instead of N+1 sequential queries per competitor.
+ * Results are cached for 60 s with stale-while-revalidate for up to 5 min.
  */
-export async function getCompetitorBenchmarks(): Promise<CompetitorSummary[]> {
+export async function getCompetitorBenchmarks(workspaceId?: string | null): Promise<CompetitorSummary[]> {
+    const cacheKey = `competitor:benchmarks:${workspaceId ?? 'all'}`;
+    return apiCache.get(cacheKey, () => _fetchCompetitorBenchmarks(workspaceId), { ttl: 60_000 });
+}
+
+async function _fetchCompetitorBenchmarks(workspaceId?: string | null): Promise<CompetitorSummary[]> {
     const { data: orgData } = await supabase
         .from('users')
         .select('organization_id')
@@ -157,51 +188,63 @@ export async function getCompetitorBenchmarks(): Promise<CompetitorSummary[]> {
 
     if (!orgData?.organization_id) return [];
 
-    // Get competitors with their latest benchmarks
-    const { data: competitors } = await supabase
+    // Build workspace-scoped queries
+    const competitorQuery = supabase
         .from('competitor_domains')
         .select('*')
         .eq('organization_id', orgData.organization_id)
         .eq('is_active', true);
 
+    const benchmarkQuery = supabase
+        .from('competitor_benchmarks')
+        .select('*')
+        .eq('organization_id', orgData.organization_id)
+        .order('captured_at', { ascending: false });
+
+    // Get competitors with their latest benchmarks in parallel
+    const [competitorsResult, benchmarksResult] = await Promise.all([
+        workspaceId ? competitorQuery.eq('workspace_id', workspaceId) : competitorQuery,
+        workspaceId ? benchmarkQuery.eq('workspace_id', workspaceId) : benchmarkQuery,
+    ]);
+
+    const competitors = competitorsResult.data;
+    const allBenchmarks = benchmarksResult.data;
+
     if (!competitors || competitors.length === 0) return [];
+    if (!allBenchmarks) return competitors.map(c => ({
+        id: c.id, domain: c.domain, name: c.name,
+        latestScore: 0, scoreChange: 0, lastUpdated: c.created_at, platformScores: []
+    }));
 
-    const summaries: CompetitorSummary[] = [];
+    // Group benchmarks by competitor domain
+    const benchmarksByDomain = new Map<string, typeof allBenchmarks>();
+    for (const b of allBenchmarks) {
+        const key = b.competitor_domain;
+        if (!benchmarksByDomain.has(key)) benchmarksByDomain.set(key, []);
+        benchmarksByDomain.get(key)!.push(b);
+    }
 
-    for (const competitor of competitors) {
-        // Get latest overall score
-        const { data: latestOverall } = await supabase
-            .from('competitor_benchmarks')
-            .select('*')
-            .eq('organization_id', orgData.organization_id)
-            .eq('competitor_domain', competitor.domain)
-            .eq('platform', 'Overall')
-            .order('captured_at', { ascending: false })
-            .limit(1)
-            .single();
+    return competitors.map(competitor => {
+        const domainBenchmarks = benchmarksByDomain.get(competitor.domain) || [];
 
-        // Get previous overall score for change calculation
-        const { data: previousOverall } = await supabase
-            .from('competitor_benchmarks')
-            .select('score')
-            .eq('organization_id', orgData.organization_id)
-            .eq('competitor_domain', competitor.domain)
-            .eq('platform', 'Overall')
-            .order('captured_at', { ascending: false })
-            .range(1, 1)
-            .single();
+        // Get latest overall score (already sorted by captured_at desc)
+        const overallScores = domainBenchmarks.filter(b => b.platform === 'Overall');
+        const latestOverall = overallScores[0];
+        const previousOverall = overallScores[1];
 
-        // Get platform-specific scores
-        const { data: platformScores } = await supabase
-            .from('competitor_benchmarks')
-            .select('platform, score')
-            .eq('organization_id', orgData.organization_id)
-            .eq('competitor_domain', competitor.domain)
-            .neq('platform', 'Overall')
-            .order('captured_at', { ascending: false })
-            .limit(4);
+        // Get latest platform-specific scores (deduplicated by platform)
+        const seenPlatforms = new Set<string>();
+        const platformScores = domainBenchmarks
+            .filter(b => {
+                if (b.platform === 'Overall' || seenPlatforms.has(b.platform)) return false;
+                seenPlatforms.add(b.platform);
+                return true;
+            })
+            .slice(0, 4)
+            .map(p => ({ platform: p.platform, score: p.score }));
 
-        summaries.push({
+        return {
+            id: competitor.id,
             domain: competitor.domain,
             name: competitor.name,
             latestScore: latestOverall?.score || 0,
@@ -209,14 +252,9 @@ export async function getCompetitorBenchmarks(): Promise<CompetitorSummary[]> {
                 ? latestOverall.score - previousOverall.score
                 : 0,
             lastUpdated: latestOverall?.captured_at || competitor.created_at,
-            platformScores: platformScores?.map(p => ({
-                platform: p.platform,
-                score: p.score
-            })) || []
-        });
-    }
-
-    return summaries;
+            platformScores
+        };
+    });
 }
 
 /**
@@ -226,7 +264,8 @@ export async function saveCompetitorBenchmark(
     competitorDomain: string,
     platform: CompetitorBenchmark['platform'],
     score: number,
-    metadata?: Record<string, unknown>
+    metadata?: Record<string, unknown>,
+    workspaceId?: string | null
 ): Promise<boolean> {
     const { data: orgData } = await supabase
         .from('users')
@@ -240,6 +279,7 @@ export async function saveCompetitorBenchmark(
         .from('competitor_benchmarks')
         .insert({
             organization_id: orgData.organization_id,
+            ...(workspaceId ? { workspace_id: workspaceId } : {}),
             competitor_domain: competitorDomain,
             platform,
             score,

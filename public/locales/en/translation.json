@@ -1,0 +1,51 @@
+{
+    "sidebar": {
+        "dashboard": "Dashboard",
+        "pages": "Pages",
+        "search": "Search Visibility",
+        "benchmark": "Benchmark",
+        "consistency": "Consistency",
+        "optimization": "Optimization",
+        "competitors": "Competitors",
+        "reports": "Reports",
+        "integrations": "Integrations",
+        "settings": "Settings",
+        "history": "Audit History",
+        "sandbox": "Sandbox"
+    },
+    "header": {
+        "credits_remaining": "credits remaining",
+        "get_more": "Get More",
+        "export_pdf": "Export PDF",
+        "export_csv": "Export CSV",
+        "new_audit": "New Audit"
+    },
+    "common": {
+        "loading": "Loading…",
+        "retry": "Try Again",
+        "cancel": "Cancel",
+        "save": "Save Changes",
+        "delete": "Delete",
+        "confirm": "Confirm",
+        "close": "Close",
+        "back": "Back",
+        "next": "Next",
+        "done": "Done",
+        "or": "or"
+    },
+    "audit": {
+        "start": "Start Deep Analysis",
+        "running": "Running AI Audit…",
+        "credits_label": "audit credit",
+        "credits_label_plural": "audit credits",
+        "credits_remaining": "remaining · 1 credit per audit",
+        "no_credits": "No credits remaining — top up to run audits",
+        "top_up": "Top Up to Continue"
+    },
+    "errors": {
+        "generic": "Something went wrong. Please try again.",
+        "rate_limit": "You've hit a usage limit. Upgrade your plan for higher limits.",
+        "network": "Connection lost. Please check your internet.",
+        "not_found": "We couldn't find what you were looking for."
+    }
+}

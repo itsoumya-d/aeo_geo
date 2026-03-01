@@ -1,74 +1,72 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../services/supabase';
 import { useToast } from './Toast';
+import { getTechnicalErrorMessage, toUserMessage } from '../utils/errors';
 import {
     CreditCard, Zap, RefreshCw, TrendingUp, AlertTriangle,
-    Check, ExternalLink, Loader2, Sparkles
+    Check, ExternalLink, Loader2, Sparkles, FileText, Download, Mail
 } from 'lucide-react';
 
 interface PlanConfig {
     name: string;
-    price: string;
-    priceMonthly: number; // For calculations
+    priceMonthly: number;
+    priceAnnual: number;
     audits: number;
     rewrites: number;
     priceId: string;
+    annualPriceId: string;
     features: string[];
-    apiCostPerAudit: number; // Estimated Gemini + Perplexity cost
 }
 
 /**
- * Stripe Plan Configuration
- * 
- * To configure production Stripe IDs:
- * 1. Create products in Stripe Dashboard
- * 2. Copy the Price IDs (format: price_xxxxx)
- * 3. Set environment variables:
- *    - VITE_STRIPE_STARTER_PRICE_ID
- *    - VITE_STRIPE_PRO_PRICE_ID
- *    - VITE_STRIPE_AGENCY_PRICE_ID
+ * Paddle Plan Configuration
+ *
+ * To configure production Paddle IDs:
+ * 1. Create monthly + annual products in Paddle Dashboard → Catalog
+ * 2. Copy the Price IDs (format: pri_xxxxx)
+ * 3. Set environment variables for both monthly and annual variants.
  */
 const PLANS: Record<string, PlanConfig> = {
     free: {
         name: 'Free',
-        price: '$0',
         priceMonthly: 0,
-        audits: 5,
-        rewrites: 50,
+        priceAnnual: 0,
+        audits: 3,
+        rewrites: 30,
         priceId: '',
-        features: ['5 AI Audits', '50 Rewrite Simulations', 'Basic Reports'],
-        apiCostPerAudit: 0.10
+        annualPriceId: '',
+        features: ['3 AI Audits/mo', '1 Domain', 'Basic Recommendations'],
     },
     starter: {
         name: 'Starter',
-        price: '$49',
         priceMonthly: 49,
-        audits: 50,
-        rewrites: 500,
-        priceId: import.meta.env.VITE_STRIPE_STARTER_PRICE_ID || '',
-        features: ['50 AI Audits/mo', '500 Simulations/mo', 'PDF Reports', 'Email Support'],
-        apiCostPerAudit: 0.10
+        priceAnnual: 39,
+        audits: 25,
+        rewrites: 250,
+        priceId: import.meta.env.VITE_PADDLE_STARTER_PRICE_ID || '',
+        annualPriceId: import.meta.env.VITE_PADDLE_STARTER_ANNUAL_PRICE_ID || '',
+        features: ['25 AI Audits/mo', '5 Domains', 'Keyword Tracking', 'CSV Export'],
     },
     pro: {
         name: 'Professional',
-        price: '$149',
         priceMonthly: 149,
-        audits: 200,
-        rewrites: 2000,
-        priceId: import.meta.env.VITE_STRIPE_PRO_PRICE_ID || '',
-        features: ['200 AI Audits/mo', '2000 Simulations/mo', 'API Access', 'Priority Support'],
-        apiCostPerAudit: 0.08
+        priceAnnual: 119,
+        audits: 100,
+        rewrites: 1000,
+        priceId: import.meta.env.VITE_PADDLE_PRO_PRICE_ID || '',
+        annualPriceId: import.meta.env.VITE_PADDLE_PRO_ANNUAL_PRICE_ID || '',
+        features: ['100 AI Audits/mo', 'Unlimited Domains', 'API Access', 'Scheduled Audits', 'PDF Reports'],
     },
     agency: {
         name: 'Agency',
-        price: '$399',
         priceMonthly: 399,
-        audits: 1000,
-        rewrites: 10000,
-        priceId: import.meta.env.VITE_STRIPE_AGENCY_PRICE_ID || '',
-        features: ['1000 AI Audits/mo', '10000 Simulations/mo', 'White-Label', 'Team Seats'],
-        apiCostPerAudit: 0.05
+        priceAnnual: 319,
+        audits: 500,
+        rewrites: 5000,
+        priceId: import.meta.env.VITE_PADDLE_AGENCY_PRICE_ID || '',
+        annualPriceId: import.meta.env.VITE_PADDLE_AGENCY_ANNUAL_PRICE_ID || '',
+        features: ['500 AI Audits/mo', 'White-Label Branding', 'Team Seats (10)', 'SSO', 'Webhooks'],
     }
 };
 
@@ -124,39 +122,49 @@ const UsageBar: React.FC<UsageBarProps> = ({ label, current, max, icon, colorCla
     );
 };
 
+/**
+ * Opens Paddle checkout overlay for a given price ID.
+ * Uses the Paddle.js client-side SDK.
+ */
+function openPaddleCheckout(priceId: string, email?: string | null) {
+    const Paddle = (window as any).Paddle;
+    if (!Paddle) {
+        throw new Error('Paddle SDK not loaded. Please refresh the page.');
+    }
+    Paddle.Checkout.open({
+        items: [{ priceId, quantity: 1 }],
+        customer: email ? { email } : undefined,
+    });
+}
+
 export const BillingDashboard: React.FC = () => {
-    const { organization, refreshOrganization } = useAuth();
+    const { organization, refreshOrganization, user } = useAuth();
     const toast = useToast();
     const [isLoading, setIsLoading] = useState(false);
     const [loadingAction, setLoadingAction] = useState<string | null>(null);
+    const [annualBilling, setAnnualBilling] = useState(false);
 
     const currentPlan = PLANS[organization?.plan || 'free'] || PLANS.free;
-    const auditCredits = organization?.audit_credits_remaining ?? 5;
-    const rewriteCredits = organization?.rewrite_credits_remaining ?? 50;
+    const auditCredits = organization?.audit_credits_remaining ?? 3;
+    const rewriteCredits = organization?.rewrite_credits_remaining ?? 30;
 
-    const handleUpgrade = async (priceId: string, planName: string) => {
+    const getPrice = (plan: PlanConfig) =>
+        annualBilling ? `$${plan.priceAnnual}` : `$${plan.priceMonthly}`;
+
+    const handleUpgrade = async (plan: PlanConfig, planKey: string) => {
+        const priceId = annualBilling && plan.annualPriceId ? plan.annualPriceId : plan.priceId;
         if (!priceId) {
-            toast.info("You're on the Free plan", "Select a paid plan to upgrade.");
+            toast.error("Billing Not Configured", "Payment is not yet set up. Please contact support.");
             return;
         }
 
-        setLoadingAction(planName);
+        setLoadingAction(planKey);
         try {
-            const { data, error } = await supabase.functions.invoke('create-checkout', {
-                body: {
-                    priceId,
-                    successUrl: `${window.location.origin}/settings?tab=billing&success=true`,
-                    cancelUrl: `${window.location.origin}/settings?tab=billing`
-                }
-            });
-
-            if (error) throw error;
-            if (data?.url) {
-                window.location.href = data.url;
-            }
+            openPaddleCheckout(priceId, user?.email);
         } catch (error: any) {
-            console.error("Checkout Error:", error);
-            toast.error("Checkout Failed", error.message || "Please try again later.");
+            console.error("Checkout Error:", getTechnicalErrorMessage(error));
+            const userMsg = toUserMessage(error);
+            toast.error(userMsg.title, userMsg.message);
         } finally {
             setLoadingAction(null);
         }
@@ -165,22 +173,21 @@ export const BillingDashboard: React.FC = () => {
     const handleManageBilling = async () => {
         setIsLoading(true);
         try {
-            const { data, error } = await supabase.functions.invoke('create-checkout', {
-                body: {
-                    portal: true, // Signal to create a portal session
-                    returnUrl: window.location.href
-                }
-            });
+            const Paddle = (window as any).Paddle;
+            if (!Paddle) throw new Error('Paddle SDK not loaded');
 
-            if (error) throw error;
-            if (data?.url) {
-                window.location.href = data.url;
+            if (organization?.paddle_customer_id) {
+                // Open Paddle's update payment method overlay
+                Paddle.Update.open({
+                    customer: { id: organization.paddle_customer_id },
+                });
             } else {
                 toast.info("No Active Subscription", "You are on the free plan.");
             }
         } catch (error: any) {
-            console.error("Billing Portal Error:", error);
-            toast.error("Error", "Could not access billing settings.");
+            console.error("Billing Portal Error:", getTechnicalErrorMessage(error));
+            const userMsg = toUserMessage(error);
+            toast.error(userMsg.title, userMsg.message);
         } finally {
             setIsLoading(false);
         }
@@ -205,7 +212,9 @@ export const BillingDashboard: React.FC = () => {
                         <div>
                             <p className="text-sm text-slate-400 mb-1">Current Plan</p>
                             <h2 className="text-3xl font-bold text-white">{currentPlan.name}</h2>
-                            <p className="text-primary font-semibold">{currentPlan.price}/month</p>
+                            <p className="text-primary font-semibold">
+                                {currentPlan.priceMonthly === 0 ? 'Free' : `$${currentPlan.priceMonthly}/month`}
+                            </p>
                         </div>
                         <div className="flex flex-wrap gap-3">
                             <button
@@ -247,6 +256,84 @@ export const BillingDashboard: React.FC = () => {
                 />
             </div>
 
+            {/* Usage Analytics */}
+            <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+                <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg font-semibold text-white">This Month's Activity</h3>
+                    <span className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
+                        {new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}
+                    </span>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {[
+                        { label: 'Audits Run', value: currentPlan.audits - auditCredits, icon: <TrendingUp className="w-4 h-4" />, color: 'text-primary' },
+                        { label: 'Pages Analyzed', value: `~${(currentPlan.audits - auditCredits) * 5}`, icon: <Check className="w-4 h-4" />, color: 'text-emerald-400' },
+                        { label: 'Simulations', value: currentPlan.rewrites - rewriteCredits, icon: <Zap className="w-4 h-4" />, color: 'text-amber-400' },
+                        { label: 'Credits Used', value: `${currentPlan.audits - auditCredits}/${currentPlan.audits}`, icon: <RefreshCw className="w-4 h-4" />, color: 'text-blue-400' },
+                    ].map((stat) => (
+                        <div key={stat.label} className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
+                            <div className={`flex items-center gap-2 text-xs font-bold uppercase tracking-[0.1em] text-slate-500 mb-2`}>
+                                <span className={stat.color}>{stat.icon}</span>
+                                {stat.label}
+                            </div>
+                            <p className="text-2xl font-bold text-white">{stat.value}</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Invoice History */}
+            <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+                <div className="flex items-center gap-3 mb-5">
+                    <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <FileText className="w-5 h-5 text-blue-400" />
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-semibold text-white">Invoice History</h3>
+                        <p className="text-sm text-slate-400">Download past invoices or update your billing details.</p>
+                    </div>
+                </div>
+
+                {organization?.paddle_customer_id ? (
+                    <div className="space-y-4">
+                        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 flex items-start gap-3">
+                            <Mail className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
+                            <div>
+                                <p className="text-sm text-white font-medium">Invoices are sent by email</p>
+                                <p className="text-xs text-slate-400 mt-0.5">
+                                    Paddle automatically emails a PDF invoice to <span className="text-white">{user?.email}</span> after each payment.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <button
+                                onClick={handleManageBilling}
+                                disabled={isLoading}
+                                className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2.5 rounded-xl font-medium text-sm transition-colors"
+                            >
+                                {isLoading ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <Download className="w-4 h-4" />
+                                )}
+                                Manage Billing &amp; Download Invoices
+                            </button>
+                            <p className="text-xs text-slate-500 self-center">
+                                Opens Paddle's secure billing portal
+                            </p>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="text-center py-8 border border-dashed border-slate-700 rounded-xl">
+                        <FileText className="w-10 h-10 text-slate-600 mx-auto mb-3" />
+                        <p className="text-sm text-slate-400 mb-1">No billing history yet</p>
+                        <p className="text-xs text-slate-500">
+                            Invoice history will appear here once you subscribe to a paid plan.
+                        </p>
+                    </div>
+                )}
+            </div>
+
             {/* Upgrade Prompt for Free Users */}
             {organization?.plan === 'free' && (
                 <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 rounded-xl p-6">
@@ -261,9 +348,14 @@ export const BillingDashboard: React.FC = () => {
                             <p className="text-sm text-slate-400 mb-4">
                                 You're on the Free plan with limited audits. Upgrade to run unlimited analyses
                                 and access advanced features like API access and white-label reports.
+                                {annualBilling && (
+                                    <span className="text-emerald-400 font-semibold ml-1">
+                                        Save ${(PLANS.starter.priceMonthly - PLANS.starter.priceAnnual) * 12}/yr with annual billing.
+                                    </span>
+                                )}
                             </p>
                             <button
-                                onClick={() => handleUpgrade(PLANS.starter.priceId, 'starter')}
+                                onClick={() => handleUpgrade(PLANS.starter, 'starter')}
                                 disabled={loadingAction === 'starter'}
                                 className="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-lg font-medium transition-colors inline-flex items-center gap-2"
                             >
@@ -272,7 +364,7 @@ export const BillingDashboard: React.FC = () => {
                                 ) : (
                                     <CreditCard className="w-4 h-4" />
                                 )}
-                                Upgrade to Starter ($49/mo)
+                                Upgrade to Starter (${annualBilling ? PLANS.starter.priceAnnual : PLANS.starter.priceMonthly}/mo)
                             </button>
                         </div>
                     </div>
@@ -281,13 +373,35 @@ export const BillingDashboard: React.FC = () => {
 
             {/* Plan Comparison */}
             <div>
-                <h3 className="text-lg font-semibold text-white mb-4">Available Plans</h3>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                    <h3 className="text-lg font-semibold text-white">Available Plans</h3>
+                    {/* Annual / Monthly Toggle */}
+                    <div className="flex items-center gap-3">
+                        <span className={`text-sm font-medium ${!annualBilling ? 'text-white' : 'text-slate-500'}`}>Monthly</span>
+                        <button
+                            onClick={() => setAnnualBilling(v => !v)}
+                            className={`relative w-12 h-6 rounded-full transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${annualBilling ? 'bg-primary' : 'bg-slate-700'}`}
+                            aria-label="Toggle annual billing"
+                        >
+                            <span
+                                className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform duration-300 ${annualBilling ? 'translate-x-6' : 'translate-x-0'}`}
+                            />
+                        </button>
+                        <span className={`text-sm font-medium flex items-center gap-1.5 ${annualBilling ? 'text-white' : 'text-slate-500'}`}>
+                            Annual
+                            <span className="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-1.5 py-0.5 rounded">
+                                Save 20%
+                            </span>
+                        </span>
+                    </div>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {Object.entries(PLANS).filter(([key]) => key !== 'free').map(([key, plan]) => {
                         const isCurrent = organization?.plan === key;
                         return (
-                            <div
+                            <motion.div
                                 key={key}
+                                layout
                                 className={`relative rounded-xl p-5 border transition-all ${isCurrent
                                     ? 'bg-primary/10 border-primary'
                                     : 'bg-slate-900/50 border-slate-800 hover:border-slate-700'
@@ -299,20 +413,28 @@ export const BillingDashboard: React.FC = () => {
                                     </div>
                                 )}
                                 <h4 className="text-lg font-semibold text-white mb-1">{plan.name}</h4>
-                                <p className="text-2xl font-bold text-white mb-4">
-                                    {plan.price}<span className="text-sm text-slate-500">/mo</span>
+                                <p className="text-2xl font-bold text-white mb-1">
+                                    {getPrice(plan)}<span className="text-sm text-slate-500">/mo</span>
                                 </p>
-                                <ul className="space-y-2 mb-5">
+                                {annualBilling && plan.priceMonthly > 0 && (
+                                    <p className="text-xs text-slate-500 mb-3 flex items-center gap-2 flex-wrap">
+                                        <span>Billed annually (${plan.priceAnnual * 12}/yr)</span>
+                                        <span className="bg-emerald-500/20 text-emerald-400 font-bold px-1.5 py-0.5 rounded">
+                                            Save ${(plan.priceMonthly - plan.priceAnnual) * 12}/yr
+                                        </span>
+                                    </p>
+                                )}
+                                <ul className="space-y-2 mb-5 mt-3">
                                     {plan.features.map((feature, i) => (
                                         <li key={i} className="text-sm text-slate-400 flex items-center gap-2">
-                                            <Check className="w-4 h-4 text-primary" />
+                                            <Check className="w-4 h-4 text-primary flex-shrink-0" />
                                             {feature}
                                         </li>
                                     ))}
                                 </ul>
                                 {!isCurrent && (
                                     <button
-                                        onClick={() => handleUpgrade(plan.priceId, key)}
+                                        onClick={() => handleUpgrade(plan, key)}
                                         disabled={loadingAction === key}
                                         className="w-full bg-slate-800 hover:bg-slate-700 text-white py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
                                     >
@@ -323,7 +445,7 @@ export const BillingDashboard: React.FC = () => {
                                         )}
                                     </button>
                                 )}
-                            </div>
+                            </motion.div>
                         );
                     })}
                 </div>

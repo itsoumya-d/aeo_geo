@@ -1,0 +1,89 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { AlertCircle } from 'lucide-react';
+import { FullPageLoader } from '../../components/routing/FullPageLoader';
+import { useAuth } from '../../contexts/AuthContext';
+
+function getReturnTo(search: string) {
+    const params = new URLSearchParams(search);
+    return params.get('returnTo') || sessionStorage.getItem('returnTo') || '';
+}
+
+const OAUTH_ERROR_MESSAGES: Record<string, string> = {
+    access_denied: 'You denied access. Sign in again to continue.',
+    server_error: 'The authentication server encountered an error. Please try again.',
+    temporarily_unavailable: 'The service is temporarily unavailable. Please try again shortly.',
+};
+
+export const AuthCallbackPage: React.FC = () => {
+    const auth = useAuth();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const [oauthError, setOauthError] = useState<string | null>(null);
+
+    const returnTo = useMemo(() => getReturnTo(location.search), [location.search]);
+
+    // Detect OAuth error params in the URL (e.g. ?error=access_denied)
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const error = params.get('error');
+        const errorDesc = params.get('error_description');
+        if (error) {
+            const friendly = OAUTH_ERROR_MESSAGES[error] || errorDesc || 'An unexpected error occurred during sign in.';
+            setOauthError(friendly);
+            console.error('[AuthCallback] OAuth error:', error, errorDesc);
+        }
+    }, [location.search]);
+
+    useEffect(() => {
+        if (oauthError) return;
+        if (!auth.isConfigured && import.meta.env.PROD) return;
+        if (auth.loading) return;
+
+        if (!auth.user) {
+            navigate('/login', { replace: true });
+            return;
+        }
+
+        const onboardingIncomplete = !auth.organization || !auth.onboarding?.is_completed;
+        sessionStorage.removeItem('returnTo');
+
+        if (onboardingIncomplete) {
+            navigate(`/onboarding${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`, { replace: true });
+            return;
+        }
+
+        navigate(returnTo || '/dashboard', { replace: true });
+    }, [auth.isConfigured, auth.loading, auth.user, auth.organization, auth.onboarding, navigate, returnTo, oauthError]);
+
+    if (oauthError) {
+        return (
+            <div className="min-h-screen bg-background text-text-primary flex items-center justify-center p-6">
+                <div className="max-w-md w-full text-center space-y-5">
+                    <div className="w-14 h-14 mx-auto rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center">
+                        <AlertCircle className="w-7 h-7 text-rose-400" />
+                    </div>
+                    <h1 className="text-xl font-bold text-white">Sign-in failed</h1>
+                    <p className="text-text-secondary text-sm leading-relaxed">{oauthError}</p>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                        <Link
+                            to="/login"
+                            className="inline-flex items-center justify-center bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-xl font-semibold text-sm transition-colors"
+                        >
+                            Back to sign in
+                        </Link>
+                        <Link
+                            to="/"
+                            className="inline-flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 text-text-secondary hover:text-white px-6 py-3 rounded-xl font-semibold text-sm transition-colors"
+                        >
+                            Go home
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    return <FullPageLoader label="Completing sign in…" />;
+};
+
