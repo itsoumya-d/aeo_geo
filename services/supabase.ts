@@ -340,20 +340,11 @@ export async function createAudit(domainUrl: string, workspaceId?: string | null
 
 export async function insertFreeAuditLead(websiteUrl: string): Promise<boolean> {
     const org = await getOrganization();
-    const auditRequestsSchemaMissingKey = 'audit_requests_schema_missing';
-    const pendingAuditRequestsKey = 'pending_audit_requests';
 
     const normalizedUrl = websiteUrl.startsWith('http://') || websiteUrl.startsWith('https://')
         ? websiteUrl
         : `https://${websiteUrl}`;
     const hostname = new URL(normalizedUrl).hostname.replace(/^www\./, "");
-    const fallbackPayload = {
-        website_url: normalizedUrl,
-        domain_url: hostname,
-        source: 'landing_page',
-        status: 'pending',
-        created_at: new Date().toISOString()
-    };
 
     if (org) {
         const { error } = await supabase
@@ -374,13 +365,21 @@ export async function insertFreeAuditLead(websiteUrl: string): Promise<boolean> 
         return true;
     }
 
-    if (typeof window !== 'undefined') {
-        const existing = window.localStorage.getItem(pendingAuditRequestsKey);
-        const pendingRequests = existing ? JSON.parse(existing) : [];
-        pendingRequests.push(fallbackPayload);
-        window.localStorage.setItem(pendingAuditRequestsKey, JSON.stringify(pendingRequests));
-        window.localStorage.setItem(auditRequestsSchemaMissingKey, 'true');
-        return true;
+    const response = await fetch('/api/free-audit', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            websiteUrl: normalizedUrl,
+            domainUrl: hostname,
+        }),
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Supabase insert error:', errorText);
+        throw new Error(errorText || 'Could not save free audit request.');
     }
 
     return true;
