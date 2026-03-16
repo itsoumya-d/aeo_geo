@@ -123,12 +123,36 @@ export async function bootstrapOrganization(name?: string): Promise<{
     organization: Organization | null;
     onboarding: OnboardingStatus | null;
 }> {
-    const { data, error } = await supabase.functions.invoke('bootstrap-org', {
-        body: { name }
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+        console.error('Error bootstrapping organization:', 'No active session.');
+        return { organization: null, onboarding: null };
+    }
+
+    const response = await fetch('/api/bootstrap-org', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ name }),
     });
 
-    if (error) {
-        console.error('Error bootstrapping organization:', error);
+    let data: {
+        success?: boolean;
+        error?: string;
+        organization?: Organization | null;
+        onboarding?: OnboardingStatus | null;
+    } | null = null;
+
+    try {
+        data = await response.json();
+    } catch {
+        data = null;
+    }
+
+    if (!response.ok) {
+        console.error('Error bootstrapping organization:', data?.error || `HTTP ${response.status}`);
         return { organization: null, onboarding: null };
     }
 

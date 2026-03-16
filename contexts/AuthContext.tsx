@@ -252,6 +252,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setProfile(userProfile);
         setOrganization(org);
         setOnboarding(onboardingStatus);
+        if (org?.id) {
+            await loadWorkspacesInternal(org.id);
+        } else {
+            setWorkspaces(null);
+            setCurrentWorkspace(null);
+        }
     };
 
     const value: AuthContextType = {
