@@ -30,7 +30,7 @@ interface AuthContextType {
 
     // Auth methods
     signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
-    signUp: (email: string, password: string, fullName?: string) => Promise<{ data?: { session: Session | null }; error: AuthError | null }>;
+    signUp: (email: string, password: string, fullName?: string, emailRedirectTo?: string) => Promise<{ data?: { session: Session | null }; error: AuthError | null }>;
     signInWithGoogle: (returnTo?: string) => Promise<{ error: AuthError | null }>;
     signOut: () => Promise<void>;
     resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
@@ -184,12 +184,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return { error };
     };
 
-    const signUp = async (email: string, password: string, fullName?: string) => {
+    const signUp = async (email: string, password: string, fullName?: string, emailRedirectTo?: string) => {
         setError(null);
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
             options: {
+                ...(emailRedirectTo ? { emailRedirectTo } : {}),
                 data: {
                     full_name: fullName,
                 },

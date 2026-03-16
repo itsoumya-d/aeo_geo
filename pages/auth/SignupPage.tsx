@@ -13,6 +13,8 @@ function getReturnTo(search: string) {
     return params.get('returnTo') || sessionStorage.getItem('returnTo') || '';
 }
 
+const EMAIL_CONFIRMATION_REDIRECT = 'https://aeo-buad2wn0a-mpksdai-projects.vercel.app/login';
+
 function validatePassword(password: string) {
     const errors: string[] = [];
     if (password.length < 8) errors.push('At least 8 characters');
@@ -78,7 +80,12 @@ export const SignupPage: React.FC = () => {
 
         setSubmitting(true);
         try {
-            const { error, data } = await auth.signUp(email.trim(), password, fullName.trim() || undefined);
+            const { error, data } = await auth.signUp(
+                email.trim(),
+                password,
+                fullName.trim() || undefined,
+                EMAIL_CONFIRMATION_REDIRECT
+            );
             if (error) {
                 const msg = error.message?.toLowerCase().includes('already registered')
                     ? 'An account with this email already exists. Try signing in.'
