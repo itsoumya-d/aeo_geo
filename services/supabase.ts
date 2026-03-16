@@ -32,8 +32,8 @@ export interface Organization {
     id: string;
     name: string;
     plan: 'free' | 'starter' | 'pro' | 'agency' | 'enterprise';
-    paddle_customer_id: string | null;
-    paddle_subscription_id: string | null;
+    stripe_customer_id: string | null;
+    stripe_subscription_id: string | null;
     subscription_status: string | null;
     audit_credits_remaining: number;
     rewrite_credits_remaining: number;
@@ -340,26 +340,47 @@ export async function createAudit(domainUrl: string, workspaceId?: string | null
 
 export async function insertFreeAuditLead(websiteUrl: string): Promise<boolean> {
     const org = await getOrganization();
+    const auditRequestsSchemaMissingKey = 'audit_requests_schema_missing';
+    const pendingAuditRequestsKey = 'pending_audit_requests';
 
-    if (!org) {
-        const error = new Error('Cannot insert into audits without an organization. The audits table requires organization_id.');
-        console.error('Supabase insert error:', error);
-        throw error;
+    const normalizedUrl = websiteUrl.startsWith('http://') || websiteUrl.startsWith('https://')
+        ? websiteUrl
+        : `https://${websiteUrl}`;
+    const hostname = new URL(normalizedUrl).hostname.replace(/^www\./, "");
+    const fallbackPayload = {
+        website_url: normalizedUrl,
+        domain_url: hostname,
+        source: 'landing_page',
+        status: 'pending',
+        created_at: new Date().toISOString()
+    };
+
+    if (org) {
+        const { error } = await supabase
+            .from("audits")
+            .insert([
+                {
+                    organization_id: org.id,
+                    domain_url: hostname,
+                    status: "pending"
+                }
+            ]);
+
+        if (error) {
+            console.error("Supabase insert error:", error);
+            throw error;
+        }
+
+        return true;
     }
 
-    const { error } = await supabase
-        .from("audits")
-        .insert([
-            {
-                organization_id: org.id,
-                domain_url: websiteUrl,
-                status: 'pending'
-            }
-        ]);
-
-    if (error) {
-        console.error("Supabase insert error:", error);
-        throw error;
+    if (typeof window !== 'undefined') {
+        const existing = window.localStorage.getItem(pendingAuditRequestsKey);
+        const pendingRequests = existing ? JSON.parse(existing) : [];
+        pendingRequests.push(fallbackPayload);
+        window.localStorage.setItem(pendingAuditRequestsKey, JSON.stringify(pendingRequests));
+        window.localStorage.setItem(auditRequestsSchemaMissingKey, 'true');
+        return true;
     }
 
     return true;

@@ -93,7 +93,7 @@ serve(async (req) => {
                 const planInfo = planFromPriceId(priceId);
 
                 const update: Record<string, any> = {
-                    paddle_subscription_id: data.id,
+                    stripe_subscription_id: data.id,
                     subscription_status: status,
                 };
 
@@ -104,14 +104,14 @@ serve(async (req) => {
                 await supabase
                     .from("organizations")
                     .update(update)
-                    .eq("paddle_customer_id", customerId);
+                    .eq("stripe_customer_id", customerId);
 
                 // On first activation, provision credits
                 if (eventType === "subscription.created" && planInfo && status === "active") {
                     const { data: org } = await supabase
                         .from("organizations")
                         .select("id, audit_credits_remaining, rewrite_credits_remaining")
-                        .eq("paddle_customer_id", customerId)
+                        .eq("stripe_customer_id", customerId)
                         .single();
 
                     if (org) {
@@ -141,7 +141,7 @@ serve(async (req) => {
                     .update({
                         subscription_status: "canceled",
                     })
-                    .eq("paddle_customer_id", customerId);
+                    .eq("stripe_customer_id", customerId);
                 break;
             }
 
@@ -157,7 +157,7 @@ serve(async (req) => {
                     const { data: org } = await supabase
                         .from("organizations")
                         .select("id")
-                        .eq("paddle_customer_id", customerId)
+                        .eq("stripe_customer_id", customerId)
                         .single();
                     targetOrgId = org?.id;
                 }
@@ -244,7 +244,7 @@ serve(async (req) => {
                     await supabase
                         .from("organizations")
                         .update({ subscription_status: "past_due" })
-                        .eq("paddle_customer_id", customerId);
+                        .eq("stripe_customer_id", customerId);
                 }
                 break;
             }

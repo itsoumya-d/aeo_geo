@@ -108,6 +108,7 @@ serve(async (req) => {
           .insert({
             organization_id: org.id,
             name: org.name,
+            slug: org.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) + '-' + crypto.randomUUID().slice(0, 8),
             description: "Default workspace",
             created_by: userId,
           });

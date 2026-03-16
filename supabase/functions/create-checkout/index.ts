@@ -77,11 +77,11 @@ serve(async (req) => {
         // Get or create Paddle customer
         const { data: orgData } = await supabaseClient
             .from('organizations')
-            .select('paddle_customer_id')
+            .select('stripe_customer_id')
             .eq('id', orgId)
             .single();
 
-        let customerId = orgData?.paddle_customer_id;
+        let customerId = orgData?.stripe_customer_id;
 
         if (!customerId && user.email) {
             const customerRes = await fetch(`${paddleBaseUrl}/customers`, {
@@ -107,7 +107,7 @@ serve(async (req) => {
                 );
                 await adminClient
                     .from('organizations')
-                    .update({ paddle_customer_id: customerId })
+                    .update({ stripe_customer_id: customerId })
                     .eq('id', orgId);
             }
         }

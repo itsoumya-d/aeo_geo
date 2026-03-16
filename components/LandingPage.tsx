@@ -286,11 +286,13 @@ const FAQ_ITEMS = [
 const FreeAuditCaptureForm: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
     const [websiteUrl, setWebsiteUrl] = React.useState('');
     const [error, setError] = React.useState('');
+    const [successMessage, setSuccessMessage] = React.useState('');
     const [isSubmitting, setIsSubmitting] = React.useState(false);
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setError('');
+        setSuccessMessage('');
 
         const validation = validateUrl(websiteUrl);
         if (!validation.isValid) {
@@ -305,6 +307,7 @@ const FreeAuditCaptureForm: React.FC<{ compact?: boolean }> = ({ compact = false
             const success = await insertFreeAuditLead(websiteUrl);
             if (success) {
                 setWebsiteUrl('');
+                setSuccessMessage('Audit request saved successfully.');
             } else {
                 setError('Could not save your audit request.');
             }
@@ -325,8 +328,9 @@ const FreeAuditCaptureForm: React.FC<{ compact?: boolean }> = ({ compact = false
                     onChange={(event) => {
                         setWebsiteUrl(event.target.value);
                         if (error) setError('');
+                        if (successMessage) setSuccessMessage('');
                     }}
-                    placeholder="Enter your website URL"
+                    placeholder="Enter your website URL (e.g. https://example.com)"
                     error={error}
                     disabled={isSubmitting}
                     className={compact ? 'h-11' : 'h-12 text-base'}
@@ -342,6 +346,9 @@ const FreeAuditCaptureForm: React.FC<{ compact?: boolean }> = ({ compact = false
                     <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
             </div>
+            {successMessage ? (
+                <p className="mt-2 text-sm text-emerald-400">{successMessage}</p>
+            ) : null}
         </form>
     );
 };

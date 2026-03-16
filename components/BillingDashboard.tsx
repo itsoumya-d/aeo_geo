@@ -176,10 +176,10 @@ export const BillingDashboard: React.FC = () => {
             const Paddle = (window as any).Paddle;
             if (!Paddle) throw new Error('Paddle SDK not loaded');
 
-            if (organization?.paddle_customer_id) {
+            if (organization?.stripe_customer_id) {
                 // Open Paddle's update payment method overlay
                 Paddle.Update.open({
-                    customer: { id: organization.paddle_customer_id },
+                    customer: { id: organization.stripe_customer_id },
                 });
             } else {
                 toast.info("No Active Subscription", "You are on the free plan.");
@@ -294,7 +294,7 @@ export const BillingDashboard: React.FC = () => {
                     </div>
                 </div>
 
-                {organization?.paddle_customer_id ? (
+                {organization?.stripe_customer_id ? (
                     <div className="space-y-4">
                         <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 flex items-start gap-3">
                             <Mail className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />

@@ -4,6 +4,17 @@
 import { supabase } from './supabase';
 import { Workspace } from '../types';
 
+/** Generate a URL-safe slug from a name, with a short random suffix for uniqueness */
+function generateSlug(name: string): string {
+    const base = name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 60);
+    const suffix = Math.random().toString(36).slice(2, 8);
+    return `${base || 'workspace'}-${suffix}`;
+}
+
 /**
  * Get all workspaces for an organization
  */
@@ -75,6 +86,7 @@ export async function createWorkspace(
         .insert({
             organization_id: organizationId,
             name,
+            slug: generateSlug(name),
             description,
             icon_url: iconUrl,
         })
