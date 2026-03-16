@@ -8,8 +8,11 @@ import {
 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Card } from './ui/Card';
+import { Input } from './ui/Input';
 import { FadeIn, SlideUp, StaggerContainer } from './ui/Motion';
 import { VideoModal } from './VideoModal';
+import { insertFreeAuditLead } from '../services/supabase';
+import { normalizeUrl, validateUrl } from '../utils/validation';
 
 /* ─────────────────────────────────────────────────────── */
 /*  Reusable sub-components                                 */
@@ -280,6 +283,69 @@ const FAQ_ITEMS = [
 ];
 
 /* Mobile sticky CTA — only rendered on small screens */
+const FreeAuditCaptureForm: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
+    const [websiteUrl, setWebsiteUrl] = React.useState('');
+    const [error, setError] = React.useState('');
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        setError('');
+
+        const validation = validateUrl(websiteUrl);
+        if (!validation.isValid) {
+            const message = validation.error || 'Enter a valid website URL.';
+            setError(message);
+            console.error('Free audit insert failed:', message);
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            const success = await insertFreeAuditLead(websiteUrl);
+            if (success) {
+                setWebsiteUrl('');
+            } else {
+                setError('Could not save your audit request.');
+            }
+        } catch (submitError) {
+            console.error('Free audit insert failed:', submitError);
+            setError('Could not save your audit request.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className={`w-full ${compact ? '' : 'max-w-2xl'}`}>
+            <div className={`flex items-stretch ${compact ? 'flex-col gap-2' : 'flex-col sm:flex-row gap-3'}`}>
+                <Input
+                    type="text"
+                    value={websiteUrl}
+                    onChange={(event) => {
+                        setWebsiteUrl(event.target.value);
+                        if (error) setError('');
+                    }}
+                    placeholder="Enter your website URL"
+                    error={error}
+                    disabled={isSubmitting}
+                    className={compact ? 'h-11' : 'h-12 text-base'}
+                />
+                <Button
+                    type="submit"
+                    variant="cta"
+                    size="lg"
+                    className={`${compact ? 'w-full' : 'w-full sm:w-auto'} whitespace-nowrap`}
+                    disabled={isSubmitting}
+                >
+                    {isSubmitting ? 'Submitting...' : 'Get your free AI audit'}
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+            </div>
+        </form>
+    );
+};
+
 const MobileStickyCTA: React.FC = () => (
     <motion.div
         initial={{ y: 80, opacity: 0 }}
@@ -287,11 +353,7 @@ const MobileStickyCTA: React.FC = () => (
         transition={{ delay: 1.2, duration: 0.4, ease: 'easeOut' }}
         className="md:hidden fixed bottom-0 inset-x-0 z-40 p-4 bg-background/90 backdrop-blur-xl border-t border-white/10 safe-area-inset-bottom"
     >
-        <Link to="/signup" className="block">
-            <Button variant="cta" size="lg" className="w-full">
-                Get your free AI audit <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-        </Link>
+        <FreeAuditCaptureForm compact />
         <p className="text-center text-[11px] text-text-muted mt-1.5">No credit card · 3 free audits</p>
     </motion.div>
 );
@@ -443,9 +505,11 @@ export const LandingPage: React.FC = () => {
                             </p>
                         </SlideUp>
 
-                        <FadeIn delay={0.15} className="mt-7 flex flex-col sm:flex-row gap-3">
+                        <FadeIn delay={0.15} className="mt-7">
+                            <FreeAuditCaptureForm />
+                            <div className="mt-3 flex flex-col sm:flex-row gap-3">
                             <Link to="/signup" className="w-full sm:w-auto">
-                                <Button variant="cta" size="lg" className="w-full sm:w-auto">
+                                <Button variant="secondary" size="lg" className="w-full sm:w-auto">
                                     Start free — no card needed <ArrowRight className="w-4 h-4 ml-2" />
                                 </Button>
                             </Link>
@@ -458,6 +522,7 @@ export const LandingPage: React.FC = () => {
                                 <Play className="w-4 h-4 mr-2 fill-current group-hover:text-primary transition-colors" />
                                 Watch 2-min demo
                             </Button>
+                            </div>
                         </FadeIn>
 
                         {/* Trust signals */}

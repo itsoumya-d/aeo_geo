@@ -4,6 +4,8 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 // Environment variables for Supabase configuration
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const fallbackSupabaseUrl = 'https://placeholder.supabase.co';
+const fallbackSupabaseAnonKey = 'placeholder-anon-key';
 
 // Validate configuration
 if (!supabaseUrl || !supabaseAnonKey) {
@@ -14,7 +16,10 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 // Create Supabase client
-export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+export const supabase: SupabaseClient = createClient(
+    supabaseUrl || fallbackSupabaseUrl,
+    supabaseAnonKey || fallbackSupabaseAnonKey,
+    {
     auth: {
         autoRefreshToken: true,
         persistSession: true,
@@ -331,6 +336,33 @@ export async function createAudit(domainUrl: string, workspaceId?: string | null
     }
 
     return data;
+}
+
+export async function insertFreeAuditLead(websiteUrl: string): Promise<boolean> {
+    const org = await getOrganization();
+
+    if (!org) {
+        const error = new Error('Cannot insert into audits without an organization. The audits table requires organization_id.');
+        console.error('Supabase insert error:', error);
+        throw error;
+    }
+
+    const { error } = await supabase
+        .from("audits")
+        .insert([
+            {
+                organization_id: org.id,
+                domain_url: websiteUrl,
+                status: 'pending'
+            }
+        ]);
+
+    if (error) {
+        console.error("Supabase insert error:", error);
+        throw error;
+    }
+
+    return true;
 }
 
 /**

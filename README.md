@@ -92,11 +92,16 @@ VITE_STRIPE_AGENCY_PRICE_ID=price_...    # $399/mo plan
 
 ## Deployment
 
-For a step-by-step guide on deploying both the backend (Supabase) and frontend (Vercel), please verify the [Deployment Guide](./DEPLOYMENT.md).
+For the full frontend and backend deployment flow, see [DEPLOYMENT.md](./DEPLOYMENT.md).
 
-This app is configured for **Vercel** deployment (see `vercel.json`).
- Simply import the repository into Vercel and it should auto-detect Vite.
- Remember to add the `VITE_` environment variables in Vercel.
+This app is configured for **Vercel** deployment through [vercel.json](./vercel.json):
+- Framework preset: `vite`
+- Install command: `npm install`
+- Build command: `npm run build`
+- Output directory: `dist`
+- SPA routing: all app routes rewrite to `index.html`
+
+Remember to add the required `VITE_` environment variables in Vercel and the server-side secrets in Supabase before going live.
 
 ## Documentation
 - [Project Walkthrough & Architecture](./docs/production-readiness/route-inventory.md)

@@ -6,7 +6,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
 
-  const vendorReact = ['react', 'react-dom', 'react-router-dom', 'zustand', 'react-helmet-async'];
+  const vendorReact = ['react', 'react-dom', 'react-router-dom', 'zustand', '@vuer-ai/react-helmet-async'];
   const vendorUi = ['framer-motion', 'lucide-react', 'clsx', 'tailwind-merge'];
   const vendorCharts = ['recharts'];
   const vendorSupabase = ['@supabase/supabase-js'];
@@ -29,6 +29,7 @@ export default defineConfig(({ mode }) => {
   };
 
   return {
+    base: '/',
     server: {
       port: 5173,
       host: '0.0.0.0',
