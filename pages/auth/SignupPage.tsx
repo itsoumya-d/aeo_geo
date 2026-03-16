@@ -118,7 +118,13 @@ export const SignupPage: React.FC = () => {
     const handleResend = async () => {
         setResending(true);
         try {
-            await supabase.auth.resend({ type: 'signup', email: email.trim() });
+            await supabase.auth.resend({
+                type: 'signup',
+                email: email.trim(),
+                options: {
+                    emailRedirectTo: EMAIL_CONFIRMATION_REDIRECT,
+                },
+            });
             setResendDone(true);
         } finally {
             setResending(false);

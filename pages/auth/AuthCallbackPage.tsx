@@ -43,23 +43,86 @@ export const AuthCallbackPage: React.FC = () => {
         const completeSession = async () => {
             const params = new URLSearchParams(location.search);
             const code = params.get('code');
+            const tokenHash = params.get('token_hash');
+            const type = params.get('type');
 
-            if (!code) {
-                if (active) setCompletingSession(false);
-                return;
-            }
+            const hashParams = new URLSearchParams(location.hash.replace(/^#/, ''));
+            const hashError = hashParams.get('error');
+            const hashErrorDescription = hashParams.get('error_description');
+            const hashTokenHash = hashParams.get('token_hash');
+            const hashType = hashParams.get('type');
 
-            const { error } = await supabase.auth.exchangeCodeForSession(code);
-            if (error) {
-                console.error('[AuthCallback] Session exchange failed:', error);
+            if (hashError) {
                 if (active) {
-                    setOauthError(error.message || 'We could not complete sign in.');
+                    setOauthError(hashErrorDescription || OAUTH_ERROR_MESSAGES[hashError] || 'We could not complete sign in.');
                     setCompletingSession(false);
                 }
                 return;
             }
 
-            if (active) setCompletingSession(false);
+            if (code) {
+                const { error } = await supabase.auth.exchangeCodeForSession(code);
+                if (error) {
+                    console.error('[AuthCallback] Session exchange failed:', error);
+                    if (active) {
+                        setOauthError(error.message || 'We could not complete sign in.');
+                        setCompletingSession(false);
+                    }
+                    return;
+                }
+
+                if (active) setCompletingSession(false);
+                return;
+            }
+
+            const confirmationTokenHash = tokenHash || hashTokenHash;
+            const confirmationType = (type || hashType) as 'signup' | 'invite' | 'magiclink' | 'recovery' | 'email_change' | 'email';
+
+            if (confirmationTokenHash && confirmationType) {
+                const { error } = await supabase.auth.verifyOtp({
+                    token_hash: confirmationTokenHash,
+                    type: confirmationType,
+                });
+
+                if (error) {
+                    console.error('[AuthCallback] OTP verification failed:', error);
+                    if (active) {
+                        setOauthError(error.message || 'We could not confirm your email.');
+                        setCompletingSession(false);
+                    }
+                    return;
+                }
+
+                if (active) setCompletingSession(false);
+                return;
+            }
+
+            const accessToken = hashParams.get('access_token');
+            const refreshToken = hashParams.get('refresh_token');
+
+            if (accessToken && refreshToken) {
+                const { error } = await supabase.auth.setSession({
+                    access_token: accessToken,
+                    refresh_token: refreshToken,
+                });
+
+                if (error) {
+                    console.error('[AuthCallback] Session set failed:', error);
+                    if (active) {
+                        setOauthError(error.message || 'We could not complete sign in.');
+                        setCompletingSession(false);
+                    }
+                    return;
+                }
+
+                if (active) setCompletingSession(false);
+                return;
+            }
+
+            if (!code && !confirmationTokenHash && !accessToken) {
+                if (active) setCompletingSession(false);
+                return;
+            }
         };
 
         completeSession().catch((error) => {
