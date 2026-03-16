@@ -13,7 +13,7 @@ function getReturnTo(search: string) {
     return params.get('returnTo') || sessionStorage.getItem('returnTo') || '';
 }
 
-const EMAIL_CONFIRMATION_REDIRECT = 'https://aeo-buad2wn0a-mpksdai-projects.vercel.app/login';
+const EMAIL_CONFIRMATION_REDIRECT = `${window.location.origin}/auth/callback`;
 
 function validatePassword(password: string) {
     const errors: string[] = [];

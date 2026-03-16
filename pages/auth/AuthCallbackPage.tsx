@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
 import { FullPageLoader } from '../../components/routing/FullPageLoader';
 import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../services/supabase';
 
 function getReturnTo(search: string) {
     const params = new URLSearchParams(search);
@@ -20,6 +21,7 @@ export const AuthCallbackPage: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [oauthError, setOauthError] = useState<string | null>(null);
+    const [completingSession, setCompletingSession] = useState(true);
 
     const returnTo = useMemo(() => getReturnTo(location.search), [location.search]);
 
@@ -36,7 +38,46 @@ export const AuthCallbackPage: React.FC = () => {
     }, [location.search]);
 
     useEffect(() => {
+        let active = true;
+
+        const completeSession = async () => {
+            const params = new URLSearchParams(location.search);
+            const code = params.get('code');
+
+            if (!code) {
+                if (active) setCompletingSession(false);
+                return;
+            }
+
+            const { error } = await supabase.auth.exchangeCodeForSession(code);
+            if (error) {
+                console.error('[AuthCallback] Session exchange failed:', error);
+                if (active) {
+                    setOauthError(error.message || 'We could not complete sign in.');
+                    setCompletingSession(false);
+                }
+                return;
+            }
+
+            if (active) setCompletingSession(false);
+        };
+
+        completeSession().catch((error) => {
+            console.error('[AuthCallback] Unexpected callback error:', error);
+            if (active) {
+                setOauthError('We could not complete sign in.');
+                setCompletingSession(false);
+            }
+        });
+
+        return () => {
+            active = false;
+        };
+    }, [location.search]);
+
+    useEffect(() => {
         if (oauthError) return;
+        if (completingSession) return;
         if (!auth.isConfigured && import.meta.env.PROD) return;
         if (auth.loading) return;
 
@@ -53,8 +94,8 @@ export const AuthCallbackPage: React.FC = () => {
             return;
         }
 
-        navigate(returnTo || '/dashboard', { replace: true });
-    }, [auth.isConfigured, auth.loading, auth.user, auth.organization, auth.onboarding, navigate, returnTo, oauthError]);
+        navigate(returnTo || '/audit', { replace: true });
+    }, [auth.isConfigured, auth.loading, auth.user, auth.organization, auth.onboarding, navigate, returnTo, oauthError, completingSession]);
 
     if (oauthError) {
         return (
