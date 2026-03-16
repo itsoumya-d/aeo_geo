@@ -80,7 +80,7 @@ const App: React.FC = () => {
                                 path="/"
                                 element={
                                     auth.user
-                                        ? <Navigate to="/dashboard" replace />
+                                        ? <Navigate to="/audit" replace />
                                         : (
                                             <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
                                                 <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
@@ -127,6 +127,16 @@ const App: React.FC = () => {
                                 }
                             />
 
+                            <Route
+                                path="/audit"
+                                element={
+                                    <ProtectedRoute>
+                                        <ErrorBoundary>
+                                            <DashboardPage />
+                                        </ErrorBoundary>
+                                    </ProtectedRoute>
+                                }
+                            />
                             <Route
                                 path="/dashboard"
                                 element={

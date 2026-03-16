@@ -28,7 +28,7 @@ export const DashboardPage: React.FC = () => {
 
     const handleReset = () => {
         resetAudit();
-        navigate('/dashboard');
+        navigate('/audit');
     };
 
     const handleStartAnalysis = async (assets: Asset[]) => {

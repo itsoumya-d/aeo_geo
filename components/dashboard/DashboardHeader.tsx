@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, Zap, Download, FileText, PlusCircle, X, Brain, Share2 } from 'lucide-react';
+import { Menu, Zap, Download, FileText, PlusCircle, X, Brain, Share2, LogOut } from 'lucide-react';
 import { useToast } from '../Toast';
 import { TabType } from './DashboardTypes';
 import { NotificationDropdown } from '../NotificationDropdown';
@@ -7,6 +7,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 // import { MobileMenu } from './MobileMenu'; // Could extract mobile menu separately
 
 interface DashboardHeaderProps {
@@ -33,12 +35,19 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     sidebarCollapsed,
 }) => {
     const { t, i18n } = useTranslation();
+    const { signOut } = useAuth();
+    const navigate = useNavigate();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const toast = useToast();
 
     const handleShare = () => {
         navigator.clipboard.writeText(window.location.href);
         toast.success('Link copied!', 'Share this report with your team.');
+    };
+
+    const handleLogout = async () => {
+        await signOut();
+        navigate('/login', { replace: true });
     };
 
     if (isExporting) return null;
@@ -150,6 +159,15 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                                     </button>
                                     <div className="w-px h-4 bg-border mx-1" aria-hidden="true" />
                                     <button
+                                        onClick={handleLogout}
+                                        className="p-2 text-text-secondary hover:text-white transition-colors tooltip"
+                                        title="Logout"
+                                        aria-label="Logout"
+                                    >
+                                        <LogOut className="w-4 h-4" aria-hidden="true" />
+                                    </button>
+                                    <div className="w-px h-4 bg-border mx-1" aria-hidden="true" />
+                                    <button
                                         onClick={handleShare}
                                         className="p-2 text-text-secondary hover:text-white transition-colors tooltip"
                                         title="Copy link"
@@ -208,6 +226,12 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                                     className="w-full flex items-center gap-2 px-4 py-3 bg-primary/10 text-primary rounded-lg text-sm font-medium"
                                 >
                                     <PlusCircle className="w-4 h-4" /> New Audit
+                                </button>
+                                <button
+                                    onClick={async () => { await handleLogout(); setMobileMenuOpen(false); }}
+                                    className="w-full flex items-center gap-2 px-4 py-3 text-text-secondary rounded-lg text-sm font-medium hover:bg-white/5"
+                                >
+                                    <LogOut className="w-4 h-4" /> Logout
                                 </button>
                                 <button
                                     onClick={() => { onExportPDF(); setMobileMenuOpen(false); }}

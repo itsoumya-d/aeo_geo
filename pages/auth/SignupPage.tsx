@@ -89,7 +89,7 @@ export const SignupPage: React.FC = () => {
 
             if (data?.session) {
                 sessionStorage.removeItem('returnTo');
-                navigate('/onboarding', { replace: true });
+                navigate(returnTo || '/audit', { replace: true });
                 return;
             }
 

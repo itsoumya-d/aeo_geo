@@ -53,7 +53,7 @@ export const LoginPage: React.FC = () => {
             }
 
             sessionStorage.removeItem('returnTo');
-            navigate(returnTo || '/dashboard', { replace: true });
+            navigate(returnTo || '/audit', { replace: true });
         } finally {
             setSubmitting(false);
         }

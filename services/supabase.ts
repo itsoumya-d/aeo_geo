@@ -72,6 +72,7 @@ export interface OnboardingStatus {
 export interface Audit {
     id: string;
     organization_id: string;
+    user_id: string | null;
     workspace_id?: string | null;
     domain_id: string | null;
     domain_url: string;
@@ -317,12 +318,15 @@ export async function getAudit(auditId: string): Promise<Audit | null> {
  */
 export async function createAudit(domainUrl: string, workspaceId?: string | null): Promise<Audit | null> {
     const org = await getOrganization();
+    const { data: { user } } = await supabase.auth.getUser();
     if (!org) return null;
+    if (!user) return null;
 
     const { data, error } = await supabase
         .from('audits')
         .insert({
             organization_id: org.id,
+            user_id: user.id,
             ...(workspaceId ? { workspace_id: workspaceId } : {}),
             domain_url: domainUrl,
             status: 'pending',
