@@ -58,12 +58,21 @@ export const analyzeBrandAssets = async (
   const mainPageUrl = discoveredPages[0]?.url;
   const mainPageMarkdown = cachedContent && mainPageUrl ? cachedContent[mainPageUrl] : "No content crawled.";
   const otherAssets = assets.filter(a => a.type !== AssetType.WEBSITE).map(a => `${a.type}: ${a.url}`).join(", ");
+  const pageContents = discoveredPages
+    .map((page) => ({
+      url: page.url,
+      pageType: page.type,
+      content: cachedContent?.[page.url] || '',
+    }))
+    .filter((page) => page.content.trim().length > 0)
+    .slice(0, 8);
 
   try {
     const report = await invokeAI<Report>('ANALYZE', {
       websiteUrl: website,
       otherAssets,
       mainContent: mainPageMarkdown,
+      pageContents,
       competitors
     });
     return report;

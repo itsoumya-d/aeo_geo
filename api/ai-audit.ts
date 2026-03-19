@@ -72,7 +72,7 @@ function cleanDomain(input: string): string {
 
 async function callGemini(prompt: string, responseMimeType?: string): Promise<string> {
     const apiKey = process.env.GEMINI_API_KEY?.trim() || process.env.GOOGLE_API_KEY?.trim();
-    const model = process.env.GEMINI_CHAT_MODEL?.trim() || 'gemini-2.0-flash';
+    const model = process.env.GEMINI_CHAT_MODEL?.trim() || 'gemini-2.5-flash';
 
     if (!apiKey) {
         throw new Error('GEMINI_API_KEY is not configured on Vercel.');
