@@ -20,6 +20,11 @@ type AnalyzePayload = {
     websiteUrl: string;
     otherAssets?: string;
     mainContent?: string;
+    pageContents?: Array<{
+        url: string;
+        pageType?: string;
+        content: string;
+    }>;
     competitors?: string[];
 };
 
@@ -169,26 +174,148 @@ function normalizeNumber(value: unknown, fallback: number): number {
     return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 }
 
-function buildReportFromGemini(raw: Record<string, any> | null, domain: string, mainPageUrl: string, content: string) {
-    const keywords = normalizeArray<string>(raw?.keywords, buildFallbackKeywords(domain, content));
+function clamp(value: number, min: number, max: number): number {
+    return Math.min(max, Math.max(min, value));
+}
+
+function countMatches(text: string, pattern: RegExp): number {
+    return (text.match(pattern) || []).length;
+}
+
+function detectKeywords(text: string): string[] {
+    const phrases = [
+        'ai visibility',
+        'answer engine optimization',
+        'brand visibility',
+        'seo',
+        'geo',
+        'aeo',
+        'automation',
+        'analytics',
+        'dashboard',
+        'audit',
+        'pricing',
+        'integration',
+        'documentation',
+        'api',
+    ];
+
+    return phrases.filter((phrase) => text.includes(phrase)).slice(0, 8);
+}
+
+function summarizePageContent(content: string): string {
+    return content
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 2200);
+}
+
+function buildHeuristicSignals(domain: string, mainPageUrl: string, pageContents: Array<{ url: string; pageType?: string; content: string }>) {
+    const combinedContent = pageContents.map((page) => page.content).join('\n\n');
+    const normalizedContent = combinedContent.toLowerCase();
+    const domainRoot = domain.split('.')[0].toLowerCase();
+    const words = normalizedContent.split(/\s+/).filter(Boolean);
+    const uniqueWords = new Set(words);
+    const pageCount = pageContents.length;
+    const pageTypes = new Set(pageContents.map((page) => (page.pageType || inferPageType(page.url)).toUpperCase()));
+    const hasPricing = pageTypes.has('PRICING') || /pricing|plans|book a demo|request a demo/.test(normalizedContent);
+    const hasDocs = pageTypes.has('DOCS') || /docs|documentation|help center|developer/.test(normalizedContent);
+    const hasAbout = pageTypes.has('ABOUT') || /about us|our story|mission|founded/.test(normalizedContent);
+    const hasContact = pageTypes.has('CONTACT') || /contact|email us|book a call|get in touch/.test(normalizedContent);
+    const hasSchema = /application\/ld\+json|faqpage|organization|softwareapplication/.test(normalizedContent);
+    const hasProof = /case study|customer|trusted by|testimonial|review|g2|capterra|roi|results|used by/.test(normalizedContent);
+    const hasStats = /\b\d+(\.\d+)?(%|x|k|m|b)\b/.test(normalizedContent);
+    const hasFaq = /faq|frequently asked questions|questions/.test(normalizedContent);
+    const brandMentions = countMatches(normalizedContent, new RegExp(domainRoot.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g'));
+    const productSignals = countMatches(normalizedContent, /\bplatform|software|tool|product|solution|dashboard|analytics\b/g);
+    const claritySignals = countMatches(normalizedContent, /\bfor\b|\bhelps\b|\bautomate\b|\banalyze\b|\bmonitor\b/g);
+    const differentiationSignals = countMatches(normalizedContent, /\bcompare\b|\bvs\b|\bunique\b|\bdifferent\b|\badvantage\b/g);
+
+    const contentDepthScore = clamp(Math.round(words.length / 90), 0, 24);
+    const pageCoverageScore = clamp(pageCount * 6, 0, 24);
+    const structureScore =
+        (hasPricing ? 8 : 0) +
+        (hasDocs ? 7 : 0) +
+        (hasAbout ? 4 : 0) +
+        (hasContact ? 3 : 0) +
+        (hasFaq ? 4 : 0) +
+        (hasSchema ? 4 : 0);
+    const proofScore = (hasProof ? 10 : 0) + (hasStats ? 6 : 0);
+    const languageScore = clamp(Math.round((productSignals + claritySignals + differentiationSignals + brandMentions) / 3), 0, 20);
+
+    const overallScore = clamp(28 + contentDepthScore + pageCoverageScore + structureScore + proofScore + languageScore, 18, 96);
+    const technicalHealth = clamp(35 + pageCoverageScore + (hasSchema ? 10 : 0) + (hasPricing ? 6 : 0) + (hasDocs ? 8 : 0), 20, 95);
+    const brandConsistencyScore = clamp(30 + Math.round((brandMentions + claritySignals + pageCount) / 2) + (hasAbout ? 6 : 0), 22, 94);
+
+    const keywords = detectKeywords(normalizedContent);
+    const fallbackPages = pageContents.length > 0
+        ? pageContents.slice(0, 5).map((page, index) => ({
+            url: page.url,
+            pageType: page.pageType || inferPageType(page.url),
+            quoteLikelihood: clamp(overallScore - index * 5 + (page.content.length > 1200 ? 4 : -3), 28, 95),
+        }))
+        : [
+            { url: mainPageUrl, pageType: 'HOMEPAGE', quoteLikelihood: clamp(overallScore - 4, 30, 90) },
+            { url: `${new URL(mainPageUrl).origin}/pricing`, pageType: 'PRICING', quoteLikelihood: clamp(overallScore - 1, 32, 92) },
+            { url: `${new URL(mainPageUrl).origin}/docs`, pageType: 'DOCS', quoteLikelihood: clamp(overallScore - 6, 24, 88) },
+        ];
+
+    return {
+        overallScore,
+        technicalHealth,
+        brandConsistencyScore,
+        keywords: keywords.length > 0 ? keywords : buildFallbackKeywords(domain, normalizedContent),
+        hasPricing,
+        hasDocs,
+        hasAbout,
+        hasContact,
+        hasSchema,
+        hasProof,
+        hasStats,
+        fallbackPages,
+        combinedContent,
+        wordCount: words.length,
+        uniqueWordCount: uniqueWords.size,
+        pageCount,
+    };
+}
+
+function buildReportFromGemini(
+    raw: Record<string, any> | null,
+    domain: string,
+    mainPageUrl: string,
+    content: string,
+    pageContents: Array<{ url: string; pageType?: string; content: string }>,
+) {
+    const signals = buildHeuristicSignals(domain, mainPageUrl, pageContents);
+    const keywords = normalizeArray<string>(raw?.keywords, signals.keywords);
     const platformScores = PLATFORM_LIST.map((platform, index) => {
         const existing = Array.isArray(raw?.platformScores)
             ? raw.platformScores.find((item: { platform: string }) => item.platform === platform)
             : null;
+        const heuristicScore = clamp(
+            signals.overallScore
+            + (platform === 'Perplexity' && signals.hasProof ? 4 : 0)
+            + (platform === 'Google AI Overviews' && signals.hasSchema ? 5 : 0)
+            + (platform === 'Gemini' && signals.hasDocs ? 3 : 0)
+            + (platform === 'ChatGPT' && signals.hasPricing ? 2 : 0)
+            - index,
+            20,
+            97,
+        );
         return {
             platform,
-            score: normalizeNumber(existing?.score, Math.max(48, 78 - index * 4)),
+            score: normalizeNumber(existing?.score, heuristicScore),
             reasoning: typeof existing?.reasoning === 'string'
                 ? existing.reasoning
-                : `${platform} sees the brand clearly on core commercial pages but still lacks stronger proof and supporting evidence.`,
+                : `${platform} can identify the brand from the crawled site content, but the quality of proof, structure, and supporting pages still limits confidence.`,
         };
     });
 
-    const fallbackPages = [
-        { url: mainPageUrl, pageType: 'HOMEPAGE' },
-        { url: `${new URL(mainPageUrl).origin}/pricing`, pageType: 'PRICING' },
-        { url: `${new URL(mainPageUrl).origin}/docs`, pageType: 'DOCS' },
-    ];
+    const fallbackPages = signals.fallbackPages.map((page) => ({
+        url: page.url,
+        pageType: page.pageType,
+    }));
 
     const pages = (Array.isArray(raw?.pages) && raw.pages.length > 0 ? raw.pages : fallbackPages).slice(0, 5).map((page: any, index: number) => ({
         url: typeof page.url === 'string' ? page.url : fallbackPages[Math.min(index, fallbackPages.length - 1)].url,
@@ -196,7 +323,7 @@ function buildReportFromGemini(raw: Record<string, any> | null, domain: string, 
         pageType: typeof page.pageType === 'string' ? page.pageType : fallbackPages[Math.min(index, fallbackPages.length - 1)].pageType,
         aiUnderstanding: typeof page.aiUnderstanding === 'string' ? page.aiUnderstanding : 'AI sees this page as a relevant explanation of the brand and its offer.',
         aiMissed: typeof page.aiMissed === 'string' ? page.aiMissed : 'Stronger proof, statistics, and clearer differentiation would improve recall.',
-        quoteLikelihood: normalizeNumber(page.quoteLikelihood, 62 - index * 6),
+        quoteLikelihood: normalizeNumber(page.quoteLikelihood, signals.fallbackPages[Math.min(index, signals.fallbackPages.length - 1)]?.quoteLikelihood ?? clamp(signals.overallScore - index * 6, 25, 92)),
         recommendations: normalizeArray<any>(page.recommendations, []).slice(0, 3).map((recommendation: any, recIndex: number) => ({
             id: typeof recommendation.id === 'string' ? recommendation.id : `${slugify(domain)}-${index}-${recIndex}`,
             pageUrl: typeof recommendation.pageUrl === 'string' ? recommendation.pageUrl : (typeof page.url === 'string' ? page.url : mainPageUrl),
@@ -212,13 +339,13 @@ function buildReportFromGemini(raw: Record<string, any> | null, domain: string, 
     }));
 
     return {
-        overallScore: normalizeNumber(raw?.overallScore, 68),
+        overallScore: normalizeNumber(raw?.overallScore, signals.overallScore),
         platformScores,
         pages,
-        brandConsistencyScore: normalizeNumber(raw?.brandConsistencyScore, 71),
+        brandConsistencyScore: normalizeNumber(raw?.brandConsistencyScore, signals.brandConsistencyScore),
         consistencyAnalysis: typeof raw?.consistencyAnalysis === 'string'
             ? raw.consistencyAnalysis
-            : 'The brand story is mostly clear, but support pages need tighter language and more evidence to keep AI summaries consistent.',
+            : 'The score is based on the actual crawled pages. Brand consistency improves when pricing, docs, proof, and explanation pages reinforce the same positioning.',
         topicalDominance: normalizeArray<string>(raw?.topicalDominance, keywords.slice(0, 4)),
         searchQueries: normalizeArray<any>(raw?.searchQueries, [
             { platform: 'ChatGPT', query: `best ${domain} alternatives`, intent: 'Commercial' },
@@ -231,17 +358,27 @@ function buildReportFromGemini(raw: Record<string, any> | null, domain: string, 
             intent: typeof query.intent === 'string' ? query.intent : 'Informational',
         })),
         seoAudit: {
-            implemented: normalizeArray<string>(raw?.seoAudit?.implemented, ['Core brand messaging exists', 'Primary domain is crawlable']),
-            missing: normalizeArray<string>(raw?.seoAudit?.missing, ['Add more proof-driven copy', 'Expand docs/help coverage', 'Tighten pricing page clarity']),
-            technicalHealth: normalizeNumber(raw?.seoAudit?.technicalHealth, 74),
+            implemented: normalizeArray<string>(raw?.seoAudit?.implemented, [
+                'Primary domain is crawlable',
+                ...(signals.hasPricing ? ['Commercial intent is visible through pricing or sales pages'] : []),
+                ...(signals.hasDocs ? ['Support or documentation content is available for retrieval'] : []),
+                ...(signals.hasSchema ? ['Structured data signals are present'] : []),
+            ]),
+            missing: normalizeArray<string>(raw?.seoAudit?.missing, [
+                ...(signals.hasProof ? [] : ['Add first-party proof like case studies, testimonials, or measurable outcomes']),
+                ...(signals.hasDocs ? [] : ['Add docs/help content that explains features in plain language']),
+                ...(signals.hasPricing ? [] : ['Add a pricing or plans page so AI can infer commercial intent']),
+                ...(signals.hasAbout ? [] : ['Strengthen company/about information to improve entity clarity']),
+            ].slice(0, 4)),
+            technicalHealth: normalizeNumber(raw?.seoAudit?.technicalHealth, signals.technicalHealth),
         },
         keywords,
         keywordRankings: normalizeArray<any>(raw?.keywordRankings, []).slice(0, 8).map((item: any, index: number) => ({
             keyword: typeof item.keyword === 'string' ? item.keyword : keywords[index % keywords.length],
             platform: typeof item.platform === 'string' ? item.platform : PLATFORM_LIST[index % 4],
-            rank: normalizeNumber(item.rank, index < 2 ? 1 : 0),
-            citationFound: typeof item.citationFound === 'boolean' ? item.citationFound : index < 2,
-            sentiment: normalizeNumber(item.sentiment, 58 + index * 3),
+            rank: normalizeNumber(item.rank, index < Math.max(1, Math.round(signals.overallScore / 35)) ? 1 : 0),
+            citationFound: typeof item.citationFound === 'boolean' ? item.citationFound : index < Math.max(1, Math.round(signals.overallScore / 35)),
+            sentiment: normalizeNumber(item.sentiment, clamp(signals.overallScore - 8 + index * 2, 22, 96)),
         })),
     };
 }
@@ -302,12 +439,25 @@ function inferPageType(url: string) {
 
 async function analyzeBrand(payload: AnalyzePayload) {
     const domain = cleanDomain(payload.websiteUrl);
-    const content = (payload.mainContent || '').slice(0, 16000);
+    const pageContents = Array.isArray(payload.pageContents)
+        ? payload.pageContents
+            .filter((page): page is { url: string; pageType?: string; content: string } => !!page && typeof page.url === 'string' && typeof page.content === 'string')
+            .map((page) => ({
+                url: page.url,
+                pageType: page.pageType || inferPageType(page.url),
+                content: summarizePageContent(page.content),
+            }))
+            .filter((page) => page.content.length > 0)
+            .slice(0, 8)
+        : [];
+    const combinedContent = pageContents.map((page) => `URL: ${page.url}\nTYPE: ${page.pageType}\nCONTENT:\n${page.content}`).join('\n\n---\n\n');
+    const content = (combinedContent || payload.mainContent || '').slice(0, 24000);
     const assets = payload.otherAssets || 'None';
     const competitors = payload.competitors?.join(', ') || 'None provided';
     const mainPageUrl = payload.websiteUrl.startsWith('http://') || payload.websiteUrl.startsWith('https://')
         ? payload.websiteUrl
         : `https://${payload.websiteUrl}`;
+    const signals = buildHeuristicSignals(domain, mainPageUrl, pageContents);
 
     const prompt = `
 You are an expert AI visibility analyst for brands.
@@ -317,7 +467,19 @@ Analyze how the brand at ${domain} is likely to appear across AI platforms such 
 Brand domain: ${domain}
 Competitors: ${competitors}
 Other assets: ${assets}
-Main website content:
+Scoring anchors derived from the actual crawl:
+- page count: ${signals.pageCount}
+- word count: ${signals.wordCount}
+- unique word count: ${signals.uniqueWordCount}
+- has pricing: ${signals.hasPricing}
+- has docs/help: ${signals.hasDocs}
+- has about page: ${signals.hasAbout}
+- has contact path: ${signals.hasContact}
+- has proof/testimonials/results: ${signals.hasProof}
+- has structured data or schema clues: ${signals.hasSchema}
+- baseline overall score from crawl heuristics: ${signals.overallScore}
+
+Crawled website content:
 ${content || 'No content was supplied.'}
 
 Return strict JSON with this exact shape:
@@ -365,10 +527,11 @@ Return strict JSON with this exact shape:
 
 Rules:
 - Include all 8 platforms exactly once in platformScores.
-- Use realistic, specific reasoning.
+- Use realistic, specific reasoning tied to the supplied crawled content, page types, and proof signals.
 - Give 3 to 6 pages maximum.
 - Give 4 to 8 searchQueries.
 - Keep recommendations practical and specific to AI visibility.
+- Do not reuse generic scores. The numbers must reflect the actual site quality shown in the crawled content.
     `.trim();
 
     let raw: Record<string, any> | null = null;
@@ -399,7 +562,7 @@ ${content || 'No content was supplied.'}
         };
     }
 
-    return buildReportFromGemini(raw, domain, mainPageUrl, content);
+    return buildReportFromGemini(raw, domain, mainPageUrl, content, pageContents);
 }
 
 async function runVisibilityCheck(payload: VisibilityPayload) {
