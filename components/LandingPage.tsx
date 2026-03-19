@@ -145,74 +145,159 @@ const PricingCard: React.FC<{
     </Card>
 );
 
-const HeroPreview: React.FC = () => (
-    <div className="relative group">
-        <div className="absolute -inset-6 bg-primary/10 blur-2xl rounded-[3rem] group-hover:bg-primary/15 transition-colors duration-500" aria-hidden="true" />
-        <Card variant="glass" className="border-white/10 shadow-2xl overflow-hidden hover:border-primary/20 transition-colors duration-300">
-            <div className="p-5 border-b border-white/10 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 bg-gradient-to-tr from-primary to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
-                        <LayoutDashboard className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="min-w-0">
-                        <p className="text-white font-display font-bold truncate text-sm">AI Visibility Report</p>
-                        <p className="text-xs text-text-muted font-bold uppercase tracking-[0.2em] truncate">yoursite.com</p>
-                    </div>
-                </div>
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full whitespace-nowrap flex items-center gap-1.5 flex-shrink-0">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    Live
-                </span>
-            </div>
+const HeroPreview: React.FC = () => {
+    const platformScores = [
+        { name: 'ChatGPT', score: 82, color: 'bg-emerald-400' },
+        { name: 'Gemini', score: 76, color: 'bg-sky-400' },
+        { name: 'Claude', score: 69, color: 'bg-violet-400' },
+        { name: 'Perplexity', score: 88, color: 'bg-amber-400' },
+    ];
 
-            <div className="p-5 grid grid-cols-3 gap-3">
-                {[
-                    { label: 'Overall', value: '78', trend: '+12%', color: 'text-emerald-400' },
-                    { label: 'Citations', value: '64', trend: '+8%', color: 'text-emerald-400' },
-                    { label: 'Technical', value: '82', trend: '+5%', color: 'text-emerald-400' }
-                ].map((m) => (
-                    <div key={m.label} className="bg-white/5 border border-white/10 rounded-xl p-3 hover:bg-white/10 transition-all duration-200">
-                        <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-muted">{m.label}</p>
-                        <div className="flex items-baseline gap-1.5 mt-1.5">
-                            <p className="text-xl font-display font-bold text-white">{m.value}</p>
-                            <span className={`text-xs font-bold ${m.color}`}>{m.trend}</span>
+    const pageSignals = [
+        { page: '/pricing', state: 'Strong commercial clarity', tone: 'text-emerald-300', bar: 'bg-emerald-400', width: '88%' },
+        { page: '/docs/get-started', state: 'Missing proof + evidence', tone: 'text-amber-300', bar: 'bg-amber-400', width: '58%' },
+        { page: '/compare', state: 'Low entity confidence', tone: 'text-rose-300', bar: 'bg-rose-400', width: '42%' },
+    ];
+
+    const nextMoves = [
+        'Add first-party proof and statistics to high-intent pages.',
+        'Tighten brand language so product positioning stays consistent.',
+        'Expand docs and help pages that AI tools use for factual grounding.',
+    ];
+
+    return (
+        <div className="relative">
+            <div className="pointer-events-none absolute inset-0 rounded-[2rem] bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.08),transparent_32%)]" aria-hidden="true" />
+            <Card variant="glass" className="relative overflow-hidden border-white/10 bg-surface/80 shadow-2xl shadow-black/30">
+                <div className="border-b border-white/10 px-5 py-4 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
+                            <LayoutDashboard className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-white font-display font-bold text-base truncate">Visibility command center</p>
+                            <p className="text-xs text-text-muted font-bold uppercase tracking-[0.22em] truncate">example.com · weekly snapshot</p>
                         </div>
                     </div>
-                ))}
-            </div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-sky-300 bg-sky-500/10 border border-sky-500/20 px-3 py-1 rounded-full whitespace-nowrap flex-shrink-0">
+                        Operator view
+                    </span>
+                </div>
 
-            <div className="px-5 pb-5">
-                <div className="bg-background/60 border border-white/5 rounded-2xl p-4">
-                    <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-muted mb-3">AI Platform Breakdown</p>
-                    <div className="grid grid-cols-2 gap-2">
-                        {[
-                            { name: 'ChatGPT', score: 85, color: 'bg-emerald-500' },
-                            { name: 'Gemini', score: 72, color: 'bg-blue-500' },
-                            { name: 'Claude', score: 68, color: 'bg-purple-500' },
-                            { name: 'Perplexity', score: 91, color: 'bg-orange-500' }
-                        ].map((p) => (
-                            <div key={p.name} className="bg-white/5 border border-white/10 rounded-xl p-2.5">
-                                <div className="flex items-center justify-between">
-                                    <p className="text-white text-xs font-semibold truncate">{p.name}</p>
-                                    <span className="text-xs font-bold text-text-muted ml-1 flex-shrink-0">{p.score}</span>
+                <div className="grid gap-4 p-5 lg:grid-cols-[1.08fr_0.92fr]">
+                    <div className="space-y-4">
+                        <div className="rounded-[1.5rem] border border-white/10 bg-[#08111f] p-5">
+                            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                                <div>
+                                    <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-text-muted">Current posture</p>
+                                    <div className="mt-3 flex items-end gap-3">
+                                        <p className="text-5xl font-display font-bold text-white leading-none">74</p>
+                                        <p className="text-sm font-semibold text-emerald-300 pb-1">+6 this week</p>
+                                    </div>
+                                    <p className="mt-3 max-w-sm text-sm leading-relaxed text-text-secondary">
+                                        Strong commercial pages. Weak supporting evidence on docs and help content.
+                                    </p>
                                 </div>
-                                <div className="mt-1.5 h-1.5 rounded-full bg-white/10 overflow-hidden">
-                                    <motion.div
-                                        className={`h-full ${p.color}`}
-                                        initial={{ width: 0 }}
-                                        whileInView={{ width: `${p.score}%` }}
-                                        viewport={{ once: true }}
-                                        transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
-                                    />
+                                <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 sm:max-w-[180px]">
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-emerald-300">Movement</p>
+                                    <p className="mt-2 text-sm font-semibold text-white">Citation readiness is climbing</p>
+                                    <p className="mt-1 text-xs leading-relaxed text-emerald-200/80">Pricing copy and FAQ clarity improved recall signals.</p>
                                 </div>
                             </div>
-                        ))}
+
+                            <div className="mt-5 grid grid-cols-3 gap-3">
+                                {[
+                                    { label: 'Citations', value: '64', note: 'Needs more proof' },
+                                    { label: 'Entity Trust', value: '71', note: 'Mostly consistent' },
+                                    { label: 'Technical', value: '83', note: 'Healthy baseline' },
+                                ].map((metric) => (
+                                    <div key={metric.label} className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+                                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-text-muted">{metric.label}</p>
+                                        <p className="mt-2 text-2xl font-display font-bold text-white">{metric.value}</p>
+                                        <p className="mt-1 text-xs text-text-muted">{metric.note}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="rounded-[1.5rem] border border-white/10 bg-background/50 p-4">
+                            <div className="flex items-center justify-between gap-3">
+                                <div>
+                                    <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-text-muted">Pages shaping brand recall</p>
+                                    <p className="mt-1 text-sm text-text-secondary">The pages most likely to influence how AI describes you.</p>
+                                </div>
+                                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-text-muted">
+                                    page level
+                                </span>
+                            </div>
+
+                            <div className="mt-4 space-y-3">
+                                {pageSignals.map((item) => (
+                                    <div key={item.page} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <p className="text-sm font-semibold text-white">{item.page}</p>
+                                            <p className={`text-xs font-semibold ${item.tone}`}>{item.state}</p>
+                                        </div>
+                                        <div className="mt-2 h-1.5 rounded-full bg-white/10 overflow-hidden">
+                                            <motion.div
+                                                className={`h-full ${item.bar}`}
+                                                initial={{ width: 0 }}
+                                                whileInView={{ width: item.width }}
+                                                viewport={{ once: true }}
+                                                transition={{ duration: 0.8, ease: 'easeOut' }}
+                                            />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="rounded-[1.5rem] border border-white/10 bg-background/50 p-4">
+                            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-text-muted">Answer-engine spread</p>
+                            <p className="mt-1 text-sm text-text-secondary">Compare how each platform currently interprets the same brand.</p>
+                            <div className="mt-4 space-y-3">
+                                {platformScores.map((platform) => (
+                                    <div key={platform.name} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <p className="text-sm font-semibold text-white">{platform.name}</p>
+                                            <p className="text-xs font-bold text-text-muted">{platform.score}/100</p>
+                                        </div>
+                                        <div className="mt-2 h-1.5 rounded-full bg-white/10 overflow-hidden">
+                                            <motion.div
+                                                className={`h-full ${platform.color}`}
+                                                initial={{ width: 0 }}
+                                                whileInView={{ width: `${platform.score}%` }}
+                                                viewport={{ once: true }}
+                                                transition={{ duration: 0.85, ease: 'easeOut' }}
+                                            />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="rounded-[1.5rem] border border-white/10 bg-background/50 p-4">
+                            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-text-muted">Next moves</p>
+                            <p className="mt-1 text-sm text-text-secondary">A focused list your content, SEO, and growth teams can ship this week.</p>
+                            <div className="mt-4 space-y-3">
+                                {nextMoves.map((item, index) => (
+                                    <div key={item} className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+                                        <span className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[10px] font-bold text-text-muted">
+                                            0{index + 1}
+                                        </span>
+                                        <p className="text-sm leading-relaxed text-text-secondary">{item}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </Card>
-    </div>
-);
+            </Card>
+        </div>
+    );
+};
 
 const FAQItem: React.FC<{ question: string; answer: string }> = ({ question, answer }) => {
     const [open, setOpen] = React.useState(false);
@@ -280,6 +365,79 @@ const FAQ_ITEMS = [
     {
         question: 'Do you offer white-label reports for agencies?',
         answer: 'Yes. Agency plan includes white-label branding — add your logo, custom colors, and hide Cognition branding in PDF reports. Perfect for agencies delivering AI visibility audits to their clients.'
+    },
+];
+
+const HERO_SIGNAL_CHIPS = [
+    'B2B SaaS',
+    'Agencies',
+    'Growth teams',
+    'Private dashboard',
+];
+
+const FIRST_AUDIT_CARDS = [
+    {
+        value: '8',
+        title: 'platforms in one baseline',
+        detail: 'See how ChatGPT, Gemini, Claude, Perplexity, and others interpret the same brand at the same time.',
+        icon: <Globe className="w-5 h-5 text-sky-300" />,
+    },
+    {
+        value: '3',
+        title: 'priority lanes to improve',
+        detail: 'Separate visibility, authority, and technical trust so the team knows what to ship first.',
+        icon: <Target className="w-5 h-5 text-amber-300" />,
+    },
+    {
+        value: '1',
+        title: 'shared view for the team',
+        detail: 'Give content, SEO, growth, and founder-led teams one dashboard instead of scattered screenshots.',
+        icon: <Users className="w-5 h-5 text-emerald-300" />,
+    },
+];
+
+const SHIFT_FRAMES = [
+    {
+        kicker: 'SEO-only view',
+        title: 'What the old stack tells you',
+        signal: 'Rankings, impressions, crawl errors, backlinks.',
+        detail: 'Helpful context, but not enough to predict whether an answer engine will confidently cite you.',
+    },
+    {
+        kicker: 'Model behavior',
+        title: 'What AI systems actually use',
+        signal: 'Entity clarity, quotability, evidence density, and message consistency.',
+        detail: 'These are the signals that shape recommendation confidence when a user asks for the best option.',
+    },
+    {
+        kicker: 'Operator workflow',
+        title: 'What the product should give you',
+        signal: 'A page-level brief of what is strong, weak, missing, and commercially important.',
+        detail: 'Not more abstract scoring. A sharper weekly operating view your team can act on.',
+    },
+];
+
+const WORKFLOW_STEPS = [
+    {
+        step: '01',
+        title: 'Start with the pages that define your brand',
+        description: 'Enter the domain. The audit maps the pages most likely to shape how AI explains you to buyers.',
+        outcome: 'Homepage, docs, pricing, help, and about pages come into focus first.',
+        icon: <Globe className="w-5 h-5 text-sky-300" />,
+    },
+    {
+        step: '02',
+        title: 'See where the narrative breaks',
+        description: 'The report surfaces weak citations, missing proof, thin entity detail, and inconsistent positioning.',
+        outcome: 'You get a ranked list of issues instead of a noisy wall of metrics.',
+        icon: <Brain className="w-5 h-5 text-violet-300" />,
+    },
+    {
+        step: '03',
+        title: 'Ship the next fix with confidence',
+        description: 'Turn the findings into clearer copy, stronger evidence, and more useful support pages.',
+        outcome: 'The goal is cleaner brand recall and better citation odds, not vanity movement.',
+        icon: <Zap className="w-5 h-5 text-emerald-300" />,
     },
 ];
 
@@ -501,121 +659,133 @@ export const LandingPage: React.FC = () => {
             </AnimatePresence>
 
             {/* ── Hero ───────────────────────────────────── */}
-            <header className="relative z-10 pt-12 pb-16 sm:pt-16 sm:pb-24 overflow-hidden">
-                {/* Ambient gradient orbs */}
+            <header className="relative z-10 overflow-hidden border-b border-white/5">
                 <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-                    <motion.div
-                        className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full bg-primary/10 blur-[140px]"
-                        animate={shouldReduceMotion ? {} : { scale: [1, 1.08, 1], opacity: [0.6, 0.9, 0.6] }}
-                        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-                    />
-                    <motion.div
-                        className="absolute top-1/4 right-0 w-[400px] h-[400px] rounded-full bg-purple-600/10 blur-[120px]"
-                        animate={shouldReduceMotion ? {} : { scale: [1, 1.12, 1], opacity: [0.5, 0.8, 0.5] }}
-                        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
-                    />
-                    <motion.div
-                        className="absolute bottom-0 left-1/3 w-[300px] h-[300px] rounded-full bg-pink-600/8 blur-[100px]"
-                        animate={shouldReduceMotion ? {} : { scale: [1, 1.15, 1], opacity: [0.4, 0.7, 0.4] }}
-                        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 4 }}
-                    />
+                    <div className="absolute inset-x-0 top-0 h-[560px] bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_38%),radial-gradient(circle_at_top_right,rgba(245,158,11,0.08),transparent_26%)]" />
+                    <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
                 </div>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 grid lg:grid-cols-2 gap-10 lg:gap-16 items-center relative">
-                    <div className="min-w-0">
-                        <SlideUp>
-                            <motion.div
-                                initial={{ scale: 0.95, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-full text-primary text-xs font-bold uppercase tracking-wider mb-5"
-                            >
-                                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                                AI Search Visibility Platform
-                            </motion.div>
 
-                            <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] xl:text-6xl font-display font-bold text-white leading-[1.05] tracking-tight">
-                                Make Your Brand<br />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">
-                                    Impossible to Miss
-                                </span>{' '}
-                                in AI Search
-                            </h1>
-                            <p className="mt-5 text-base sm:text-lg text-text-secondary leading-relaxed max-w-xl">
-                                Find out exactly what ChatGPT, Gemini, Claude, and Perplexity say about your brand — then get a clear, prioritized action plan to get cited more.
-                            </p>
-                        </SlideUp>
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-14 pb-18 sm:pt-18 sm:pb-24 relative">
+                    <div className="grid gap-12 lg:grid-cols-[minmax(0,1.02fr)_minmax(360px,0.98fr)] lg:gap-16 items-center">
+                        <div className="min-w-0">
+                            <SlideUp>
+                                <motion.div
+                                    initial={{ scale: 0.98, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    className="inline-flex items-center gap-2 rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.24em] text-sky-200"
+                                >
+                                    <span className="w-1.5 h-1.5 rounded-full bg-sky-300" />
+                                    AI visibility for operator teams
+                                </motion.div>
 
-                        <FadeIn delay={0.15} className="mt-7">
-                            <FreeAuditCaptureForm />
-                            <div className="mt-3 flex flex-col sm:flex-row gap-3">
-                            <Link to="/signup" className="w-full sm:w-auto">
-                                <Button variant="secondary" size="lg" className="w-full sm:w-auto">
-                                    Start free — no card needed <ArrowRight className="w-4 h-4 ml-2" />
-                                </Button>
-                            </Link>
-                            <Button
-                                variant="ghost"
-                                size="lg"
-                                className="w-full sm:w-auto group border border-white/10 hover:bg-white/5"
-                                onClick={() => setShowVideo(true)}
-                            >
-                                <Play className="w-4 h-4 mr-2 fill-current group-hover:text-primary transition-colors" />
-                                Watch 2-min demo
-                            </Button>
-                            </div>
-                        </FadeIn>
+                                <h1 className="mt-6 max-w-4xl text-4xl sm:text-5xl lg:text-[3.65rem] xl:text-[4.2rem] font-display font-bold leading-[1.02] tracking-[-0.04em] text-white">
+                                    Know what AI says about your brand
+                                    <span className="block text-white/65">before your market does.</span>
+                                </h1>
 
-                        {/* Trust signals */}
-                        <FadeIn delay={0.25} className="mt-8 flex flex-wrap gap-x-5 gap-y-2 items-center">
-                            {[
-                                { icon: <Check className="w-3.5 h-3.5 text-emerald-400" />, label: '3 free audits included' },
-                                { icon: <Check className="w-3.5 h-3.5 text-emerald-400" />, label: 'No credit card required' },
-                                { icon: <Check className="w-3.5 h-3.5 text-emerald-400" />, label: 'Results in minutes' },
-                            ].map(({ icon, label }) => (
-                                <div key={label} className="flex items-center gap-1.5">
-                                    {icon}
-                                    <span className="text-sm font-medium text-text-secondary">{label}</span>
+                                <p className="mt-6 max-w-xl text-base sm:text-lg leading-relaxed text-text-secondary">
+                                    Audit the pages, citations, and brand signals shaping how ChatGPT, Gemini, Claude, and Perplexity describe you. Then fix the specific gaps that actually matter.
+                                </p>
+                            </SlideUp>
+
+                            <FadeIn delay={0.12} className="mt-6 flex flex-wrap gap-2">
+                                {HERO_SIGNAL_CHIPS.map((chip) => (
+                                    <span
+                                        key={chip}
+                                        className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-semibold text-text-secondary"
+                                    >
+                                        {chip}
+                                    </span>
+                                ))}
+                            </FadeIn>
+
+                            <FadeIn delay={0.18} className="mt-8 rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-4 sm:p-5">
+                                <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-text-muted">
+                                    Start with one URL. Create an account before the audit runs.
+                                </p>
+                                <div className="mt-4 hidden md:block">
+                                    <FreeAuditCaptureForm />
                                 </div>
-                            ))}
-                        </FadeIn>
-                    </div>
+                                <div className="mt-4 flex flex-col sm:flex-row gap-3">
+                                    <Link to="/signup" className="w-full sm:w-auto">
+                                        <Button variant="secondary" size="lg" className="w-full sm:w-auto">
+                                            Start free — no card needed <ArrowRight className="w-4 h-4 ml-2" />
+                                        </Button>
+                                    </Link>
+                                    <Button
+                                        variant="ghost"
+                                        size="lg"
+                                        className="w-full sm:w-auto group border border-white/10 hover:bg-white/5"
+                                        onClick={() => setShowVideo(true)}
+                                    >
+                                        <Play className="w-4 h-4 mr-2 fill-current group-hover:text-primary transition-colors" />
+                                        Watch 2-min walkthrough
+                                    </Button>
+                                </div>
+                                <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
+                                    {[
+                                        '3 free audits included',
+                                        'Private dashboard',
+                                        'Results in minutes',
+                                    ].map((label) => (
+                                        <div key={label} className="flex items-center gap-1.5 text-sm text-text-secondary">
+                                            <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                            <span>{label}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </FadeIn>
+                        </div>
 
-                    <motion.div
-                        initial={{ opacity: 0, y: 24 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, margin: "-50px" }}
-                        transition={{ duration: 0.5, ease: "easeOut" }}
-                        className="min-w-0 w-full"
-                    >
-                        <HeroPreview />
-                    </motion.div>
+                        <motion.div
+                            initial={{ opacity: 0, y: 18 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: "-40px" }}
+                            transition={{ duration: 0.45, ease: 'easeOut' }}
+                            className="min-w-0 w-full"
+                        >
+                            <HeroPreview />
+                        </motion.div>
+                    </div>
                 </div>
             </header>
 
             {/* ── Stats Bar ──────────────────────────────── */}
-            <section className="relative z-10 border-y border-white/5 bg-white/[0.02]">
-                <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-12">
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8">
-                        {[
-                            { value: '8', label: 'AI platforms tracked', icon: <Globe className="w-5 h-5 text-primary" /> },
-                            { value: '50%+', label: 'of searches show AI results', icon: <BarChart2 className="w-5 h-5 text-purple-400" /> },
-                            { value: '520%', label: 'growth in AI-driven traffic', icon: <TrendingUp className="w-5 h-5 text-emerald-400" /> },
-                            { value: '1.8B', label: 'generative AI users globally', icon: <Users className="w-5 h-5 text-amber-400" /> },
-                        ].map((stat) => (
-                            <motion.div
-                                key={stat.label}
-                                initial={{ opacity: 0, y: 10 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.4 }}
-                                className="flex flex-col items-center text-center gap-2"
-                            >
-                                {stat.icon}
-                                <p className="text-3xl sm:text-4xl font-display font-bold text-white">
-                                    <AnimatedStat value={stat.value} />
-                                </p>
-                                <p className="text-xs sm:text-sm text-text-muted leading-snug">{stat.label}</p>
-                            </motion.div>
-                        ))}
+            <section className="relative z-10 border-b border-white/5 bg-white/[0.02]">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14 sm:py-16">
+                    <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+                        <FadeIn>
+                            <p className="text-xs font-bold uppercase tracking-[0.25em] text-secondary">What The First Audit Gives You</p>
+                            <h2 className="mt-3 text-3xl sm:text-4xl font-display font-bold text-white">
+                                A tighter view of what AI trusts, ignores, and repeats.
+                            </h2>
+                            <p className="mt-4 max-w-xl text-text-secondary leading-relaxed">
+                                The point is not another vanity dashboard. It is one practical read on brand visibility that your team can use to make sharper content and product marketing decisions.
+                            </p>
+                        </FadeIn>
+
+                        <div className="grid gap-4 sm:grid-cols-3">
+                            {FIRST_AUDIT_CARDS.map((card, index) => (
+                                <motion.div
+                                    key={card.title}
+                                    initial={{ opacity: 0, y: 14 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.35, delay: index * 0.05 }}
+                                >
+                                    <Card variant="glass" className="h-full border-white/10 p-5 bg-surface/50">
+                                        <div className="flex items-center justify-between gap-3">
+                                            {card.icon}
+                                            <p className="text-3xl font-display font-bold text-white">
+                                                <AnimatedStat value={card.value} />
+                                            </p>
+                                        </div>
+                                        <p className="mt-4 text-sm font-semibold text-white">{card.title}</p>
+                                        <p className="mt-2 text-sm leading-relaxed text-text-secondary">{card.detail}</p>
+                                    </Card>
+                                </motion.div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </section>
@@ -623,124 +793,115 @@ export const LandingPage: React.FC = () => {
             {/* ── Problem Section ────────────────────────── */}
             <section className="relative z-10 py-20 sm:py-24">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6">
-                    <FadeIn>
-                        <p className="text-xs font-bold uppercase tracking-[0.25em] text-secondary text-center">The Shift</p>
-                        <h2 className="text-3xl sm:text-4xl font-display font-bold text-white text-center mt-3">
-                            Search changed. Your tools haven't caught up.
-                        </h2>
-                        <p className="text-text-secondary text-center mt-4 max-w-2xl mx-auto leading-relaxed">
-                            When someone asks an AI assistant a question, it picks a brand to recommend. That brand is never chosen randomly — and traditional SEO tools have no way to measure or influence it.
-                        </p>
-                    </FadeIn>
-
-                    <div className="mt-14 grid md:grid-cols-3 gap-6">
-                        {[
-                            {
-                                icon: <Minus className="w-6 h-6 text-rose-400" />,
-                                iconBg: 'bg-rose-500/10 border-rose-500/20',
-                                tag: 'Traditional SEO',
-                                tagColor: 'text-rose-400',
-                                title: 'Ranks for Google. That\'s it.',
-                                desc: 'Traditional tools track keyword positions and backlinks — metrics that tell you nothing about whether AI recommends your brand when users ask questions.',
-                            },
-                            {
-                                icon: <Brain className="w-6 h-6 text-amber-400" />,
-                                iconBg: 'bg-amber-500/10 border-amber-500/20',
-                                tag: 'The Gap',
-                                tagColor: 'text-amber-400',
-                                title: 'AI picks winners differently.',
-                                desc: 'LLMs evaluate brands on semantic clarity, entity authority, quotability, and content consistency — none of which Google rankings measure.',
-                            },
-                            {
-                                icon: <Target className="w-6 h-6 text-emerald-400" />,
-                                iconBg: 'bg-emerald-500/10 border-emerald-500/20',
-                                tag: 'Cognition AI',
-                                tagColor: 'text-emerald-400',
-                                title: 'Built for the AI era.',
-                                desc: 'Cognition measures exactly what AI models use to evaluate your brand — and gives you specific, prioritized fixes that move the needle.',
-                            },
-                        ].map((item) => (
-                            <motion.div
-                                key={item.title}
-                                initial={{ opacity: 0, y: 14 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.4 }}
-                            >
-                                <Card variant="glass" className="p-7 border-white/10 h-full flex flex-col">
-                                    <div className={`w-12 h-12 rounded-2xl ${item.iconBg} border flex items-center justify-center mb-4 flex-shrink-0`}>
-                                        {item.icon}
+                    <div className="grid gap-10 lg:grid-cols-[0.82fr_1.18fr] lg:items-start">
+                        <FadeIn>
+                            <p className="text-xs font-bold uppercase tracking-[0.25em] text-secondary">Why Teams Switch</p>
+                            <h2 className="mt-3 text-3xl sm:text-4xl font-display font-bold text-white">
+                                Google rankings do not tell you if AI will cite you.
+                            </h2>
+                            <p className="mt-4 max-w-xl text-text-secondary leading-relaxed">
+                                Buyers are increasingly getting their first recommendation from an answer engine, not a search results page. That changes what your team needs to measure.
+                            </p>
+                            <div className="mt-6 space-y-3">
+                                {[
+                                    'See where your commercial pages are strong but your support content is weak.',
+                                    'Find missing proof, claims, and entity detail that reduce citation confidence.',
+                                    'Turn abstract model behavior into page-level work your team can actually ship.',
+                                ].map((point) => (
+                                    <div key={point} className="flex items-start gap-3">
+                                        <ShieldCheck className="w-5 h-5 text-emerald-300 mt-0.5 flex-shrink-0" />
+                                        <p className="text-sm leading-relaxed text-text-secondary">{point}</p>
                                     </div>
-                                    <span className={`text-[10px] font-bold uppercase tracking-[0.2em] ${item.tagColor} mb-2`}>{item.tag}</span>
-                                    <h3 className="text-white font-display font-bold text-lg">{item.title}</h3>
-                                    <p className="text-text-secondary mt-3 leading-relaxed text-sm flex-1">{item.desc}</p>
-                                </Card>
-                            </motion.div>
-                        ))}
+                                ))}
+                            </div>
+                        </FadeIn>
+
+                        <div className="space-y-4">
+                            {SHIFT_FRAMES.map((item, index) => (
+                                <motion.div
+                                    key={item.title}
+                                    initial={{ opacity: 0, y: 14 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.35, delay: index * 0.05 }}
+                                >
+                                    <Card variant="glass" className="border-white/10 bg-surface/45 p-5 sm:p-6">
+                                        <div className="grid gap-4 sm:grid-cols-[180px_1fr] sm:items-start">
+                                            <div>
+                                                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-text-muted">{item.kicker}</p>
+                                                <h3 className="mt-2 text-lg font-display font-bold text-white">{item.title}</h3>
+                                            </div>
+                                            <div className="grid gap-3 sm:grid-cols-2">
+                                                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted">Signals</p>
+                                                    <p className="mt-2 text-sm leading-relaxed text-white">{item.signal}</p>
+                                                </div>
+                                                <div className="rounded-2xl border border-white/10 bg-background/50 p-4">
+                                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted">Why it matters</p>
+                                                    <p className="mt-2 text-sm leading-relaxed text-text-secondary">{item.detail}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </Card>
+                                </motion.div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </section>
 
             {/* ── How It Works ───────────────────────────── */}
-            <section id="how-it-works" className="relative z-10 py-20 sm:py-24 border-t border-white/5 bg-surface/30 backdrop-blur-sm">
+            <section id="how-it-works" className="relative z-10 py-20 sm:py-24 border-t border-white/5 bg-surface/20">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6">
-                    <FadeIn>
-                        <p className="text-xs font-bold uppercase tracking-[0.25em] text-secondary text-center">How It Works</p>
-                        <h2 className="text-3xl sm:text-4xl font-display font-bold text-white text-center mt-3">
-                            From URL to action plan in minutes
-                        </h2>
-                        <p className="text-text-secondary text-center mt-4 max-w-2xl mx-auto leading-relaxed">
-                            No setup. No integrations needed. Just paste your URL and see exactly how AI perceives your brand.
-                        </p>
-                    </FadeIn>
+                    <div className="grid gap-10 lg:grid-cols-[0.84fr_1.16fr] lg:items-start">
+                        <FadeIn>
+                            <p className="text-xs font-bold uppercase tracking-[0.25em] text-secondary">Workflow</p>
+                            <h2 className="mt-3 text-3xl sm:text-4xl font-display font-bold text-white">
+                                A calmer way to run your first AI visibility audit.
+                            </h2>
+                            <p className="mt-4 max-w-xl text-text-secondary leading-relaxed">
+                                The product is designed to get you from raw website to focused next move without making you wade through a maze of charts.
+                            </p>
+                            <div className="mt-6">
+                                <Link to="/signup">
+                                    <Button variant="cta" size="lg">
+                                        Try it free — no credit card <ArrowRight className="w-4 h-4 ml-2" />
+                                    </Button>
+                                </Link>
+                            </div>
+                        </FadeIn>
 
-                    <StaggerContainer className="mt-14 grid md:grid-cols-3 gap-8 relative">
-                        <div className="hidden md:block absolute top-8 left-[calc(16.67%+1.5rem)] right-[calc(16.67%+1.5rem)] h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" aria-hidden="true" />
-                        {[
-                            {
-                                step: '01',
-                                title: 'Enter your website URL',
-                                desc: 'Paste any URL. Our engine automatically discovers your site structure, key pages, and content — no sitemap or configuration needed.',
-                                color: 'from-primary to-purple-600',
-                                icon: <Globe className="w-6 h-6 text-white" />,
-                            },
-                            {
-                                step: '02',
-                                title: 'AI analysis runs instantly',
-                                desc: 'Gemini AI evaluates your content across 8 platforms — measuring semantic clarity, entity authority, citation potential, and brand consistency.',
-                                color: 'from-purple-600 to-pink-600',
-                                icon: <Brain className="w-6 h-6 text-white" />,
-                            },
-                            {
-                                step: '03',
-                                title: 'Get your prioritized action plan',
-                                desc: 'Receive page-by-page recommendations ranked by impact. Simulate content changes and see predicted improvements before you publish anything.',
-                                color: 'from-pink-600 to-orange-500',
-                                icon: <Zap className="w-6 h-6 text-white" />,
-                            },
-                        ].map((item) => (
-                            <motion.div
-                                key={item.step}
-                                variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } }}
-                                className="relative flex flex-col items-center text-center"
-                            >
-                                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-tr ${item.color} flex items-center justify-center shadow-lg mb-6`}>
-                                    {item.icon}
-                                </div>
-                                <p className="text-[10px] font-bold text-text-muted uppercase tracking-[0.25em] mb-2">Step {item.step}</p>
-                                <h3 className="text-white font-display font-bold text-lg">{item.title}</h3>
-                                <p className="text-text-secondary mt-3 leading-relaxed text-sm">{item.desc}</p>
-                            </motion.div>
-                        ))}
-                    </StaggerContainer>
-
-                    <FadeIn delay={0.2} className="mt-12 text-center">
-                        <Link to="/signup">
-                            <Button variant="cta" size="lg">
-                                Try it free — no credit card <ArrowRight className="w-4 h-4 ml-2" />
-                            </Button>
-                        </Link>
-                    </FadeIn>
+                        <div className="space-y-4">
+                            {WORKFLOW_STEPS.map((item, index) => (
+                                <motion.div
+                                    key={item.step}
+                                    initial={{ opacity: 0, y: 14 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.35, delay: index * 0.06 }}
+                                >
+                                    <Card variant="glass" className="border-white/10 bg-surface/45 p-5 sm:p-6">
+                                        <div className="grid gap-4 md:grid-cols-[82px_1fr_220px] md:items-start">
+                                            <div className="flex md:flex-col items-center md:items-start gap-3">
+                                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
+                                                    {item.icon}
+                                                </div>
+                                                <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-text-muted">Step {item.step}</p>
+                                            </div>
+                                            <div>
+                                                <h3 className="text-lg font-display font-bold text-white">{item.title}</h3>
+                                                <p className="mt-2 text-sm leading-relaxed text-text-secondary">{item.description}</p>
+                                            </div>
+                                            <div className="rounded-2xl border border-white/10 bg-background/55 p-4">
+                                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted">Outcome</p>
+                                                <p className="mt-2 text-sm leading-relaxed text-white/85">{item.outcome}</p>
+                                            </div>
+                                        </div>
+                                    </Card>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             </section>
 
