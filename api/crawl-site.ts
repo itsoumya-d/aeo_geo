@@ -24,7 +24,6 @@ type CrawlRequest = {
 const supabaseUrl = process.env.VITE_SUPABASE_URL?.trim();
 const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY?.trim();
 const supabaseSecretKey = (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)?.trim();
-const firecrawlKey = process.env.FIRECRAWL_API_KEY?.trim();
 
 function parseBody(body: unknown): CrawlRequest {
     if (!body) return {};
@@ -125,50 +124,6 @@ async function fetchWithBrowserHeaders(url: string): Promise<Response> {
     });
 }
 
-async function scrapeWithFirecrawl(url: string): Promise<{ markdown: string; html: string; metadata: Record<string, unknown> } | null> {
-    if (!firecrawlKey) return null;
-
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${firecrawlKey}`,
-        },
-        body: JSON.stringify({
-            url,
-            formats: ['markdown', 'html'],
-            pageOptions: {
-                onlyMainContent: true,
-                waitFor: 2000,
-            },
-        }),
-    });
-
-    if (!response.ok) {
-        throw new Error(`Firecrawl scrape failed: ${response.status} ${await response.text()}`);
-    }
-
-    const json = await response.json() as {
-        success?: boolean;
-        data?: { markdown?: string; html?: string; metadata?: Record<string, unknown> };
-        error?: string;
-    };
-
-    if (!json.success || !json.data) {
-        throw new Error(`Firecrawl scrape error: ${json.error || 'Unknown error'}`);
-    }
-
-    const markdown = json.data.markdown?.trim() || '';
-    const html = json.data.html?.trim() || '';
-    if (!markdown && !html) return null;
-
-    return {
-        markdown: markdown || toMarkdownFromHtml(html),
-        html,
-        metadata: json.data.metadata || {},
-    };
-}
-
 async function scrapeWithJina(url: string): Promise<{ markdown: string; metadata: Record<string, unknown> } | null> {
     const response = await fetch(`https://r.jina.ai/${url}`, {
         headers: {
@@ -196,22 +151,6 @@ async function scrapeWithJina(url: string): Promise<{ markdown: string; metadata
 }
 
 async function performScrape(url: string) {
-    try {
-        const firecrawlResult = await scrapeWithFirecrawl(url);
-        if (firecrawlResult?.markdown && firecrawlResult.markdown.length > 200) {
-            return {
-                markdown: firecrawlResult.markdown,
-                html: firecrawlResult.html,
-                metadata: {
-                    ...firecrawlResult.metadata,
-                    source: 'firecrawl',
-                },
-            };
-        }
-    } catch (error) {
-        console.warn('[crawl-site] Firecrawl scrape failed, falling back:', error);
-    }
-
     let directHtml = '';
     let title: string | null = null;
     let description: string | null = null;
@@ -238,7 +177,7 @@ async function performScrape(url: string) {
             }
         }
     } catch (error) {
-        console.warn('[crawl-site] Direct scrape failed, falling back:', error);
+        console.warn('[crawl-site] Direct scrape failed before Jina fallback:', error);
     }
 
     const jinaResult = await scrapeWithJina(url);
@@ -274,32 +213,6 @@ async function performScrape(url: string) {
 
 async function performMap(url: string): Promise<string[]> {
     const normalizedUrl = normalizeUrl(url);
-
-    if (firecrawlKey) {
-        try {
-            const response = await fetch('https://api.firecrawl.dev/v1/map', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${firecrawlKey}`,
-                },
-                body: JSON.stringify({
-                    url: normalizedUrl,
-                    limit: 30,
-                }),
-            });
-
-            if (response.ok) {
-                const json = await response.json() as { success?: boolean; data?: string[]; links?: string[] };
-                const links = (json.data || json.links || []).filter(Boolean);
-                if (links.length > 0) {
-                    return links.slice(0, 30);
-                }
-            }
-        } catch (error) {
-            console.warn('[crawl-site] Firecrawl map failed, falling back:', error);
-        }
-    }
 
     try {
         const sitemapUrl = new URL('/sitemap.xml', normalizedUrl).toString();

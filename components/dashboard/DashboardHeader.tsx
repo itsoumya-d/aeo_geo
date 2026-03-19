@@ -8,7 +8,7 @@ import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 // import { MobileMenu } from './MobileMenu'; // Could extract mobile menu separately
 
 interface DashboardHeaderProps {
@@ -83,16 +83,23 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                             >
                                 {mobileMenuOpen ? <X className="w-6 h-6" aria-hidden="true" /> : <Menu className="w-6 h-6" aria-hidden="true" />}
                             </button>
-                            <div className="flex items-center gap-2" onClick={onReset}>
-                                <div className="bg-primary/20 p-1.5 rounded-lg">
+                            <Link to="/" className="flex items-center gap-2 transition-transform duration-300 hover:-translate-y-0.5">
+                                <div className="bg-primary/20 p-1.5 rounded-lg transition-all duration-300 hover:bg-primary/25 hover:shadow-[0_14px_34px_rgba(14,165,233,0.16)]">
                                     <Brain className="text-primary w-4 h-4" />
                                 </div>
                                 <span className="font-bold text-white tracking-tight">Cognition</span>
-                            </div>
+                            </Link>
                         </div>
 
                         {/* Title / Breadcrumbs (Desktop) */}
-                        <div className="hidden lg:flex items-center gap-2">
+                        <div className="hidden lg:flex items-center gap-4">
+                            <Link to="/" className="flex items-center gap-2.5 transition-transform duration-300 hover:-translate-y-0.5">
+                                <div className="bg-primary/20 p-2 rounded-xl transition-all duration-300 hover:bg-primary/25 hover:shadow-[0_16px_38px_rgba(14,165,233,0.18)]">
+                                    <Brain className="text-primary w-4 h-4" />
+                                </div>
+                                <span className="font-display font-bold text-white tracking-tight">Cognition</span>
+                            </Link>
+                            <div className="h-6 w-px bg-border" />
                             <h2 className="text-xl font-display font-bold text-white capitalize">{activeTab.replace('-', ' ')}</h2>
                         </div>
 

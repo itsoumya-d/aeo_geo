@@ -73,9 +73,14 @@ const FeatureCard: React.FC<{
     title: string;
     desc: string;
 }> = ({ icon, title, desc }) => (
-    <Card variant="glass" className="p-6 border-white/10 hover:border-primary/20 transition-colors">
+    <motion.div
+        whileHover={{ y: -8, scale: 1.01 }}
+        transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+        className="h-full"
+    >
+    <Card variant="glass" className="group h-full p-6 border-white/10 hover:border-white/20 transition-all duration-300 hover:shadow-[0_24px_60px_rgba(15,23,42,0.28)] bg-surface/45">
         <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-primary flex-shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-primary flex-shrink-0 transition-all duration-300 group-hover:scale-105">
                 {icon}
             </div>
             <div className="min-w-0">
@@ -84,6 +89,7 @@ const FeatureCard: React.FC<{
             </div>
         </div>
     </Card>
+    </motion.div>
 );
 
 const PricingCard: React.FC<{
@@ -96,9 +102,14 @@ const PricingCard: React.FC<{
     featured?: boolean;
     annualBilling?: boolean;
 }> = ({ name, price, annualTotal, description, features, cta, featured, annualBilling }) => (
+    <motion.div
+        whileHover={{ y: -10, scale: featured ? 1.012 : 1.008 }}
+        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+        className="h-full"
+    >
     <Card
         variant="glass"
-        className={`p-7 border-white/10 flex flex-col ${featured ? 'ring-1 ring-primary/40 shadow-glow' : ''}`}
+        className={`h-full p-7 border-white/10 flex flex-col transition-all duration-300 hover:border-white/20 hover:shadow-[0_28px_72px_rgba(15,23,42,0.3)] ${featured ? 'ring-1 ring-primary/40 shadow-glow bg-white/[0.04]' : 'bg-surface/45'}`}
     >
         <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
@@ -143,6 +154,7 @@ const PricingCard: React.FC<{
             </Link>
         </div>
     </Card>
+    </motion.div>
 );
 
 const HeroPreview: React.FC = () => {
@@ -175,8 +187,19 @@ const HeroPreview: React.FC = () => {
             viewport={{ once: true, amount: 0.35 }}
             style={{ transformStyle: 'preserve-3d' }}
         >
-            <div className="pointer-events-none absolute inset-0 rounded-[2rem] bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.08),transparent_32%)]" aria-hidden="true" />
-            <Card variant="glass" className="relative overflow-hidden border-white/10 bg-surface/80 shadow-2xl shadow-black/30">
+            <motion.div
+                animate={{ y: [0, -5, 0] }}
+                transition={{ duration: 7.5, repeat: Infinity, ease: 'easeInOut' }}
+            >
+                <div className="pointer-events-none absolute inset-0 rounded-[2rem] bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.08),transparent_32%)]" aria-hidden="true" />
+                <motion.div
+                    className="pointer-events-none absolute -left-1/4 top-0 h-full w-1/3 bg-gradient-to-r from-transparent via-white/8 to-transparent"
+                    aria-hidden="true"
+                    animate={{ x: ['-20%', '220%'] }}
+                    transition={{ duration: 8.5, repeat: Infinity, ease: 'easeInOut', repeatDelay: 2.5 }}
+                    style={{ transform: 'skewX(-18deg)' }}
+                />
+                <Card variant="glass" className="relative overflow-hidden border-white/10 bg-surface/80 shadow-2xl shadow-black/30">
                 <div className="border-b border-white/10 px-5 py-4 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3 min-w-0">
                         <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
@@ -302,7 +325,8 @@ const HeroPreview: React.FC = () => {
                         </div>
                     </div>
                 </div>
-            </Card>
+                </Card>
+            </motion.div>
         </motion.div>
     );
 };
@@ -587,21 +611,21 @@ export const LandingPage: React.FC = () => {
             {/* ── Navigation ─────────────────────────────── */}
             <nav className={`sticky top-0 z-30 w-full backdrop-blur-xl border-b transition-all duration-300 ${scrolled ? 'bg-background/95 border-white/10 shadow-lg shadow-black/30' : 'bg-background/80 border-white/5'}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
-                    <Link to="/" className="flex items-center gap-2.5 group cursor-pointer flex-shrink-0">
-                        <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-tr from-primary to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:shadow-primary/40 transition-shadow">
+                    <Link to="/" className="flex items-center gap-2.5 group cursor-pointer flex-shrink-0 transition-transform duration-300 hover:-translate-y-0.5">
+                        <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-tr from-primary to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 transition-all duration-300 group-hover:shadow-[0_18px_45px_rgba(14,165,233,0.22)] group-hover:scale-[1.03]">
                             <Cpu className="text-white w-4 h-4 sm:w-5 sm:h-5" />
                         </div>
-                        <span className="font-display font-bold text-lg sm:text-xl tracking-tight text-white group-hover:text-primary transition-colors">
+                        <span className="font-display font-bold text-lg sm:text-xl tracking-tight text-white transition-colors duration-300 group-hover:text-white/80">
                             Cognition AI
                         </span>
                     </Link>
 
                     <div className="hidden md:flex items-center gap-6 lg:gap-8 text-sm font-semibold text-text-secondary">
-                        <a href="#how-it-works" className="hover:text-white transition-colors">How it works</a>
-                        <a href="#features" className="hover:text-white transition-colors">Features</a>
-                        <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
-                        <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
-                        <Link to="/help" className="hover:text-white transition-colors">Help</Link>
+                        <a href="#how-it-works" className="hover:text-white transition-colors duration-300">How it works</a>
+                        <a href="#features" className="hover:text-white transition-colors duration-300">Features</a>
+                        <a href="#pricing" className="hover:text-white transition-colors duration-300">Pricing</a>
+                        <a href="#faq" className="hover:text-white transition-colors duration-300">FAQ</a>
+                        <Link to="/help" className="hover:text-white transition-colors duration-300">Help</Link>
                     </div>
 
                     <div className="hidden md:flex items-center gap-3">
@@ -678,8 +702,9 @@ export const LandingPage: React.FC = () => {
                         <div className="min-w-0">
                             <SlideUp>
                                 <motion.div
-                                    initial={{ scale: 0.98, opacity: 0 }}
-                                    animate={{ scale: 1, opacity: 1 }}
+                                    initial={{ scale: 0.985, opacity: 0, y: 10 }}
+                                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                                     className="inline-flex items-center gap-2 rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.24em] text-sky-200"
                                 >
                                     <span className="w-1.5 h-1.5 rounded-full bg-sky-300" />
@@ -698,12 +723,14 @@ export const LandingPage: React.FC = () => {
 
                             <FadeIn delay={0.12} className="mt-6 flex flex-wrap gap-2">
                                 {HERO_SIGNAL_CHIPS.map((chip) => (
-                                    <span
+                                    <motion.span
                                         key={chip}
                                         className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-semibold text-text-secondary"
+                                        whileHover={shouldReduceMotion ? undefined : { y: -2, borderColor: 'rgba(255,255,255,0.18)', backgroundColor: 'rgba(255,255,255,0.05)' }}
+                                        transition={{ duration: 0.2 }}
                                     >
                                         {chip}
-                                    </span>
+                                    </motion.span>
                                 ))}
                             </FadeIn>
 
@@ -711,7 +738,7 @@ export const LandingPage: React.FC = () => {
                                 <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-text-muted">
                                     Start with one URL. Create an account before the audit runs.
                                 </p>
-                                <div className="mt-4 hidden md:block">
+                                <div className="mt-4">
                                     <FreeAuditCaptureForm />
                                 </div>
                                 <div className="mt-4 flex flex-col sm:flex-row gap-3">
@@ -772,16 +799,14 @@ export const LandingPage: React.FC = () => {
                             </p>
                         </FadeIn>
 
-                        <div className="grid gap-4 sm:grid-cols-3">
+                        <StaggerContainer staggerDelay={0.08} className="grid gap-4 sm:grid-cols-3">
                             {FIRST_AUDIT_CARDS.map((card, index) => (
                                 <motion.div
                                     key={card.title}
-                                    initial={{ opacity: 0, y: 14 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true }}
-                                    transition={{ duration: 0.35, delay: index * 0.05 }}
+                                    variants={{ hidden: { opacity: 0, y: 24, scale: 0.985 }, show: { opacity: 1, y: 0, scale: 1 } }}
+                                    transition={{ duration: 0.45, delay: index * 0.05, ease: [0.22, 1, 0.36, 1] }}
                                 >
-                                    <Card variant="glass" className="h-full border-white/10 p-5 bg-surface/50">
+                                    <Card variant="glass" className="h-full border-white/10 p-5 bg-surface/50 transition-all duration-300 hover:-translate-y-1 hover:border-white/15 hover:shadow-[0_22px_50px_rgba(15,23,42,0.24)]">
                                         <div className="flex items-center justify-between gap-3">
                                             {card.icon}
                                             <p className="text-3xl font-display font-bold text-white">
@@ -793,7 +818,7 @@ export const LandingPage: React.FC = () => {
                                     </Card>
                                 </motion.div>
                             ))}
-                        </div>
+                        </StaggerContainer>
                     </div>
                 </div>
             </section>
@@ -824,16 +849,14 @@ export const LandingPage: React.FC = () => {
                             </div>
                         </FadeIn>
 
-                        <div className="space-y-4">
+                        <StaggerContainer staggerDelay={0.08} className="space-y-4">
                             {SHIFT_FRAMES.map((item, index) => (
                                 <motion.div
                                     key={item.title}
-                                    initial={{ opacity: 0, y: 14 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true }}
-                                    transition={{ duration: 0.35, delay: index * 0.05 }}
+                                    variants={{ hidden: { opacity: 0, y: 22, scale: 0.99 }, show: { opacity: 1, y: 0, scale: 1 } }}
+                                    transition={{ duration: 0.42, delay: index * 0.05, ease: [0.22, 1, 0.36, 1] }}
                                 >
-                                    <Card variant="glass" className="border-white/10 bg-surface/45 p-5 sm:p-6">
+                                    <Card variant="glass" className="border-white/10 bg-surface/45 p-5 sm:p-6 transition-all duration-300 hover:-translate-y-1 hover:border-white/15 hover:shadow-[0_24px_58px_rgba(15,23,42,0.26)]">
                                         <div className="grid gap-4 sm:grid-cols-[180px_1fr] sm:items-start">
                                             <div>
                                                 <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-text-muted">{item.kicker}</p>
@@ -853,7 +876,7 @@ export const LandingPage: React.FC = () => {
                                     </Card>
                                 </motion.div>
                             ))}
-                        </div>
+                        </StaggerContainer>
                     </div>
                 </div>
             </section>
@@ -879,16 +902,14 @@ export const LandingPage: React.FC = () => {
                             </div>
                         </FadeIn>
 
-                        <div className="space-y-4">
+                        <StaggerContainer staggerDelay={0.08} className="space-y-4">
                             {WORKFLOW_STEPS.map((item, index) => (
                                 <motion.div
                                     key={item.step}
-                                    initial={{ opacity: 0, y: 14 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true }}
-                                    transition={{ duration: 0.35, delay: index * 0.06 }}
+                                    variants={{ hidden: { opacity: 0, y: 24, scale: 0.99 }, show: { opacity: 1, y: 0, scale: 1 } }}
+                                    transition={{ duration: 0.45, delay: index * 0.06, ease: [0.22, 1, 0.36, 1] }}
                                 >
-                                    <Card variant="glass" className="border-white/10 bg-surface/45 p-5 sm:p-6">
+                                    <Card variant="glass" className="border-white/10 bg-surface/45 p-5 sm:p-6 transition-all duration-300 hover:-translate-y-1 hover:border-white/15 hover:shadow-[0_24px_58px_rgba(15,23,42,0.26)]">
                                         <div className="grid gap-4 md:grid-cols-[82px_1fr_220px] md:items-start">
                                             <div className="flex md:flex-col items-center md:items-start gap-3">
                                                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
@@ -908,7 +929,7 @@ export const LandingPage: React.FC = () => {
                                     </Card>
                                 </motion.div>
                             ))}
-                        </div>
+                        </StaggerContainer>
                     </div>
                 </div>
             </section>
@@ -981,11 +1002,12 @@ export const LandingPage: React.FC = () => {
                     </FadeIn>
 
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
+                        initial={{ opacity: 0, y: 24, scale: 0.99 }}
+                        whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                        whileHover={{ y: -4 }}
                         viewport={{ once: true }}
-                        transition={{ duration: 0.5 }}
-                        className="mt-12 overflow-x-auto rounded-2xl border border-white/10"
+                        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                        className="mt-12 overflow-x-auto rounded-2xl border border-white/10 bg-surface/35 shadow-[0_24px_60px_rgba(15,23,42,0.22)]"
                     >
                         <table className="w-full min-w-[560px] text-sm">
                             <thead>
@@ -1228,7 +1250,7 @@ export const LandingPage: React.FC = () => {
             </section>
 
             {/* ── Mobile Sticky CTA ──────────────────────── */}
-            <MobileStickyCTA />
+            {false && <MobileStickyCTA />}
 
             {/* ── Footer ─────────────────────────────────── */}
             <footer className="relative z-10 border-t border-white/5 py-12 sm:py-14 pb-32 sm:pb-14">
