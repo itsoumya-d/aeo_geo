@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import {
     ArrowRight, Check, Cpu, Globe, LayoutDashboard, ShieldCheck, Menu, X,
@@ -13,6 +13,7 @@ import { FadeIn, SlideUp, StaggerContainer } from './ui/Motion';
 import { VideoModal } from './VideoModal';
 import { insertFreeAuditLead } from '../services/supabase';
 import { normalizeUrl, validateUrl } from '../utils/validation';
+import { useAuth } from '../contexts/AuthContext';
 
 /* ─────────────────────────────────────────────────────── */
 /*  Reusable sub-components                                 */
@@ -282,12 +283,27 @@ const FAQ_ITEMS = [
     },
 ];
 
+const FREE_AUDIT_URL_STORAGE_KEY = 'cognition:pendingFreeAuditUrl';
+
 /* Mobile sticky CTA — only rendered on small screens */
 const FreeAuditCaptureForm: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
+    const auth = useAuth();
+    const navigate = useNavigate();
     const [websiteUrl, setWebsiteUrl] = React.useState('');
     const [error, setError] = React.useState('');
     const [successMessage, setSuccessMessage] = React.useState('');
     const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+    React.useEffect(() => {
+        try {
+            const pendingUrl = sessionStorage.getItem(FREE_AUDIT_URL_STORAGE_KEY);
+            if (pendingUrl) {
+                setWebsiteUrl(pendingUrl);
+            }
+        } catch {
+            // Ignore storage access errors.
+        }
+    }, []);
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -302,12 +318,28 @@ const FreeAuditCaptureForm: React.FC<{ compact?: boolean }> = ({ compact = false
             return;
         }
 
+        if (!auth.user) {
+            try {
+                sessionStorage.setItem(FREE_AUDIT_URL_STORAGE_KEY, websiteUrl);
+            } catch {
+                // Ignore storage access errors.
+            }
+
+            navigate('/signup?returnTo=%2F');
+            return;
+        }
+
         setIsSubmitting(true);
         try {
             const success = await insertFreeAuditLead(websiteUrl);
             if (success) {
                 setWebsiteUrl('');
                 setSuccessMessage('Audit request saved successfully.');
+                try {
+                    sessionStorage.removeItem(FREE_AUDIT_URL_STORAGE_KEY);
+                } catch {
+                    // Ignore storage access errors.
+                }
             } else {
                 setError('Could not save your audit request.');
             }
