@@ -166,7 +166,15 @@ const HeroPreview: React.FC = () => {
     ];
 
     return (
-        <div className="relative">
+        <motion.div
+            className="relative"
+            initial={{ opacity: 0, y: 16, rotateX: 2, rotateY: -2 }}
+            whileInView={{ opacity: 1, y: 0, rotateX: 0, rotateY: 0 }}
+            whileHover={{ y: -4, rotateX: 1, rotateY: -1 }}
+            transition={{ duration: 0.55, ease: 'easeOut' }}
+            viewport={{ once: true, amount: 0.35 }}
+            style={{ transformStyle: 'preserve-3d' }}
+        >
             <div className="pointer-events-none absolute inset-0 rounded-[2rem] bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.08),transparent_32%)]" aria-hidden="true" />
             <Card variant="glass" className="relative overflow-hidden border-white/10 bg-surface/80 shadow-2xl shadow-black/30">
                 <div className="border-b border-white/10 px-5 py-4 flex items-center justify-between gap-4">
@@ -295,7 +303,7 @@ const HeroPreview: React.FC = () => {
                     </div>
                 </div>
             </Card>
-        </div>
+        </motion.div>
     );
 };
 
@@ -953,195 +961,6 @@ export const LandingPage: React.FC = () => {
                         ].map((f) => (
                             <motion.div key={f.title} variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } }}>
                                 <FeatureCard icon={f.icon} title={f.title} desc={f.desc} />
-                            </motion.div>
-                        ))}
-                    </StaggerContainer>
-                </div>
-            </section>
-
-            {/* ── Who It's For ───────────────────────────── */}
-            <section className="relative z-10 py-20 sm:py-24 border-t border-white/5 bg-surface/30 backdrop-blur-sm">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6">
-                    <FadeIn>
-                        <p className="text-xs font-bold uppercase tracking-[0.25em] text-secondary text-center">Who It's For</p>
-                        <h2 className="text-3xl sm:text-4xl font-display font-bold text-white text-center mt-3">
-                            Built for teams who can't afford to be invisible
-                        </h2>
-                    </FadeIn>
-
-                    <StaggerContainer className="mt-12 grid md:grid-cols-3 gap-6">
-                        {[
-                            {
-                                icon: <Building2 className="w-7 h-7 text-primary" />,
-                                bg: 'bg-primary/10 border-primary/20',
-                                persona: 'Agencies',
-                                headline: 'Deliver AI visibility as a service',
-                                points: [
-                                    'White-label PDF reports with your branding',
-                                    'Manage unlimited client domains',
-                                    '10-seat team collaboration',
-                                    'API access for custom dashboards',
-                                ],
-                                cta: 'See Agency plan',
-                                href: '#pricing',
-                            },
-                            {
-                                icon: <Target className="w-7 h-7 text-purple-400" />,
-                                bg: 'bg-purple-500/10 border-purple-500/20',
-                                persona: 'Brands & Startups',
-                                headline: 'Own the AI conversation in your niche',
-                                points: [
-                                    'Understand how AI perceives your product',
-                                    'Get fixes you can ship this week',
-                                    'Track score improvements over time',
-                                    'Competitor benchmarking built in',
-                                ],
-                                cta: 'Start free',
-                                href: '/signup',
-                            },
-                            {
-                                icon: <Code2 className="w-7 h-7 text-emerald-400" />,
-                                bg: 'bg-emerald-500/10 border-emerald-500/20',
-                                persona: 'Developers & SEOs',
-                                headline: 'Integrate AI visibility into your workflow',
-                                points: [
-                                    'Full REST API with authenticated keys',
-                                    'Webhook integrations for CI/CD',
-                                    'Scheduled auto-audits',
-                                    'Looker Studio connector included',
-                                ],
-                                cta: 'View API docs',
-                                href: '/docs/api',
-                            },
-                        ].map((item) => (
-                            <motion.div
-                                key={item.persona}
-                                variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } }}
-                            >
-                                <Card variant="glass" className="p-7 border-white/10 h-full flex flex-col hover:border-white/20 transition-colors">
-                                    <div className={`w-14 h-14 rounded-2xl ${item.bg} border flex items-center justify-center mb-5 flex-shrink-0`}>
-                                        {item.icon}
-                                    </div>
-                                    <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-text-muted mb-2">{item.persona}</p>
-                                    <h3 className="text-white font-display font-bold text-xl leading-tight">{item.headline}</h3>
-                                    <ul className="mt-5 space-y-3 flex-1">
-                                        {item.points.map((pt) => (
-                                            <li key={pt} className="flex items-start gap-3 text-sm text-text-secondary">
-                                                <Check className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
-                                                <span>{pt}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                    <div className="mt-7">
-                                        {item.href.startsWith('/') && !item.href.startsWith('#') ? (
-                                            <Link to={item.href}>
-                                                <Button variant="secondary" className="w-full">
-                                                    {item.cta} <ArrowRight className="w-4 h-4 ml-2" />
-                                                </Button>
-                                            </Link>
-                                        ) : (
-                                            <a href={item.href}>
-                                                <Button variant="secondary" className="w-full">
-                                                    {item.cta} <ArrowRight className="w-4 h-4 ml-2" />
-                                                </Button>
-                                            </a>
-                                        )}
-                                    </div>
-                                </Card>
-                            </motion.div>
-                        ))}
-                    </StaggerContainer>
-                </div>
-            </section>
-
-            {/* ── Platform Coverage ──────────────────────── */}
-            <section className="relative z-10 py-14 border-t border-white/5">
-                <div className="max-w-5xl mx-auto px-4 sm:px-6">
-                    <FadeIn>
-                        <p className="text-xs font-bold uppercase tracking-[0.25em] text-text-muted text-center mb-8">AI platforms we track</p>
-                        <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
-                            {['ChatGPT', 'Gemini', 'Claude', 'Perplexity', 'AI Overviews', 'Copilot', 'Meta AI', 'Grok'].map((name) => (
-                                <span key={name} className="text-sm font-bold text-text-muted hover:text-text-secondary transition-colors">
-                                    {name}
-                                </span>
-                            ))}
-                        </div>
-                        <div className="mt-10 flex flex-wrap items-center justify-center gap-4 sm:gap-6">
-                            <div className="flex items-center gap-2 text-sm text-text-secondary">
-                                <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                                <span className="font-semibold">Data encrypted in transit &amp; at rest</span>
-                            </div>
-                            <span className="w-1 h-1 rounded-full bg-white/20 hidden sm:block" />
-                            <div className="flex items-center gap-2 text-sm text-text-secondary">
-                                <Globe className="w-4 h-4 text-primary" />
-                                <span className="font-semibold">Available worldwide · Paddle payments</span>
-                            </div>
-                            <span className="w-1 h-1 rounded-full bg-white/20 hidden sm:block" />
-                            <div className="flex items-center gap-2 text-sm text-text-secondary">
-                                <Users className="w-4 h-4 text-purple-400" />
-                                <span className="font-semibold">Trusted by early adopters globally</span>
-                            </div>
-                        </div>
-                    </FadeIn>
-                </div>
-            </section>
-
-            {/* ── Social Proof / Testimonials ─────────────── */}
-            <section className="relative z-10 py-20 sm:py-24 border-t border-white/5">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6">
-                    <FadeIn>
-                        <p className="text-xs font-bold uppercase tracking-[0.25em] text-secondary text-center">Trusted by teams worldwide</p>
-                        <h2 className="text-3xl sm:text-4xl font-display font-bold text-white text-center mt-3">
-                            What our users say
-                        </h2>
-                    </FadeIn>
-                    <StaggerContainer className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {[
-                            {
-                                quote: "Cognition AI showed us we were invisible on Perplexity despite ranking #1 on Google. We fixed that in a week and our AI-sourced traffic grew 3x.",
-                                name: "Sarah K.",
-                                role: "SEO Director",
-                                company: "Growth Agency",
-                                avatar: "SK",
-                                color: "from-primary/20 to-purple-500/10"
-                            },
-                            {
-                                quote: "The AEO Forge tool alone is worth the subscription. We rewrote our product descriptions and went from 0 citations to appearing in 4 different AI platforms.",
-                                name: "Marcus T.",
-                                role: "Head of Content",
-                                company: "B2B SaaS Brand",
-                                avatar: "MT",
-                                color: "from-emerald-500/20 to-teal-500/10"
-                            },
-                            {
-                                quote: "Finally a tool that explains WHY an AI engine ignores your brand. The Vector Map made it instantly clear which pages were semantically redundant.",
-                                name: "Priya L.",
-                                role: "Product Marketer",
-                                company: "Tech Startup",
-                                avatar: "PL",
-                                color: "from-amber-500/20 to-orange-500/10"
-                            }
-                        ].map((t) => (
-                            <motion.div
-                                key={t.name}
-                                initial={{ opacity: 0, y: 16 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.4 }}
-                                className={`bg-gradient-to-br ${t.color} border border-white/10 rounded-2xl p-6 flex flex-col gap-4`}
-                            >
-                                <p className="text-text-secondary leading-relaxed text-sm flex-1">
-                                    &ldquo;{t.quote}&rdquo;
-                                </p>
-                                <div className="flex items-center gap-3 border-t border-white/5 pt-4">
-                                    <div className="w-10 h-10 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
-                                        {t.avatar}
-                                    </div>
-                                    <div>
-                                        <p className="text-white font-semibold text-sm">{t.name}</p>
-                                        <p className="text-text-muted text-xs">{t.role} · {t.company}</p>
-                                    </div>
-                                </div>
                             </motion.div>
                         ))}
                     </StaggerContainer>

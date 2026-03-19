@@ -8,6 +8,31 @@ import { getTechnicalErrorMessage, toUserMessage } from "../utils/errors";
  * Invoke the secure Edge Function for AI operations with rate limiting.
  */
 async function invokeAI<T>(action: ActionType, payload: Record<string, unknown>): Promise<T> {
+  try {
+    const response = await fetch('/api/ai-audit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ action, payload }),
+    });
+
+    if (response.ok) {
+      return await response.json() as T;
+    }
+
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      const body = await response.json() as { error?: string };
+      throw new Error(body.error || `Vercel AI route failed for ${action}`);
+    }
+
+    const text = await response.text();
+    throw new Error(text || `Vercel AI route failed for ${action}`);
+  } catch (routeError) {
+    console.warn(`Primary AI route failed (${action}), falling back to Supabase function.`, routeError);
+  }
+
   const { data, error } = await supabase.functions.invoke('analyze-content', {
     body: { action, payload }
   });
