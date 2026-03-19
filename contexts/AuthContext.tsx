@@ -65,6 +65,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const isConfigured = isSupabaseConfigured();
 
+    const withTimeout = async <T,>(promise: Promise<T>, timeoutMs = 10000): Promise<T> => {
+        let timeoutHandle: ReturnType<typeof setTimeout> | null = null;
+
+        const timeoutPromise = new Promise<never>((_, reject) => {
+            timeoutHandle = setTimeout(() => {
+                reject(new Error('Auth data load timed out'));
+            }, timeoutMs);
+        });
+
+        try {
+            return await Promise.race([promise, timeoutPromise]);
+        } finally {
+            if (timeoutHandle) {
+                clearTimeout(timeoutHandle);
+            }
+        }
+    };
+
     // Initialize auth state
     useEffect(() => {
         if (!isConfigured) {
@@ -76,11 +94,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         supabase.auth.getSession().then(({ data: { session } }) => {
             setSession(session);
             setUser(session?.user ?? null);
+            setLoading(false);
 
             if (session?.user) {
-                loadUserData();
-            } else {
-                setLoading(false);
+                void loadUserData();
             }
         });
 
@@ -89,16 +106,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             async (event, session) => {
                 setSession(session);
                 setUser(session?.user ?? null);
+                setLoading(false);
 
                 if (event === 'SIGNED_IN' && session?.user) {
-                    await loadUserData();
+                    void loadUserData();
                 } else if (event === 'SIGNED_OUT') {
                     setProfile(null);
                     setOrganization(null);
                     setOnboarding(null);
+                    setWorkspaces(null);
+                    setCurrentWorkspace(null);
                 }
-
-                setLoading(false);
             }
         );
 
@@ -107,18 +125,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const loadUserData = async () => {
         try {
-            const [userProfile, org, onboardingStatus] = await Promise.all([
+            const [userProfile, org, onboardingStatus] = await withTimeout(Promise.all([
                 getUserProfile(),
                 getOrganization(),
                 getOnboardingStatus(),
-            ]);
+            ]));
             setProfile(userProfile);
             setOrganization(org);
             setOnboarding(onboardingStatus);
 
             // Load workspaces if organization exists
             if (org?.id) {
-                await loadWorkspacesInternal(org.id);
+                void loadWorkspacesInternal(org.id);
             }
         } catch (err) {
             console.error('Error loading user data:', err);
