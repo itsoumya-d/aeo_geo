@@ -231,12 +231,14 @@ export const AnalysisPage: React.FC = () => {
             console.error('Analysis failed:', technical);
 
             const friendlyError = toUserMessage(error);
+            const shouldShowTechnical =
+                /gemini|ai audit|analysis|content warning/i.test(technical);
 
             if (friendlyError.isRateLimit) {
                 setShowTopUp(true);
                 setErrorMessage('You need more credits to complete this analysis.');
             } else {
-                setErrorMessage(friendlyError.message);
+                setErrorMessage(shouldShowTechnical ? technical : friendlyError.message);
             }
             setAuditStatus('failed');
             clearAuditDraft(auditId);
@@ -247,7 +249,10 @@ export const AnalysisPage: React.FC = () => {
                 completed_at: new Date().toISOString()
             });
 
-            toast.error(friendlyError.title, friendlyError.message);
+            toast.error(
+                shouldShowTechnical ? 'Audit failed' : friendlyError.title,
+                shouldShowTechnical ? technical : friendlyError.message
+            );
         } finally {
             setIsAnalyzing(false);
             setStatusMessage('');
