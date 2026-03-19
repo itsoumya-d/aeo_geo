@@ -14,25 +14,38 @@ interface CrawlResult {
  * Requires an existing AuditPage ID to link the content to.
  */
 export const crawlPage = async (url: string, auditPageId: string): Promise<CrawlResult> => {
-    // Action 'SCRAPE' is default, but let's be explicit
-    const { data: result, error } = await supabase.functions.invoke('crawl-site', {
-        body: { action: 'SCRAPE', url, auditPageId },
-    });
-
-    if (error) {
-        console.error("Crawl function error:", error);
-        throw new Error(`Failed to crawl ${url}: ${error.message}`);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+        throw new Error('You must be signed in to run a crawl.');
     }
 
-    // The function returns data directly now
-    if (result && result.data) {
+    const response = await fetch('/api/crawl-site', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ action: 'SCRAPE', url, auditPageId }),
+    });
+
+    let result: { data?: CrawlResult; error?: string } | null = null;
+    try {
+        result = await response.json() as { data?: CrawlResult; error?: string };
+    } catch {
+        result = null;
+    }
+
+    if (!response.ok) {
+        throw new Error(result?.error || `Failed to crawl ${url}.`);
+    }
+
+    if (result?.data) {
         return {
             markdown: result.data.markdown,
             metadata: result.data.metadata
         };
     }
 
-    // Fallback: Fetch from DB if function didn't return data (legacy compat)
     const { data: contentData, error: contentError } = await supabase
         .from('page_contents')
         .select('markdown_content, metadata')
@@ -54,16 +67,32 @@ export const crawlPage = async (url: string, auditPageId: string): Promise<Crawl
  */
 export const discoverLinks = async (url: string): Promise<string[]> => {
     try {
-        const { data: result, error } = await supabase.functions.invoke('crawl-site', {
-            body: { action: 'MAP', url }
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) {
+            throw new Error('You must be signed in to discover links.');
+        }
+
+        const response = await fetch('/api/crawl-site', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({ action: 'MAP', url })
         });
 
-        if (error) throw error;
+        let result: { data?: string[]; error?: string } | null = null;
+        try {
+            result = await response.json() as { data?: string[]; error?: string };
+        } catch {
+            result = null;
+        }
 
-        // Result data should be a list of strings (links)
+        if (!response.ok) {
+            throw new Error(result?.error || 'Discovery failed.');
+        }
+
         if (result && Array.isArray(result.data)) {
-            // Filter to only include subpaths or same domain?
-            // Firecrawl /map usually respects the domain.
             return result.data.slice(0, 50); // Limit to 50 pages for now
         }
 

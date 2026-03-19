@@ -327,7 +327,7 @@ async function performMap(url: string): Promise<string[]> {
     return [normalizedUrl];
 }
 
-async function refundCredits(supabase: ReturnType<typeof createClient>, orgId: string, amount: number) {
+async function refundCredits(supabase: any, orgId: string, amount: number) {
     const { error } = await supabase.rpc('increment_credits', {
         p_org_id: orgId,
         p_amount: amount,
