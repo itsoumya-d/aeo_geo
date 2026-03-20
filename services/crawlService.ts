@@ -5,6 +5,34 @@ interface CrawlResult {
     metadata: any;
 }
 
+const fetchJinaMarkdown = async (url: string): Promise<CrawlResult> => {
+    const normalizedUrl = url.startsWith('http://') || url.startsWith('https://') ? url : `https://${url}`;
+    const jinaUrl = `https://r.jina.ai/${normalizedUrl}`;
+    const response = await fetch(jinaUrl, {
+        headers: {
+            'x-respond-with': 'markdown',
+            'x-no-cache': 'true',
+            'User-Agent': 'Mozilla/5.0',
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error(`Jina fallback failed for ${url}: ${response.status}`);
+    }
+
+    const markdown = (await response.text()).trim();
+    if (!markdown) {
+        throw new Error(`Jina fallback returned empty content for ${url}.`);
+    }
+
+    return {
+        markdown,
+        metadata: {
+            source: 'jina-reader-direct',
+        }
+    };
+};
+
 /**
  * Triggers the Supabase Edge Function to crawl a specific URL.
  * Requires an existing AuditPage ID to link the content to.
@@ -16,7 +44,7 @@ interface CrawlResult {
 export const crawlPage = async (url: string, auditPageId: string): Promise<CrawlResult> => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.access_token) {
-        throw new Error('You must be signed in to run a crawl.');
+        return await fetchJinaMarkdown(url);
     }
 
     const response = await fetch('/api/crawl-site', {
@@ -36,7 +64,8 @@ export const crawlPage = async (url: string, auditPageId: string): Promise<Crawl
     }
 
     if (!response.ok) {
-        throw new Error(result?.error || `Failed to crawl ${url}.`);
+        console.warn('Server crawl failed, falling back to Jina Reader:', result?.error || response.statusText);
+        return await fetchJinaMarkdown(url);
     }
 
     if (result?.data) {
@@ -53,7 +82,7 @@ export const crawlPage = async (url: string, auditPageId: string): Promise<Crawl
         .single();
 
     if (contentError || !contentData) {
-        throw new Error("Content was not saved correctly after crawl.");
+        return await fetchJinaMarkdown(url);
     }
 
     return {

@@ -29,6 +29,8 @@ const HistoryPage = React.lazy(() => import('./pages/HistoryPage').then(m => ({ 
 const HelpCenter = React.lazy(() => import('./pages/HelpCenter').then(m => ({ default: m.HelpCenter })));
 const TermsPage = React.lazy(() => import('./pages/legal/TermsPage').then(m => ({ default: m.TermsPage })));
 const PrivacyPage = React.lazy(() => import('./pages/legal/PrivacyPage').then(m => ({ default: m.PrivacyPage })));
+const RefundPage = React.lazy(() => import('./pages/legal/RefundPage').then(m => ({ default: m.RefundPage })));
+const PricingPage = React.lazy(() => import('./pages/PricingPage').then(m => ({ default: m.PricingPage })));
 const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 
 const APIDocs = React.lazy(() => import('./components/docs/APIDocs').then(m => ({ default: m.APIDocs })));
@@ -96,6 +98,8 @@ const App: React.FC = () => {
                             <Route path="/help" element={<HelpCenter />} />
                             <Route path="/terms" element={<TermsPage />} />
                             <Route path="/privacy" element={<PrivacyPage />} />
+                            <Route path="/refund" element={<RefundPage />} />
+                            <Route path="/pricing" element={<PricingPage />} />
                             <Route path="/docs/api" element={<APIDocs />} />
 
                             <Route

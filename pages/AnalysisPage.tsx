@@ -184,14 +184,8 @@ export const AnalysisPage: React.FC = () => {
                 ));
 
                 const auditPage = await createAuditPage(auditId, page.url, page.type);
-                if (!auditPage) {
-                    setPageLog(prev => prev.map((entry, idx) =>
-                        idx === i ? { ...entry, status: 'failed' } : entry
-                    ));
-                    continue;
-                }
-
-                const markdown = await crawlWithRetry(page.url, auditPage.id);
+                const crawlTargetId = auditPage?.id || `temp-${auditId}-${i}`;
+                const markdown = await crawlWithRetry(page.url, crawlTargetId);
                 if (markdown) {
                     contentMap[page.url] = markdown;
                     setPageLog(prev => prev.map((entry, idx) =>

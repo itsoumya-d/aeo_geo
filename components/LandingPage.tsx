@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import {
@@ -19,65 +19,15 @@ import { useAuth } from '../contexts/AuthContext';
 /*  Reusable sub-components                                 */
 /* ─────────────────────────────────────────────────────── */
 
-/**
- * Counts from 0 to `target` when the element scrolls into view.
- * Handles suffixes like '+', '%', 'B' so the display matches the raw value exactly.
- */
-const AnimatedStat: React.FC<{ value: string; className?: string }> = ({ value, className = '' }) => {
-    const ref = useRef<HTMLSpanElement>(null);
-    const [displayed, setDisplayed] = useState('0');
-    const prefersReduced = useReducedMotion();
-
-    useEffect(() => {
-        const el = ref.current;
-        if (!el || prefersReduced) {
-            setDisplayed(value);
-            return;
-        }
-
-        const observer = new IntersectionObserver(([entry]) => {
-            if (!entry.isIntersecting) return;
-            observer.disconnect();
-
-            // Parse numeric portion and suffix (e.g. '520%' → num=520, suffix='%')
-            const match = value.match(/^([\d.]+)(.*)$/);
-            if (!match) { setDisplayed(value); return; }
-
-            const target = parseFloat(match[1]);
-            const suffix = match[2];
-            const isDecimal = match[1].includes('.');
-            const duration = 1200;
-            const start = performance.now();
-
-            const tick = (now: number) => {
-                const elapsed = now - start;
-                const progress = Math.min(elapsed / duration, 1);
-                // Ease-out cubic
-                const eased = 1 - Math.pow(1 - progress, 3);
-                const current = target * eased;
-                setDisplayed((isDecimal ? current.toFixed(1) : Math.round(current).toString()) + suffix);
-                if (progress < 1) requestAnimationFrame(tick);
-            };
-            requestAnimationFrame(tick);
-        }, { threshold: 0.3 });
-
-        observer.observe(el);
-        return () => observer.disconnect();
-    }, [value, prefersReduced]);
-
-    return <span ref={ref} className={className}>{displayed}</span>;
-};
+const StaticStat: React.FC<{ value: string; className?: string }> = ({ value, className = '' }) => (
+    <span className={className}>{value}</span>
+);
 
 const FeatureCard: React.FC<{
     icon: React.ReactNode;
     title: string;
     desc: string;
 }> = ({ icon, title, desc }) => (
-    <motion.div
-        whileHover={{ y: -8, scale: 1.01 }}
-        transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-        className="h-full"
-    >
     <Card variant="glass" className="group h-full p-6 border-white/10 hover:border-white/20 transition-all duration-300 hover:shadow-[0_24px_60px_rgba(15,23,42,0.28)] bg-surface/45">
         <div className="flex items-start gap-4">
             <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-primary flex-shrink-0 transition-all duration-300 group-hover:scale-105">
@@ -89,7 +39,6 @@ const FeatureCard: React.FC<{
             </div>
         </div>
     </Card>
-    </motion.div>
 );
 
 const PricingCard: React.FC<{
@@ -102,11 +51,6 @@ const PricingCard: React.FC<{
     featured?: boolean;
     annualBilling?: boolean;
 }> = ({ name, price, annualTotal, description, features, cta, featured, annualBilling }) => (
-    <motion.div
-        whileHover={{ y: -10, scale: featured ? 1.012 : 1.008 }}
-        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-        className="h-full"
-    >
     <Card
         variant="glass"
         className={`h-full p-7 border-white/10 flex flex-col transition-all duration-300 hover:border-white/20 hover:shadow-[0_28px_72px_rgba(15,23,42,0.3)] ${featured ? 'ring-1 ring-primary/40 shadow-glow bg-white/[0.04]' : 'bg-surface/45'}`}
@@ -154,7 +98,6 @@ const PricingCard: React.FC<{
             </Link>
         </div>
     </Card>
-    </motion.div>
 );
 
 const HeroPreview: React.FC = () => {
@@ -180,26 +123,13 @@ const HeroPreview: React.FC = () => {
     return (
         <motion.div
             className="relative"
-            initial={{ opacity: 0, y: 16, rotateX: 2, rotateY: -2 }}
-            whileInView={{ opacity: 1, y: 0, rotateX: 0, rotateY: 0 }}
-            whileHover={{ y: -4, rotateX: 1, rotateY: -1 }}
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, ease: 'easeOut' }}
             viewport={{ once: true, amount: 0.35 }}
-            style={{ transformStyle: 'preserve-3d' }}
         >
-            <motion.div
-                animate={{ y: [0, -5, 0] }}
-                transition={{ duration: 7.5, repeat: Infinity, ease: 'easeInOut' }}
-            >
-                <div className="pointer-events-none absolute inset-0 rounded-[2rem] bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.08),transparent_32%)]" aria-hidden="true" />
-                <motion.div
-                    className="pointer-events-none absolute -left-1/4 top-0 h-full w-1/3 bg-gradient-to-r from-transparent via-white/8 to-transparent"
-                    aria-hidden="true"
-                    animate={{ x: ['-20%', '220%'] }}
-                    transition={{ duration: 8.5, repeat: Infinity, ease: 'easeInOut', repeatDelay: 2.5 }}
-                    style={{ transform: 'skewX(-18deg)' }}
-                />
-                <Card variant="glass" className="relative overflow-hidden border-white/10 bg-surface/80 shadow-2xl shadow-black/30">
+            <div className="pointer-events-none absolute inset-0 rounded-[2rem] bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.08),transparent_32%)]" aria-hidden="true" />
+            <Card variant="glass" className="relative overflow-hidden border-white/10 bg-surface/80 shadow-2xl shadow-black/30">
                 <div className="border-b border-white/10 px-5 py-4 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3 min-w-0">
                         <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
@@ -325,8 +255,7 @@ const HeroPreview: React.FC = () => {
                         </div>
                     </div>
                 </div>
-                </Card>
-            </motion.div>
+            </Card>
         </motion.div>
     );
 };
@@ -810,7 +739,7 @@ export const LandingPage: React.FC = () => {
                                         <div className="flex items-center justify-between gap-3">
                                             {card.icon}
                                             <p className="text-3xl font-display font-bold text-white">
-                                                <AnimatedStat value={card.value} />
+                                                <StaticStat value={card.value} />
                                             </p>
                                         </div>
                                         <p className="mt-4 text-sm font-semibold text-white">{card.title}</p>
