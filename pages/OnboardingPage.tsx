@@ -6,7 +6,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { useAuth } from '../contexts/AuthContext';
-import { bootstrapOrganization, createAudit, updateOnboardingStatus } from '../services/supabase';
+import { bootstrapOrganization, createAudit, getOrganization, getOnboardingStatus, updateOnboardingStatus } from '../services/supabase';
 import { useToast } from '../components/Toast';
 import { AssetType, AnalysisStatus } from '../types';
 import { normalizeUrl, validateUrl } from '../utils/validation';
@@ -72,12 +72,22 @@ export const OnboardingPage: React.FC = () => {
         setBootstrapping(true);
         setBootstrapFailed(false);
         try {
-            const { organization } = await bootstrapOrganization();
-            if (!organization) {
+            const { organization, onboarding } = await bootstrapOrganization();
+            await auth.refreshOrganization();
+
+            const refreshedOrg = await getOrganization();
+            const refreshedOnboarding = await getOnboardingStatus();
+
+            if (refreshedOnboarding?.current_step && refreshedOnboarding.current_step >= 1 && refreshedOnboarding.current_step <= 3) {
+                setStep(refreshedOnboarding.current_step);
+            } else if (onboarding?.current_step && onboarding.current_step >= 1 && onboarding.current_step <= 3) {
+                setStep(onboarding.current_step);
+            }
+
+            if (!organization && !refreshedOrg) {
                 setBootstrapFailed(true);
                 return;
             }
-            await auth.refreshOrganization();
         } catch {
             setBootstrapFailed(true);
         } finally {

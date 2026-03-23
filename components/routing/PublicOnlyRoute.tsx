@@ -7,7 +7,11 @@ function getReturnToFromQuery(search: string) {
     const params = new URLSearchParams(search);
     const returnTo = params.get('returnTo');
     if (returnTo) return returnTo;
-    return sessionStorage.getItem('returnTo');
+    try {
+        return sessionStorage.getItem('returnTo');
+    } catch {
+        return null;
+    }
 }
 
 export const PublicOnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {

@@ -9,7 +9,8 @@ import {
     getOrganization,
     getUserProfile,
     createOrganization,
-    getOnboardingStatus
+    getOnboardingStatus,
+    bootstrapOrganization
 } from '../services/supabase';
 import { Workspace } from '../types';
 import { getWorkspaces, getDefaultWorkspace } from '../services/workspaceService';
@@ -64,6 +65,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
 
     const isConfigured = isSupabaseConfigured();
+
+    const safeStorageGet = (key: string): string | null => {
+        try {
+            return localStorage.getItem(key);
+        } catch {
+            return null;
+        }
+    };
+
+    const safeStorageSet = (key: string, value: string) => {
+        try {
+            localStorage.setItem(key, value);
+        } catch {
+            // Ignore storage failures on restricted mobile/private browsers.
+        }
+    };
+
+    const safeStorageRemove = (key: string) => {
+        try {
+            localStorage.removeItem(key);
+        } catch {
+            // Ignore storage failures on restricted mobile/private browsers.
+        }
+    };
 
     const withTimeout = async <T,>(promise: Promise<T>, timeoutMs = 10000): Promise<T> => {
         let timeoutHandle: ReturnType<typeof setTimeout> | null = null;
@@ -125,11 +150,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const loadUserData = async () => {
         try {
-            const [userProfile, org, onboardingStatus] = await withTimeout(Promise.all([
-                getUserProfile(),
-                getOrganization(),
-                getOnboardingStatus(),
-            ]));
+            const userProfile = await withTimeout(getUserProfile(), 15000).catch(() => null);
+
+            let org: Organization | null = null;
+            let onboardingStatus: OnboardingStatus | null = null;
+
+            if (userProfile?.organization_id) {
+                [org, onboardingStatus] = await Promise.all([
+                    withTimeout(getOrganization(), 15000).catch(() => null),
+                    withTimeout(getOnboardingStatus(), 15000).catch(() => null),
+                ]);
+            }
+
             setProfile(userProfile);
             setOrganization(org);
             setOnboarding(onboardingStatus);
@@ -152,7 +184,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setWorkspaces(workspaceList);
 
             // Get stored workspace ID or use default
-            const storedWorkspaceId = localStorage.getItem('current_workspace_id');
+            const storedWorkspaceId = safeStorageGet('current_workspace_id');
             let workspace: Workspace | null = null;
 
             if (storedWorkspaceId) {
@@ -168,7 +200,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
             // Store for next session
             if (workspace) {
-                localStorage.setItem('current_workspace_id', workspace.id);
+                safeStorageSet('current_workspace_id', workspace.id);
             }
         } catch (err) {
             console.error('Error loading workspaces:', err);
@@ -188,7 +220,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const workspace = workspaces.find(w => w.id === workspaceId);
         if (workspace) {
             setCurrentWorkspace(workspace);
-            localStorage.setItem('current_workspace_id', workspaceId);
+            safeStorageSet('current_workspace_id', workspaceId);
         }
     };
 
@@ -240,7 +272,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setOnboarding(null);
         setWorkspaces(null);
         setCurrentWorkspace(null);
-        localStorage.removeItem('current_workspace_id');
+        safeStorageRemove('current_workspace_id');
     };
 
     const resetPassword = async (email: string) => {
@@ -262,14 +294,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     const refreshOrganization = async () => {
-        const [userProfile, org, onboardingStatus] = await Promise.all([
-            getUserProfile(),
-            getOrganization(),
-            getOnboardingStatus(),
-        ]);
+        const userProfile = await getUserProfile();
+        let org: Organization | null = null;
+        let onboardingStatus: OnboardingStatus | null = null;
+
+        if (userProfile?.organization_id) {
+            [org, onboardingStatus] = await Promise.all([
+                getOrganization(),
+                getOnboardingStatus(),
+            ]);
+        }
+
         setProfile(userProfile);
         setOrganization(org);
         setOnboarding(onboardingStatus);
+
+        if (!org && userProfile && !userProfile.organization_id) {
+            const bootstrap = await bootstrapOrganization();
+            org = bootstrap.organization;
+            onboardingStatus = bootstrap.onboarding;
+            setOrganization(org);
+            setOnboarding(onboardingStatus);
+        }
+
         if (org?.id) {
             await loadWorkspacesInternal(org.id);
         } else {

@@ -12,6 +12,14 @@ function getReturnToFromLocation(location: { pathname: string; search: string })
     return `${location.pathname}${location.search || ''}`;
 }
 
+function safeSessionSet(key: string, value: string) {
+    try {
+        sessionStorage.setItem(key, value);
+    } catch {
+        // Ignore storage failures on mobile/private browsers.
+    }
+}
+
 export const ProtectedRoute: React.FC<{
     children: React.ReactNode;
     allowOnboarding?: boolean;
@@ -28,7 +36,7 @@ export const ProtectedRoute: React.FC<{
         if (!auth.isConfigured && import.meta.env.PROD) return;
 
         if (!auth.user) {
-            sessionStorage.setItem('returnTo', returnTo);
+            safeSessionSet('returnTo', returnTo);
         }
     }, [auth.loading, auth.isConfigured, auth.user, returnTo]);
 
@@ -49,7 +57,7 @@ export const ProtectedRoute: React.FC<{
 
     const onboardingIncomplete = !auth.organization || !auth.onboarding?.is_completed;
     if (onboardingIncomplete && !allowOnboarding) {
-        sessionStorage.setItem('returnTo', returnTo);
+        safeSessionSet('returnTo', returnTo);
         return <Navigate to={`/onboarding?returnTo=${encodeReturnTo(location.pathname, location.search)}`} replace />;
     }
 

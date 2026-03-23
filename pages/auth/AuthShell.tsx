@@ -12,8 +12,8 @@ export const AuthShell: React.FC<{
     return (
         <div className="min-h-screen bg-background text-text-primary relative overflow-hidden">
             <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-                <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-primary/20 rounded-full blur-[140px]" />
-                <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-purple-600/10 rounded-full blur-[140px]" />
+                <div className="absolute top-[-10%] left-[-10%] hidden h-[42%] w-[42%] rounded-full bg-primary/14 blur-[72px] sm:block sm:blur-[120px]" />
+                <div className="absolute bottom-[-10%] right-[-10%] hidden h-[42%] w-[42%] rounded-full bg-purple-600/8 blur-[72px] sm:block sm:blur-[120px]" />
             </div>
 
             <div className="relative z-10 min-h-screen flex flex-col">

@@ -41,6 +41,55 @@ function generateWorkspaceSlug(name: string): string {
     return `${base || 'workspace'}-${crypto.randomUUID().slice(0, 8)}`;
 }
 
+async function ensureDefaultWorkspace(
+    supabaseAdmin: any,
+    organizationId: string,
+    organizationName: string,
+    userId: string
+) {
+    const { data: existingWorkspace, error: workspaceLookupError } = await supabaseAdmin
+        .from('workspaces')
+        .select('id')
+        .eq('organization_id', organizationId)
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+    if (workspaceLookupError) {
+        console.error('[bootstrap-org] workspace lookup failed:', workspaceLookupError);
+        throw new Error('Could not check your workspace.');
+    }
+
+    if (existingWorkspace) {
+        return;
+    }
+
+    const baseWorkspace = {
+        organization_id: organizationId,
+        name: organizationName,
+        description: 'Default workspace',
+        created_by: userId,
+    };
+
+    let workspaceError = (await supabaseAdmin
+        .from('workspaces')
+        .insert({
+            ...baseWorkspace,
+            slug: generateWorkspaceSlug(organizationName),
+        } as any)).error;
+
+    if (workspaceError && /column .*slug/i.test(workspaceError.message || '')) {
+        workspaceError = (await supabaseAdmin
+            .from('workspaces')
+            .insert(baseWorkspace as any)).error;
+    }
+
+    if (workspaceError) {
+        console.error('[bootstrap-org] workspace create failed:', workspaceError);
+        throw new Error('Could not create your default workspace.');
+    }
+}
+
 export default async function handler(
     req: { method?: string; headers?: Record<string, string | string[] | undefined>; body?: unknown },
     res: JsonResponse
@@ -122,6 +171,33 @@ export default async function handler(
     let organizationId = userRow.organization_id;
     let created = false;
 
+    if (organizationId) {
+        const { data: existingOrganization, error: existingOrganizationError } = await supabaseAdmin
+            .from('organizations')
+            .select('id')
+            .eq('id', organizationId)
+            .maybeSingle();
+
+        if (existingOrganizationError) {
+            console.error('[bootstrap-org] existing organization lookup failed:', existingOrganizationError);
+            return res.status(500).json({ error: 'Could not validate your organization.' });
+        }
+
+        if (!existingOrganization) {
+            const { error: clearOrganizationError } = await supabaseAdmin
+                .from('users')
+                .update({ organization_id: null })
+                .eq('id', user.id);
+
+            if (clearOrganizationError) {
+                console.error('[bootstrap-org] failed to clear broken organization link:', clearOrganizationError);
+                return res.status(500).json({ error: 'Could not repair your account.' });
+            }
+
+            organizationId = null;
+        }
+    }
+
     if (!organizationId) {
         const organizationName = deriveOrganizationName(requestBody?.name, {
             email: user.email,
@@ -156,29 +232,11 @@ export default async function handler(
         organizationId = organization.id;
         created = true;
 
-        const baseWorkspace = {
-            organization_id: organization.id,
-            name: organization.name,
-            description: 'Default workspace',
-            created_by: user.id,
-        };
-
-        let workspaceError = (await supabaseAdmin
-            .from('workspaces')
-            .insert({
-                ...baseWorkspace,
-                slug: generateWorkspaceSlug(organization.name),
-            })).error;
-
-        if (workspaceError && /column .*slug/i.test(workspaceError.message || '')) {
-            workspaceError = (await supabaseAdmin
-                .from('workspaces')
-                .insert(baseWorkspace)).error;
-        }
-
-        if (workspaceError) {
-            console.error('[bootstrap-org] workspace create failed:', workspaceError);
-            return res.status(500).json({ error: 'Could not create your default workspace.' });
+        try {
+            await ensureDefaultWorkspace(supabaseAdmin, organization.id, organization.name, user.id);
+        } catch (workspaceError) {
+            const message = workspaceError instanceof Error ? workspaceError.message : 'Could not create your default workspace.';
+            return res.status(500).json({ error: message });
         }
     }
 
@@ -191,6 +249,13 @@ export default async function handler(
     if (organizationFetchError) {
         console.error('[bootstrap-org] organization fetch failed:', organizationFetchError);
         return res.status(500).json({ error: 'Could not load your organization.' });
+    }
+
+    try {
+        await ensureDefaultWorkspace(supabaseAdmin, organization.id, organization.name, user.id);
+    } catch (workspaceError) {
+        const message = workspaceError instanceof Error ? workspaceError.message : 'Could not create your default workspace.';
+        return res.status(500).json({ error: message });
     }
 
     let { data: onboarding, error: onboardingError } = await supabaseAdmin

@@ -1005,22 +1005,24 @@ export const LandingPage: React.FC = () => {
                     </FadeIn>
 
                     {/* Annual/Monthly Toggle */}
-                    <FadeIn delay={0.1} className="mt-8 flex items-center justify-center gap-4">
+                    <FadeIn delay={0.1} className="mt-8 flex items-center justify-center gap-3 sm:gap-4">
                         <span className={`text-sm font-semibold transition-colors ${!annualBilling ? 'text-white' : 'text-text-muted'}`}>Monthly</span>
                         <button
+                            type="button"
                             onClick={() => setAnnualBilling(!annualBilling)}
-                            className={`relative w-12 h-6 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${annualBilling ? 'bg-primary' : 'bg-white/20'}`}
+                            className={`relative h-7 w-14 flex-shrink-0 rounded-full border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background ${annualBilling ? 'border-primary/60 bg-primary/90' : 'border-white/15 bg-white/10'}`}
                             aria-label="Toggle annual billing"
+                            aria-pressed={annualBilling}
                         >
                             <motion.span
-                                className="absolute top-1 w-4 h-4 rounded-full bg-white shadow-md"
-                                animate={{ x: annualBilling ? 26 : 2 }}
-                                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                                className="absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow-[0_2px_8px_rgba(15,23,42,0.35)]"
+                                animate={{ x: annualBilling ? 24 : 0 }}
+                                transition={{ type: 'spring', stiffness: 520, damping: 34 }}
                             />
                         </button>
-                        <span className={`text-sm font-semibold transition-colors ${annualBilling ? 'text-white' : 'text-text-muted'}`}>
+                        <span className={`flex items-center gap-2 text-sm font-semibold transition-colors ${annualBilling ? 'text-white' : 'text-text-muted'}`}>
                             Annual
-                            <span className="ml-2 text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
                                 Save 20%
                             </span>
                         </span>

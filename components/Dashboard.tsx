@@ -198,30 +198,32 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col min-w-0">
+                {!isExporting && (
+                    <DashboardHeader
+                        activeTab={activeTab}
+                        setActiveTab={handleSetActiveTab}
+                        auditCredits={organization?.audit_credits_remaining ?? 0}
+                        onReset={onReset}
+                        onExportPDF={handleExportPDF}
+                        onExportCSV={handleExportCSV}
+                        onTopUp={() => setShowTopUp(true)}
+                        isExporting={isExporting}
+                        sidebarCollapsed={sidebarCollapsed}
+                    />
+                )}
+
                 {/* No Report State -> Input Layer */}
                 {!report && activeTab === 'overview' ? (
-                    <div className={`flex-1 p-6 flex flex-col items-center justify-center transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-[68px]' : 'lg:ml-64'}`}>
+                    <main className={`flex-1 p-4 pb-24 sm:p-6 sm:pb-24 lg:pb-6 transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-[68px]' : 'lg:ml-64'}`}>
                         <InputLayer
                             onStartAnalysis={onStartAnalysis!}
                             isAnalyzing={isAnalyzing}
                             statusMessage={statusMessage}
                             discoveredCount={discoveredCount}
                         />
-                    </div>
+                    </main>
                 ) : (
                     <>
-                        <DashboardHeader
-                            activeTab={activeTab}
-                            setActiveTab={handleSetActiveTab}
-                            auditCredits={organization?.audit_credits_remaining ?? 0}
-                            onReset={onReset}
-                            onExportPDF={handleExportPDF}
-                            onExportCSV={handleExportCSV}
-                            onTopUp={() => setShowTopUp(true)}
-                            isExporting={isExporting}
-                            sidebarCollapsed={sidebarCollapsed}
-                        />
-
                         <main
                             id="dashboard-content"
                             className={`flex-1 p-4 pb-24 sm:p-6 sm:pb-24 lg:pb-6 lg:mt-0 transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-[68px]' : 'lg:ml-64'} ${isExporting ? 'bg-white !m-0 !p-0' : ''}`}

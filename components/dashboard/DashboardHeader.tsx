@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, Zap, Download, FileText, PlusCircle, X, Brain, Share2, LogOut } from 'lucide-react';
+import { Menu, Zap, Download, FileText, PlusCircle, X, Brain, Share2, LogOut, Settings } from 'lucide-react';
 import { useToast } from '../Toast';
 import { TabType } from './DashboardTypes';
 import { NotificationDropdown } from '../NotificationDropdown';
@@ -51,21 +51,6 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     };
 
     if (isExporting) return null;
-
-    // Mobile Tabs list - synced with Sidebar tabs
-    const tabs = [
-        { id: 'overview' as const, label: t('sidebar.dashboard', 'Dashboard') },
-        { id: 'pages' as const, label: t('sidebar.pages', 'Pages') },
-        { id: 'search' as const, label: t('sidebar.search', 'Search') },
-        { id: 'benchmark' as const, label: t('sidebar.benchmark', 'Benchmark') },
-        { id: 'consistency' as const, label: t('sidebar.consistency', 'Consistency') },
-        { id: 'optimization' as const, label: t('sidebar.optimization', 'Optimization') },
-        { id: 'sandbox' as const, label: t('sidebar.sandbox', 'Sandbox') },
-        { id: 'reports' as const, label: t('sidebar.reports', 'Reports') },
-        { id: 'history' as const, label: t('sidebar.history', 'History') },
-        { id: 'integrations' as const, label: t('sidebar.integrations', 'Integrations') },
-        { id: 'settings' as const, label: t('sidebar.settings', 'Settings') },
-    ];
 
     return (
         <>
@@ -215,42 +200,35 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                             className="relative w-64 bg-surface h-full border-r border-border p-4 overflow-y-auto"
                         >
-                            {tabs.map(tab => (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => { setActiveTab(tab.id); setMobileMenuOpen(false); }}
-                                    className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium mb-1 ${activeTab === tab.id ? 'bg-primary/10 text-primary' : 'text-text-secondary'}`}
-                                    aria-current={activeTab === tab.id ? 'page' : undefined}
-                                >
-                                    {tab.label}
-                                </button>
-                            ))}
+                            <div className="mb-4">
+                                <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-text-muted">Menu</p>
+                            </div>
 
-                            {/* Mobile-only actions */}
-                            <div className="mt-4 pt-4 border-t border-border space-y-2">
+                            <div className="space-y-2">
+                                <button
+                                    onClick={() => { setActiveTab('overview'); setMobileMenuOpen(false); }}
+                                    className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium ${activeTab === 'overview' ? 'bg-primary/10 text-primary border border-primary/20' : 'text-text-secondary hover:bg-white/5 hover:text-white border border-transparent'}`}
+                                    aria-current={activeTab === 'overview' ? 'page' : undefined}
+                                >
+                                    Dashboard
+                                </button>
                                 <button
                                     onClick={() => { onReset(); setMobileMenuOpen(false); }}
-                                    className="w-full flex items-center gap-2 px-4 py-3 bg-primary/10 text-primary rounded-lg text-sm font-medium"
+                                    className="w-full flex items-center gap-2 px-4 py-3 bg-primary/10 text-primary rounded-lg text-sm font-medium border border-primary/20"
                                 >
                                     <PlusCircle className="w-4 h-4" /> New Audit
                                 </button>
                                 <button
+                                    onClick={() => { navigate('/settings'); setMobileMenuOpen(false); }}
+                                    className="w-full flex items-center gap-2 px-4 py-3 text-text-secondary rounded-lg text-sm font-medium hover:bg-white/5 hover:text-white"
+                                >
+                                    <Settings className="w-4 h-4" /> Settings
+                                </button>
+                                <button
                                     onClick={async () => { await handleLogout(); setMobileMenuOpen(false); }}
-                                    className="w-full flex items-center gap-2 px-4 py-3 text-text-secondary rounded-lg text-sm font-medium hover:bg-white/5"
+                                    className="w-full flex items-center gap-2 px-4 py-3 text-text-secondary rounded-lg text-sm font-medium hover:bg-white/5 hover:text-white"
                                 >
-                                    <LogOut className="w-4 h-4" /> Logout
-                                </button>
-                                <button
-                                    onClick={() => { onExportPDF(); setMobileMenuOpen(false); }}
-                                    className="w-full flex items-center gap-2 px-4 py-3 text-text-secondary rounded-lg text-sm font-medium hover:bg-white/5"
-                                >
-                                    <Download className="w-4 h-4" /> Export PDF
-                                </button>
-                                <button
-                                    onClick={() => { onExportCSV(); setMobileMenuOpen(false); }}
-                                    className="w-full flex items-center gap-2 px-4 py-3 text-text-secondary rounded-lg text-sm font-medium hover:bg-white/5"
-                                >
-                                    <FileText className="w-4 h-4" /> Export CSV
+                                    <LogOut className="w-4 h-4" /> Sign Out
                                 </button>
                             </div>
                         </motion.div>

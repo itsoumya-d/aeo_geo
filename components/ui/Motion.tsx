@@ -18,8 +18,8 @@ export const FadeIn: React.FC<MotionWrapperProps> = ({
 
     return (
         <motion.div
-            initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 18, filter: 'blur(6px)' }}
-            whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration, delay, ease: [0.22, 1, 0.36, 1] }}
             className={className}

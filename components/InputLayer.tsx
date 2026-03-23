@@ -400,31 +400,29 @@ export const InputLayer: React.FC<InputLayerProps> = ({ onStartAnalysis, isAnaly
             </div>
           )}
 
-          <Button
-            onClick={() => onStartAnalysis(assets)}
-            disabled={!canStartAnalysis}
-            size="lg"
-            className={`
-              w-full sm:w-auto h-14 px-12 text-lg font-bold flex items-center gap-3
-              ${isAnalyzing ? 'opacity-70' : isOutOfCredits ? 'opacity-60 cursor-not-allowed' : 'bg-gradient-to-r from-primary via-blue-600 to-indigo-600 hover:shadow-glow'}
-            `}
-          >
-            {isAnalyzing ? (
-              <>{t('audit.running', 'Running AI Audit...')}</>
-            ) : isOutOfCredits ? (
-              <>
-                <AlertCircle className="w-5 h-5" aria-hidden="true" /> {t('audit.top_up', 'Top Up to Continue')}
-              </>
-            ) : !primaryWebsite ? (
-              <>
-                <Globe className="w-5 h-5" aria-hidden="true" /> Add Primary Website
-              </>
-            ) : (
-              <>
-                <Search className="w-5 h-5" aria-hidden="true" /> {t('audit.start', 'Start AEO Audit')}
-              </>
-            )}
-          </Button>
+          {(primaryWebsite || isAnalyzing || isOutOfCredits) && (
+            <Button
+              onClick={() => onStartAnalysis(assets)}
+              disabled={!canStartAnalysis}
+              size="lg"
+              className={`
+                w-full sm:w-auto h-14 px-12 text-lg font-bold flex items-center gap-3
+                ${isAnalyzing ? 'opacity-70' : isOutOfCredits ? 'opacity-60 cursor-not-allowed' : 'bg-gradient-to-r from-primary via-blue-600 to-indigo-600 hover:shadow-glow'}
+              `}
+            >
+              {isAnalyzing ? (
+                <>{t('audit.running', 'Running AI Audit...')}</>
+              ) : isOutOfCredits ? (
+                <>
+                  <AlertCircle className="w-5 h-5" aria-hidden="true" /> {t('audit.top_up', 'Top Up to Continue')}
+                </>
+              ) : (
+                <>
+                  <Search className="w-5 h-5" aria-hidden="true" /> {t('audit.start', 'Start AEO Audit')}
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </Card>
     </div>

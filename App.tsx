@@ -86,8 +86,8 @@ const App: React.FC = () => {
                                         : (
                                             <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
                                                 <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-                                                    <div className="absolute top-[-20%] left-[-20%] w-[60%] h-[60%] bg-primary/10 rounded-full blur-[150px]" />
-                                                    <div className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[60%] bg-purple-600/10 rounded-full blur-[150px]" />
+                                                    <div className="absolute top-[-10%] left-[-10%] hidden h-[42%] w-[42%] rounded-full bg-primary/10 blur-[80px] sm:block sm:blur-[130px]" />
+                                                    <div className="absolute bottom-[-10%] right-[-10%] hidden h-[42%] w-[42%] rounded-full bg-purple-600/8 blur-[80px] sm:block sm:blur-[130px]" />
                                                 </div>
                                                 <LandingPage />
                                             </div>
