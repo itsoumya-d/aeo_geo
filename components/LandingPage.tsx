@@ -1165,19 +1165,13 @@ export const LandingPage: React.FC = () => {
                         <p className="mt-5 text-lg text-text-secondary leading-relaxed max-w-xl mx-auto">
                             Get your first audit free. No credit card, no setup — just paste your URL and see your AI visibility score in minutes.
                         </p>
-                        <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-                            <Link to="/signup" className="w-full sm:w-auto">
-                                <Button variant="cta" size="lg" className="w-full sm:w-auto">
-                                    Start your free audit <ArrowRight className="w-4 h-4 ml-2" />
-                                </Button>
-                            </Link>
+                        <div className="mt-8 flex justify-center">
                             <Link to="/help" className="w-full sm:w-auto">
                                 <Button variant="ghost" size="lg" className="w-full sm:w-auto border border-white/10 hover:bg-white/5">
                                     Browse Help Center
                                 </Button>
                             </Link>
                         </div>
-                        <p className="mt-5 text-xs text-text-muted">3 free audits included · No credit card required · Cancel anytime</p>
                     </FadeIn>
                 </div>
             </section>

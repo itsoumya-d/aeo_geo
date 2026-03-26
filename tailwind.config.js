@@ -12,32 +12,32 @@ export default {
     theme: {
         extend: {
             colors: {
-                // Deep Space Palette
-                background: '#020617', // Slate 950 (Midnight Blue)
-                surface: '#0f172a',    // Slate 900
-                surfaceHighlight: '#1e293b', // Slate 800
+                // Mint Night Palette
+                background: '#07110f',
+                surface: '#0d1917',
+                surfaceHighlight: '#17302b',
 
                 primary: {
-                    DEFAULT: '#8b5cf6', // Violet 500 (Neon Purple)
-                    hover: '#7c3aed',   // Violet 600
-                    foreground: '#ffffff',
-                    glow: 'rgba(139, 92, 246, 0.5)'
+                    DEFAULT: '#8fe3c8',
+                    hover: '#73d6b7',
+                    foreground: '#06251f',
+                    glow: 'rgba(143, 227, 200, 0.42)'
                 },
                 secondary: {
-                    DEFAULT: '#06b6d4', // Cyan 500 (Electric Blue)
-                    hover: '#0891b2',   // Cyan 600
-                    foreground: '#ffffff',
+                    DEFAULT: '#c6f1e4',
+                    hover: '#b0e8d8',
+                    foreground: '#06251f',
                 },
                 cta: {
-                    DEFAULT: '#f59e0b', // Amber 500
-                    hover: '#d97706',   // Amber 600
+                    DEFAULT: '#5fcfb0',
+                    hover: '#48bc9c',
                 },
                 text: {
-                    primary: '#f8fafc', // Slate 50 (Starlight White)
-                    secondary: '#94a3b8', // Slate 400
-                    muted: '#64748b',   // Slate 500
+                    primary: '#f1fffb',
+                    secondary: '#a8c8be',
+                    muted: '#76978e',
                 },
-                border: '#1e293b', // Slate 800
+                border: '#1b3732',
                 success: '#10b981', // Emerald 500
                 error: '#ef4444',   // Red 500
                 warning: '#f59e0b', // Amber 500
@@ -48,9 +48,9 @@ export default {
                 mono: ['Fira Code', 'monospace'],
             },
             boxShadow: {
-                'glow': '0 0 20px -5px rgba(139, 92, 246, 0.3)', // Purple glow
-                'glow-lg': '0 0 30px -5px rgba(139, 92, 246, 0.4)',
-                'glow-cyan': '0 0 20px -5px rgba(6, 182, 212, 0.3)',
+                'glow': '0 0 22px -6px rgba(143, 227, 200, 0.28)',
+                'glow-lg': '0 0 34px -8px rgba(143, 227, 200, 0.38)',
+                'glow-cyan': '0 0 20px -6px rgba(198, 241, 228, 0.22)',
                 'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
             },
             backdropBlur: {
@@ -86,7 +86,7 @@ export default {
             },
             backgroundImage: {
                 'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-                'hero-glow': 'conic-gradient(from 180deg at 50% 50%, #1e293b 0deg, #0f172a 180deg, #1e293b 360deg)',
+                'hero-glow': 'conic-gradient(from 180deg at 50% 50%, #17302b 0deg, #0d1917 180deg, #17302b 360deg)',
             }
         },
     },
