@@ -10,6 +10,7 @@ import { Button } from './ui/Button';
 import { Card } from './ui/Card';
 import { Input } from './ui/Input';
 import { FadeIn, SlideUp, StaggerContainer } from './ui/Motion';
+import { HeroGlobeBackground } from './hero/HeroGlobeBackground';
 import { VideoModal } from './VideoModal';
 import { insertFreeAuditLead } from '../services/supabase';
 import { normalizeUrl, validateUrl } from '../utils/validation';
@@ -621,6 +622,7 @@ export const LandingPage: React.FC = () => {
 
             {/* ── Hero ───────────────────────────────────── */}
             <header className="relative z-10 overflow-hidden border-b border-white/5">
+                <HeroGlobeBackground />
                 <div className="pointer-events-none absolute inset-0" aria-hidden="true">
                     <div className="absolute inset-x-0 top-0 h-[560px] bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_38%),radial-gradient(circle_at_top_right,rgba(245,158,11,0.08),transparent_26%)]" />
                     <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
