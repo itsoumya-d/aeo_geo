@@ -269,7 +269,7 @@ export const SettingsPage: React.FC = () => {
             <div className="flex-1 flex flex-col min-w-0 lg:ml-64 transition-all duration-300">
                 <div className="max-w-5xl mx-auto w-full px-6 py-12">
                     <header className="mb-10">
-                        <h1 className="text-3xl font-display font-bold text-white mb-2">Settings</h1>
+                        <h1 className="text-3xl font-display font-bold text-slate-900 mb-2">Settings</h1>
                         <p className="text-text-secondary">Manage your account, organization, and preferences.</p>
                     </header>
 
@@ -285,7 +285,7 @@ export const SettingsPage: React.FC = () => {
                                         className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap flex-shrink-0 transition-colors ${
                                             activeTab === tab.id
                                                 ? 'bg-primary/10 text-primary border border-primary/20'
-                                                : 'text-text-secondary hover:text-white bg-white/5 border border-transparent'
+                                                : 'text-text-secondary hover:text-text-primary bg-white/5 border border-transparent'
                                         }`}
                                     >
                                         {tab.icon}
@@ -311,7 +311,7 @@ export const SettingsPage: React.FC = () => {
                                             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-left transition-colors ${
                                                 activeTab === tab.id
                                                     ? 'bg-primary/10 text-primary'
-                                                    : 'text-text-secondary hover:text-white hover:bg-white/5'
+                                                    : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
                                             }`}
                                         >
                                             {tab.icon}
@@ -341,7 +341,7 @@ export const SettingsPage: React.FC = () => {
                                 {/* Profile Tab */}
                                 {activeTab === 'profile' && (
                                     <div className="animate-in fade-in duration-300">
-                                        <h2 className="text-xl font-bold text-white mb-6 font-display">Profile Settings</h2>
+                                        <h2 className="text-xl font-bold text-slate-900 mb-6 font-display">Profile Settings</h2>
 
                                         <div className="space-y-8">
                                             {/* Avatar */}
@@ -350,7 +350,7 @@ export const SettingsPage: React.FC = () => {
                                                     {fullName?.charAt(0) || user?.email?.charAt(0) || '?'}
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <p className="text-sm font-semibold text-white">Profile</p>
+                                                    <p className="text-sm font-semibold text-slate-900">Profile</p>
                                                     <p className="text-xs text-text-secondary mt-1">Update your name and preferences.</p>
                                                 </div>
                                             </div>
@@ -386,7 +386,7 @@ export const SettingsPage: React.FC = () => {
                                 {/* Organization Tab */}
                                 {activeTab === 'organization' && (
                                     <div className="animate-in fade-in duration-300">
-                                        <h2 className="text-xl font-bold text-white mb-6 font-display">Organization Settings</h2>
+                                        <h2 className="text-xl font-bold text-slate-900 mb-6 font-display">Organization Settings</h2>
 
                                         <div className="space-y-6">
                                             <div className="max-w-md">
@@ -428,7 +428,7 @@ export const SettingsPage: React.FC = () => {
                                 {/* Domains Tab */}
                                 {activeTab === 'domains' && (
                                     <div className="animate-in fade-in duration-300">
-                                        <h2 className="text-xl font-bold text-white mb-6 font-display">Domain Management</h2>
+                                        <h2 className="text-xl font-bold text-slate-900 mb-6 font-display">Domain Management</h2>
                                         <DomainManagement />
                                     </div>
                                 )}
@@ -436,7 +436,7 @@ export const SettingsPage: React.FC = () => {
                                 {/* Security Tab */}
                                 {activeTab === 'security' && (
                                     <div className="animate-in fade-in duration-300">
-                                        <h2 className="text-xl font-bold text-white mb-6 font-display">Security Settings</h2>
+                                        <h2 className="text-xl font-bold text-slate-900 mb-6 font-display">Security Settings</h2>
 
                                         <div className="space-y-6 max-w-md">
                                             <div className="bg-background/50 border border-border rounded-xl p-5">
@@ -445,7 +445,7 @@ export const SettingsPage: React.FC = () => {
                                                         <Key className="w-5 h-5 text-text-secondary" />
                                                     </div>
                                                     <div>
-                                                        <p className="font-bold text-white">Change password</p>
+                                                        <p className="font-bold text-slate-900">Change password</p>
                                                         <p className="text-sm text-text-muted">Use a strong password to protect your account.</p>
                                                     </div>
                                                 </div>
@@ -484,7 +484,7 @@ export const SettingsPage: React.FC = () => {
                                                         <Trash2 className="w-4 h-4 text-rose-400" />
                                                     </div>
                                                     <div>
-                                                        <p className="font-bold text-white">Delete account</p>
+                                                        <p className="font-bold text-slate-900">Delete account</p>
                                                         <p className="text-sm text-text-muted mt-0.5">Permanently remove your account and all associated data. This cannot be undone.</p>
                                                     </div>
                                                 </div>
@@ -538,7 +538,7 @@ export const SettingsPage: React.FC = () => {
                                 {/* Billing Tab */}
                                 {activeTab === 'billing' && (
                                     <div className="animate-in fade-in duration-300">
-                                        <h2 className="text-xl font-bold text-white mb-6 font-display">Billing & Subscription</h2>
+                                        <h2 className="text-xl font-bold text-slate-900 mb-6 font-display">Billing & Subscription</h2>
                                         <BillingDashboard />
                                     </div>
                                 )}
@@ -546,7 +546,7 @@ export const SettingsPage: React.FC = () => {
                                 {/* API Tab */}
                                 {activeTab === 'api' && (
                                     <div className="animate-in fade-in duration-300">
-                                        <h2 className="text-xl font-bold text-white mb-6 font-display">API Access</h2>
+                                        <h2 className="text-xl font-bold text-slate-900 mb-6 font-display">API Access</h2>
                                         <APIKeyManager />
                                     </div>
                                 )}
@@ -554,7 +554,7 @@ export const SettingsPage: React.FC = () => {
                                 {/* Branding Tab */}
                                 {activeTab === 'branding' && (
                                     <div className="animate-in fade-in duration-300">
-                                        <h2 className="text-xl font-bold text-white mb-6 font-display">Report Branding</h2>
+                                        <h2 className="text-xl font-bold text-slate-900 mb-6 font-display">Report Branding</h2>
                                         <ReportBranding />
                                     </div>
                                 )}
@@ -569,7 +569,7 @@ export const SettingsPage: React.FC = () => {
                                 {/* Notifications Tab */}
                                 {activeTab === 'notifications' && (
                                     <div className="animate-in fade-in duration-300">
-                                        <h2 className="text-xl font-bold text-white mb-6 font-display">Notification Preferences</h2>
+                                        <h2 className="text-xl font-bold text-slate-900 mb-6 font-display">Notification Preferences</h2>
 
                                         <div className="space-y-4 max-w-2xl">
                                             {[
@@ -600,7 +600,7 @@ export const SettingsPage: React.FC = () => {
                                                     className="flex items-center justify-between bg-background/50 border border-border rounded-xl p-4"
                                                 >
                                                     <div>
-                                                        <p className="font-bold text-white">{pref.label}</p>
+                                                        <p className="font-bold text-slate-900">{pref.label}</p>
                                                         <p className="text-sm text-text-muted">{pref.desc}</p>
                                                     </div>
                                                     <button

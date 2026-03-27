@@ -22,20 +22,20 @@ const SectionSummary = ({ report, branding }: { report: Report, branding: any })
             <div className="h-px flex-1 bg-white/5"></div>
         </h2>
         <div className="grid grid-cols-2 gap-10">
-            <div className="bg-white/[0.03] p-10 rounded-3xl border border-white/5">
+            <div className="bg-white p-10 rounded-3xl border border-slate-200">
                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-4">Overall Visibility Score</span>
                 <div className="flex items-end gap-3">
-                    <span className="text-6xl font-black text-white">{report.overallScore}</span>
+                    <span className="text-6xl font-black text-slate-900">{report.overallScore}</span>
                     <span className="text-xl text-slate-600 mb-2 font-black">/100</span>
                 </div>
-                <div className="w-full h-1.5 bg-white/5 rounded-full mt-6 overflow-hidden">
+                <div className="w-full h-1.5 bg-slate-100 rounded-full mt-6 overflow-hidden">
                     <div className="h-full rounded-full" style={{ width: `${report.overallScore}%`, backgroundColor: branding.primaryColor }}></div>
                 </div>
             </div>
-            <div className="bg-white/[0.03] p-10 rounded-3xl border border-white/5">
+            <div className="bg-white p-10 rounded-3xl border border-slate-200">
                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-4">Brand Consistency</span>
                 <div className="flex items-end gap-3">
-                    <span className="text-6xl font-black text-white">{report.brandConsistencyScore}</span>
+                    <span className="text-6xl font-black text-slate-900">{report.brandConsistencyScore}</span>
                     <span className="text-xl text-slate-600 mb-2 font-black">%</span>
                 </div>
                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-6">Alignment across {report.pages.length} audited pages</p>
@@ -53,11 +53,11 @@ const SectionRecommendations = ({ report }: { report: Report }) => (
         </h2>
         <div className="space-y-6">
             {report.pages[0]?.recommendations.slice(0, 3).map((rec, i) => (
-                <div key={i} className="flex gap-6 p-6 rounded-2xl bg-white/[0.02] border border-white/5">
+                <div key={i} className="flex gap-6 p-6 rounded-2xl bg-white border border-slate-200">
                     <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${rec.impact === 'HIGH' ? 'bg-rose-500' : 'bg-amber-500'}`}></div>
                     <div>
-                        <h4 className="text-sm font-black text-white mb-2">{rec.issue}</h4>
-                        <p className="text-xs text-slate-400 leading-relaxed">{rec.instruction}</p>
+                        <h4 className="text-sm font-black text-slate-900 mb-2">{rec.issue}</h4>
+                        <p className="text-xs text-slate-600 leading-relaxed">{rec.instruction}</p>
                     </div>
                 </div>
             ))}
@@ -72,7 +72,7 @@ const SectionCompetitors = ({ report }: { report: Report }) => (
             Competitor Landscape
             <div className="h-px flex-1 bg-white/5"></div>
         </h2>
-        <div className="p-10 rounded-3xl bg-white/[0.02] border border-white/5 text-center">
+        <div className="p-10 rounded-3xl bg-white border border-slate-200 text-center">
             <p className="text-slate-500 text-sm">Competitor benchmarking data not available in this snapshot.</p>
         </div>
     </div>
@@ -85,7 +85,7 @@ const SectionTrends = ({ report }: { report: Report }) => (
             Visibility Trends (30d)
             <div className="h-px flex-1 bg-white/5"></div>
         </h2>
-        <div className="p-10 rounded-3xl bg-white/[0.02] border border-white/5 text-center">
+        <div className="p-10 rounded-3xl bg-white border border-slate-200 text-center">
             <p className="text-slate-500 text-sm">
                 Trendlines appear after you run multiple audits over time.
             </p>
@@ -249,8 +249,8 @@ export const ReportTab: React.FC<ReportTabProps> = ({ report }) => {
 
                 {/* Configuration Panel */}
                 <div className="lg:col-span-4 space-y-8">
-                    <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-3xl p-8 shadow-2xl">
-                        <h3 className="text-white font-black text-lg mb-6 flex items-center gap-3">
+                    <div className="bg-white backdrop-blur-xl border border-slate-200 rounded-3xl p-8 shadow-xl">
+                        <h3 className="text-slate-900 font-black text-lg mb-6 flex items-center gap-3">
                             <Palette className="w-5 h-5 text-primary" /> White-Label Settings
                         </h3>
 
@@ -261,7 +261,7 @@ export const ReportTab: React.FC<ReportTabProps> = ({ report }) => {
                                     type="text"
                                     value={branding.companyName}
                                     onChange={(e) => setBranding({ ...branding, companyName: e.target.value })}
-                                    className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 text-sm text-white font-bold outline-none focus:border-primary/50"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 font-bold outline-none focus:border-primary/50"
                                 />
                             </div>
 
@@ -278,15 +278,15 @@ export const ReportTab: React.FC<ReportTabProps> = ({ report }) => {
                                         type="text"
                                         value={branding.primaryColor}
                                         onChange={(e) => setBranding({ ...branding, primaryColor: e.target.value })}
-                                        className="flex-1 bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 text-xs text-slate-400 font-mono"
+                                        className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-700 font-mono"
                                     />
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-3xl p-8 shadow-2xl">
-                        <h3 className="text-white font-black text-lg mb-6 flex items-center gap-3">
+                    <div className="bg-white backdrop-blur-xl border border-slate-200 rounded-3xl p-8 shadow-xl">
+                        <h3 className="text-slate-900 font-black text-lg mb-6 flex items-center gap-3">
                             <Download className="w-5 h-5 text-emerald-400" /> Export Format
                         </h3>
                         <div className="grid grid-cols-3 gap-3">
@@ -295,9 +295,9 @@ export const ReportTab: React.FC<ReportTabProps> = ({ report }) => {
                                 { id: 'csv', label: 'CSV', icon: <BarChart3 className="w-4 h-4" />, desc: 'Data export', handler: handleExportCSV },
                                 { id: 'json', label: 'JSON', icon: <Search className="w-4 h-4" />, desc: 'API format', handler: handleExportJSON }
                             ].map((fmt) => (
-                                <button key={fmt.id} onClick={fmt.handler} className="p-4 rounded-xl bg-white/[0.03] border border-white/10 hover:border-primary/30 transition-all text-center group">
+                                <button key={fmt.id} onClick={fmt.handler} className="p-4 rounded-xl bg-slate-50 border border-slate-200 hover:border-primary/30 transition-all text-center group">
                                     <div className="text-primary mb-2 flex justify-center">{fmt.icon}</div>
-                                    <p className="text-xs font-bold text-white">{fmt.label}</p>
+                                    <p className="text-xs font-bold text-slate-900">{fmt.label}</p>
                                     <p className="text-[9px] text-slate-500 mt-1">{fmt.desc}</p>
                                 </button>
                             ))}

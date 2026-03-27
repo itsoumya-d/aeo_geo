@@ -191,7 +191,7 @@ export const BenchmarkTab: React.FC<BenchmarkTabProps> = ({ report }) => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/[0.05] pb-10">
                 <div>
-                    <h2 className="text-3xl font-black text-white tracking-tight flex items-center gap-4">
+                    <h2 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-4">
                         <div className="bg-primary/20 p-2.5 rounded-xl border border-primary/20">
                             <Users className="text-primary w-6 h-6" />
                         </div>
@@ -255,11 +255,11 @@ export const BenchmarkTab: React.FC<BenchmarkTabProps> = ({ report }) => {
             {competitors.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {competitors.map((comp) => (
-                        <div key={comp.domain} className="bg-slate-900/40 backdrop-blur-xl rounded-2xl border border-white/5 p-6 group hover:border-primary/20 transition-all">
+                        <div key={comp.domain} className="bg-white backdrop-blur-xl rounded-2xl border border-slate-200 p-6 group hover:border-primary/20 transition-all">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-3">
                                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: colorByDomain[comp.domain] || '#64748b' }} />
-                                    <span className="text-sm font-bold text-white truncate max-w-[120px]">{comp.name || comp.domain}</span>
+                                    <span className="text-sm font-bold text-slate-900 truncate max-w-[120px]">{comp.name || comp.domain}</span>
                                 </div>
                                 <div className={`flex items-center gap-1 text-[10px] font-black ${comp.scoreChange > 0 ? 'text-emerald-400' : comp.scoreChange < 0 ? 'text-rose-400' : 'text-slate-500'}`}>
                                     {comp.scoreChange > 0 ? <ArrowUpRight className="w-3 h-3" /> : comp.scoreChange < 0 ? <ArrowDownRight className="w-3 h-3" /> : null}
@@ -268,7 +268,7 @@ export const BenchmarkTab: React.FC<BenchmarkTabProps> = ({ report }) => {
                             </div>
                             <div className="flex items-end justify-between">
                                 <div>
-                                    <span className="text-3xl font-black text-white">{comp.latestScore}</span>
+                                    <span className="text-3xl font-black text-slate-900">{comp.latestScore}</span>
                                     <span className="text-slate-500 text-sm ml-1">/100</span>
                                 </div>
                                 <span className="text-[9px] text-slate-600 font-medium">
@@ -281,7 +281,7 @@ export const BenchmarkTab: React.FC<BenchmarkTabProps> = ({ report }) => {
             )}
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <div className="lg:col-span-7 bg-slate-900/40 backdrop-blur-xl rounded-3xl border border-white/5 p-8 sm:p-10 shadow-2xl">
+                <div className="lg:col-span-7 bg-white backdrop-blur-xl rounded-3xl border border-slate-200 p-8 sm:p-10 shadow-xl">
                     <h3 className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
                         <BarChart3 className="w-4 h-4 text-primary" /> Score comparison
                     </h3>
@@ -291,7 +291,7 @@ export const BenchmarkTab: React.FC<BenchmarkTabProps> = ({ report }) => {
                             <button
                                 key={m}
                                 onClick={() => setMetric(m)}
-                                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${metric === m ? 'bg-white/5 border-white/20 text-white' : 'border-transparent text-slate-600 hover:text-slate-400'}`}
+                                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${metric === m ? 'bg-slate-900 text-white border-slate-900' : 'border-transparent text-slate-600 hover:text-slate-900'}`}
                             >
                                 {m === 'Overall' ? 'Overall' : m}
                             </button>
@@ -326,13 +326,13 @@ export const BenchmarkTab: React.FC<BenchmarkTabProps> = ({ report }) => {
                                         <Tooltip
                                             cursor={{ fill: 'rgba(255,255,255,0.03)' }}
                                             contentStyle={{
-                                                backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                                                borderColor: 'rgba(255,255,255,0.1)',
+                                                backgroundColor: '#ffffff',
+                                                borderColor: '#e2e8f0',
                                                 borderRadius: '16px',
                                                 padding: '12px 14px',
-                                                border: '1px solid rgba(255,255,255,0.06)',
+                                                border: '1px solid #e2e8f0',
                                             }}
-                                            itemStyle={{ fontSize: '11px', fontWeight: 800 }}
+                                            itemStyle={{ fontSize: '11px', fontWeight: 800, color: '#0f172a' }}
                                         />
                                         <Bar dataKey="score" radius={[10, 10, 10, 10]}>
                                             {comparisonData.map((entry, index) => (
@@ -357,8 +357,8 @@ export const BenchmarkTab: React.FC<BenchmarkTabProps> = ({ report }) => {
                 </div>
 
                 <div className="lg:col-span-5 space-y-6">
-                    <div className="bg-slate-900/40 backdrop-blur-xl rounded-3xl border border-white/5 p-8 shadow-2xl">
-                        <h4 className="text-white font-bold text-lg">How benchmarking works</h4>
+                    <div className="bg-white backdrop-blur-xl rounded-3xl border border-slate-200 p-8 shadow-xl">
+                        <h4 className="text-slate-900 font-bold text-lg">How benchmarking works</h4>
                         <p className="text-slate-500 text-sm leading-relaxed mt-3">
                             We compare your latest audit scores against the most recent benchmarks stored for your tracked competitors.
                         </p>
@@ -379,9 +379,9 @@ export const BenchmarkTab: React.FC<BenchmarkTabProps> = ({ report }) => {
                     </div>
 
                     {competitors.length === 0 ? (
-                        <div className="bg-primary/5 border border-primary/10 p-8 rounded-3xl text-center">
-                            <Users className="text-primary w-8 h-8 mb-4 mx-auto" />
-                            <h4 className="text-white font-bold text-xl mb-2">No competitors tracked</h4>
+                    <div className="bg-primary/5 border border-primary/10 p-8 rounded-3xl text-center">
+                        <Users className="text-primary w-8 h-8 mb-4 mx-auto" />
+                        <h4 className="text-slate-900 font-bold text-xl mb-2">No competitors tracked</h4>
                             <p className="text-slate-400 text-sm leading-relaxed mb-4">
                                 Add a competitor domain to begin benchmarking.
                             </p>
@@ -397,7 +397,7 @@ export const BenchmarkTab: React.FC<BenchmarkTabProps> = ({ report }) => {
             </div>
 
             {/* Competitor Benchmarks Table */}
-            <div className="bg-slate-900/40 backdrop-blur-xl rounded-3xl border border-white/5 p-8 sm:p-10 shadow-2xl overflow-hidden">
+            <div className="bg-white backdrop-blur-xl rounded-3xl border border-slate-200 p-8 sm:p-10 shadow-xl overflow-hidden">
                 <div className="flex items-center justify-between mb-10">
                     <h3 className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2">
                         <ShieldCheck className="w-4 h-4 text-blue-400" /> Competitive benchmarks
@@ -419,10 +419,10 @@ export const BenchmarkTab: React.FC<BenchmarkTabProps> = ({ report }) => {
                                 <td className="py-6 px-4">
                                     <div className="flex items-center gap-3">
                                         <div className="w-2 h-2 rounded-full bg-primary" />
-                                        <span className="text-sm font-bold text-white uppercase tracking-tight">Your Brand</span>
+                                        <span className="text-sm font-bold text-slate-900 uppercase tracking-tight">Your Brand</span>
                                     </div>
                                 </td>
-                                <td className="py-6 px-4 text-center font-black text-white">{report.overallScore}</td>
+                                <td className="py-6 px-4 text-center font-black text-slate-900">{report.overallScore}</td>
                                 <td className="py-6 px-4 text-center text-slate-500 font-bold text-xs">—</td>
                                 <td className="py-6 px-4 text-center text-slate-500 text-xs">This audit</td>
                                 <td className="py-6 px-4 text-right">-</td>

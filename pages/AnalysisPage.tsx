@@ -272,14 +272,14 @@ export const AnalysisPage: React.FC = () => {
                                 <XCircle className="w-8 h-8 text-rose-400" />
                             </div>
                         </div>
-                        <h1 className="text-xl font-display font-bold text-white mb-2">Analysis could not complete</h1>
+                        <h1 className="text-xl font-display font-bold text-text-primary mb-2">Analysis could not complete</h1>
                         <p className="text-sm text-text-secondary mb-6 max-w-sm mx-auto">
                             {errorMessage || 'Something went wrong. Please try again or contact support if the problem persists.'}
                         </p>
                         <div className="flex flex-col sm:flex-row gap-3">
                             <button
                                 onClick={handleBackToDashboard}
-                                className="flex-1 bg-surface border border-border hover:bg-white/5 text-white font-semibold px-4 py-3 rounded-xl transition-colors"
+                                className="flex-1 bg-surface border border-border hover:bg-slate-50 text-text-primary font-semibold px-4 py-3 rounded-xl transition-colors"
                             >
                                 Back to dashboard
                             </button>
@@ -310,7 +310,7 @@ export const AnalysisPage: React.FC = () => {
             <div className="w-full max-w-2xl">
                 <div className="text-center mb-8">
                     <p className="text-xs font-bold text-text-muted uppercase tracking-[0.25em] mb-3">AI Visibility Audit</p>
-                    <h1 className="text-3xl sm:text-4xl font-display font-bold text-white mb-3">Running your analysis</h1>
+                    <h1 className="text-3xl sm:text-4xl font-display font-bold text-slate-900 mb-3">Running your analysis</h1>
                     {auditDomain && (
                         <p className="text-sm font-semibold text-primary mb-2 truncate max-w-xs mx-auto">
                             {auditDomain}
@@ -396,7 +396,7 @@ export const AnalysisPage: React.FC = () => {
 
                     <button
                         onClick={handleBackToDashboard}
-                        className="mt-2 w-full bg-white/5 hover:bg-white/10 text-text-secondary hover:text-white font-semibold px-4 py-3 rounded-xl transition-colors border border-white/10"
+                        className="mt-2 w-full bg-white/5 hover:bg-white/10 text-text-secondary hover:text-text-primary font-semibold px-4 py-3 rounded-xl transition-colors border border-white/10"
                         disabled={isAnalyzing}
                     >
                         Cancel and return

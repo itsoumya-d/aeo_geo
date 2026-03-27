@@ -120,7 +120,7 @@ export const AcceptInvitePage: React.FC = () => {
     return (
         <AuthShell
             title="Team Invitation"
-            subtitle="You've been invited to join an organization on GOAT AEO"
+                subtitle="You've been invited to join an organization on GOATAEO"
         >
             <div className="space-y-6">
                 {/* Loading */}

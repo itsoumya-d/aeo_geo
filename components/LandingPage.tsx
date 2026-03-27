@@ -94,7 +94,7 @@ const PricingCard: React.FC<{
 
         <div className="mt-8">
             <Link to={cta.to} className="block">
-                <Button variant={featured ? 'cta' : 'secondary'} size="lg" className="w-full">
+                <Button variant="cta" size="lg" className="w-full">
                     {cta.label} <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
             </Link>
@@ -124,7 +124,7 @@ const HeroPreview: React.FC = () => {
 
     return (
         <motion.div
-            className="relative"
+            className="relative z-10 w-full lg:w-[calc(100%+3rem)] xl:w-[calc(100%+7rem)] lg:-mr-12 xl:-mr-28 max-w-none origin-left"
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, ease: 'easeOut' }}
@@ -306,8 +306,8 @@ const FAQ_ITEMS = [
         answer: 'AEO is the practice of optimizing your content to be cited and recommended by AI assistants like ChatGPT, Gemini, Claude, and Perplexity. Unlike traditional SEO which focuses on Google rankings, AEO focuses on how LLMs perceive and reference your brand when users ask questions.'
     },
     {
-        question: 'How is GOAT AEO different from traditional SEO tools?',
-        answer: 'Traditional SEO tools measure Google rankings. GOAT AEO measures AI visibility — how likely your brand is to be cited, quoted, or recommended by AI search engines. We analyze your semantic positioning, entity linking, quotability, and cross-platform consistency.'
+        question: 'How is GOATAEO different from traditional SEO tools?',
+        answer: 'Traditional SEO tools measure Google rankings. GOATAEO measures AI visibility — how likely your brand is to be cited, quoted, or recommended by AI search engines. We analyze your semantic positioning, entity linking, quotability, and cross-platform consistency.'
     },
     {
         question: 'Which AI platforms do you track?',
@@ -323,7 +323,7 @@ const FAQ_ITEMS = [
     },
     {
         question: 'Is there an API for agencies?',
-        answer: 'Yes! Pro and Agency plans include full API access with SHA-256 authenticated API keys. You can run audits, fetch reports, and integrate GOAT AEO data into your own dashboards and client workflows.'
+        answer: 'Yes! Pro and Agency plans include full API access with SHA-256 authenticated API keys. You can run audits, fetch reports, and integrate GOATAEO data into your own dashboards and client workflows.'
     },
     {
         question: 'Do you offer white-label reports for agencies?',
@@ -625,7 +625,7 @@ export const LandingPage: React.FC = () => {
                 </div>
 
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-12 pb-16 sm:pt-18 sm:pb-24 relative">
-                    <div className="grid gap-12 lg:grid-cols-[minmax(0,1.02fr)_minmax(360px,0.98fr)] lg:gap-16 items-center">
+                    <div className="relative z-10 grid gap-12 lg:grid-cols-[minmax(0,1.04fr)_minmax(0,0.96fr)] lg:gap-14 xl:gap-16 items-center">
                         <div className="min-w-0">
                             <SlideUp>
                                 <motion.div
@@ -704,7 +704,7 @@ export const LandingPage: React.FC = () => {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true, margin: "-40px" }}
                             transition={{ duration: 0.45, ease: 'easeOut' }}
-                            className="min-w-0 w-full"
+                            className="min-w-0 w-full justify-self-end"
                         >
                             <HeroPreview />
                         </motion.div>
@@ -919,12 +919,12 @@ export const LandingPage: React.FC = () => {
             <section className="relative z-10 py-20 sm:py-24 border-t border-white/5 bg-surface/20">
                 <div className="max-w-5xl mx-auto px-4 sm:px-6">
                     <FadeIn>
-                        <p className="text-xs font-bold uppercase tracking-[0.25em] text-secondary text-center">Why GOAT AEO</p>
+                        <p className="text-xs font-bold uppercase tracking-[0.25em] text-secondary text-center">Why GOATAEO</p>
                         <h2 className="text-3xl sm:text-4xl font-display font-bold text-text-primary text-center mt-3">
                             The only tool built for AI search
                         </h2>
                         <p className="text-text-secondary text-center mt-4 max-w-2xl mx-auto leading-relaxed">
-                            See how GOAT AEO stacks up against traditional SEO platforms and other AI visibility tools.
+                            See how GOATAEO stacks up against traditional SEO platforms and other AI visibility tools.
                         </p>
                     </FadeIn>
 
@@ -943,7 +943,7 @@ export const LandingPage: React.FC = () => {
                                     <th className="p-4 text-center">
                                         <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 border border-primary/30 rounded-full text-primary font-bold text-xs">
                                             <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                                            GOAT AEO
+                                            GOATAEO
                                         </span>
                                     </th>
                                     <th className="p-4 text-center text-text-muted font-semibold text-xs">Traditional SEO</th>
@@ -1008,7 +1008,7 @@ export const LandingPage: React.FC = () => {
                         <button
                             type="button"
                             onClick={() => setAnnualBilling(!annualBilling)}
-                            className={`relative h-7 w-14 flex-shrink-0 rounded-full border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background ${annualBilling ? 'border-primary/60 bg-primary/90' : 'border-white/15 bg-white/10'}`}
+                            className={`relative h-7 w-14 flex-shrink-0 rounded-full border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background ${annualBilling ? 'border-primary/60 bg-primary/90' : 'border-slate-500 bg-slate-600'}`}
                             aria-label="Toggle annual billing"
                             aria-pressed={annualBilling}
                         >
@@ -1182,7 +1182,7 @@ export const LandingPage: React.FC = () => {
                         <div className="min-w-0">
                             <div className="flex items-center gap-2.5">
                                 <BrandMark className="h-8 w-8 rounded-lg" />
-                                <p className="text-text-primary font-display font-bold">GOAT AEO</p>
+                                <p className="text-text-primary font-display font-bold">GOATAEO</p>
                             </div>
                             <p className="text-sm text-text-secondary mt-3 max-w-md leading-relaxed">
                                 Measure and improve how AI assistants cite and understand your brand. Built for the AI-first search era.
@@ -1205,7 +1205,7 @@ export const LandingPage: React.FC = () => {
 
                     <div className="mt-10 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                         <p className="text-xs text-text-muted font-semibold">
-                            © {new Date().getFullYear()} GOAT AEO. All rights reserved.
+                            © {new Date().getFullYear()} GOATAEO. All rights reserved.
                         </p>
                         <p className="text-xs text-text-muted font-semibold">
                             Payments by Paddle · Available worldwide

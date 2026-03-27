@@ -7,8 +7,8 @@ type HeroGlobeBackgroundProps = {
 };
 
 const PLATFORM_BADGES = [
-    { name: 'ChatGPT', className: 'left-[10%] top-[16%] md:left-[14%] md:top-[20%]' },
-    { name: 'Gemini', className: 'left-[26%] top-[10%] md:left-[32%] md:top-[16%]' },
+    { name: 'ChatGPT', className: 'left-[10%] top-[8%] md:left-[12%] md:top-[10%]' },
+    { name: 'Gemini', className: 'left-[26%] top-[6%] md:left-[30%] md:top-[6%]' },
     { name: 'Claude', className: 'left-[16%] bottom-[18%] md:left-[22%] md:bottom-[21%]' },
 ];
 
@@ -197,7 +197,7 @@ export const HeroGlobeBackground: React.FC<HeroGlobeBackgroundProps> = ({ classN
             camera.updateProjectionMatrix();
             root.position.x = clientWidth < 768 ? 0.48 : clientWidth < 1024 ? -0.65 : -1.55;
             root.position.y = clientWidth < 768 ? 1.34 : 0.1;
-            const scale = clientWidth < 768 ? 0.9 : clientWidth < 1024 ? 0.9 : 1;
+            const scale = clientWidth < 768 ? 0.82 : clientWidth < 1024 ? 0.84 : 0.88;
             root.scale.setScalar(scale);
         };
 
@@ -266,7 +266,7 @@ export const HeroGlobeBackground: React.FC<HeroGlobeBackgroundProps> = ({ classN
     }, [reduceMotion]);
 
     return (
-        <div ref={wrapperRef} className={`pointer-events-none absolute inset-0 overflow-hidden ${className}`} aria-hidden="true">
+        <div ref={wrapperRef} className={`pointer-events-none absolute inset-0 overflow-hidden z-0 ${className}`} aria-hidden="true">
             <canvas ref={canvasRef} className="absolute inset-0 h-full w-full opacity-[0.9] md:opacity-95" />
 
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_42%,rgba(65,168,255,0.16),transparent_24%),radial-gradient(circle_at_24%_58%,rgba(95,225,240,0.1),transparent_32%),linear-gradient(90deg,rgba(10,20,36,0.88)_0%,rgba(10,20,36,0.38)_36%,rgba(10,20,36,0.48)_62%,rgba(10,20,36,0.84)_100%)]" />

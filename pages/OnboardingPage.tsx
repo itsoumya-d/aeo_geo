@@ -290,7 +290,7 @@ export const OnboardingPage: React.FC = () => {
                         Onboarding
                     </motion.div>
                     <h1 className="text-4xl font-display font-bold text-white tracking-tight">
-                        Welcome to GOAT AEO
+                            Welcome to GOATAEO
                     </h1>
                     <p className="text-text-secondary mt-4 max-w-xl mx-auto leading-relaxed">
                         We help you understand and improve how AI search engines perceive your brand.

@@ -14,7 +14,7 @@ interface SEOHeadProps {
     modifiedTime?: string;
 }
 
-const SITE_NAME = 'GOAT AEO';
+const SITE_NAME = 'GOATAEO';
 const DEFAULT_IMAGE = 'https://aeogeo-eight.vercel.app/og-image.png';
 const BASE_URL = 'https://aeogeo-eight.vercel.app';
 
@@ -22,10 +22,10 @@ const BASE_URL = 'https://aeogeo-eight.vercel.app';
 const organizationSchema = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'GOAT AEO',
+    name: 'GOATAEO',
     url: BASE_URL,
     logo: `${BASE_URL}/logo.png`,
-    description: 'GOAT AEO is an AI visibility engine for Generative Engine Optimization (GEO). Analyze how ChatGPT, Gemini, Claude, and Perplexity perceive your brand.',
+    description: 'GOATAEO is an AI visibility engine for Generative Engine Optimization (GEO). Analyze how ChatGPT, Gemini, Claude, and Perplexity perceive your brand.',
     sameAs: [],
     contactPoint: {
         '@type': 'ContactPoint',
@@ -51,7 +51,7 @@ const organizationSchema = {
 const softwareApplicationSchema = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
-    name: 'GOAT AEO Visibility Engine',
+    name: 'GOATAEO Visibility Engine',
     applicationCategory: 'BusinessApplication',
     operatingSystem: 'Web',
     offers: {
@@ -85,7 +85,7 @@ const websiteSchema = {
     '@type': 'WebSite',
     name: SITE_NAME,
     url: BASE_URL,
-    description: 'GOAT AEO helps brands improve visibility in AI search engines like ChatGPT, Gemini, Claude, and Perplexity.',
+    description: 'GOATAEO helps brands improve visibility in AI search engines like ChatGPT, Gemini, Claude, and Perplexity.',
     potentialAction: {
         '@type': 'SearchAction',
         target: {
@@ -98,8 +98,8 @@ const websiteSchema = {
 };
 
 export const SEOHead: React.FC<SEOHeadProps> = ({
-    title = 'GOAT AEO | AI Visibility Engine',
-    description = 'Discover how ChatGPT, Gemini, Claude, and Perplexity see your brand. GOAT AEO gives you real-time AI visibility scoring and recommendations.',
+    title = 'GOATAEO | AI Visibility Engine',
+    description = 'Discover how ChatGPT, Gemini, Claude, and Perplexity see your brand. GOATAEO gives you real-time AI visibility scoring and recommendations.',
     keywords = ['AI SEO', 'GEO', 'AEO', 'Generative Engine Optimization', 'AI Visibility', 'ChatGPT SEO', 'Answer Engine Optimization'],
     image = DEFAULT_IMAGE,
     url = BASE_URL,
@@ -138,11 +138,11 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
             <meta name="title" content={fullTitle} />
             <meta name="description" content={description} />
             <meta name="keywords" content={keywords.join(', ')} />
-            <meta name="author" content="GOAT AEO" />
+            <meta name="author" content="GOATAEO" />
             <link rel="canonical" href={canonicalUrl} />
 
             {/* AI Discoverability Meta Tags */}
-            <meta name="generator" content="GOAT AEO Platform v2.0" />
+            <meta name="generator" content="GOATAEO Platform v2.0" />
             <meta name="subject" content="Generative Engine Optimization (GEO) and AI SEO" />
             <meta name="topic" content="AI Visibility, GEO, Answer Engine Optimization" />
             <meta name="summary" content={description} />

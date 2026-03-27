@@ -71,7 +71,7 @@ export const VisibilityTrendChart: React.FC = () => {
     if (!loading && data.length === 0 && !error) {
         return (
             <div className="bg-surface/40 border border-border rounded-2xl p-8">
-                <h3 className="text-white font-display font-bold text-xl">Visibility momentum</h3>
+                <h3 className="text-slate-900 font-display font-bold text-xl">Visibility momentum</h3>
                 <p className="text-sm text-text-secondary mt-2 max-w-xl">
                     Run your first audit to start tracking trendlines over time. Momentum updates automatically as you add more audits.
                 </p>
@@ -89,7 +89,7 @@ export const VisibilityTrendChart: React.FC = () => {
                 <div>
                     <h3 className="text-text-secondary text-[10px] font-bold uppercase tracking-[0.2em] font-display">Visibility Momentum</h3>
                     <div className="flex items-center gap-3 mt-2">
-                        <p className="text-2xl sm:text-3xl font-black text-white tracking-tighter font-display">
+                        <p className={`text-2xl sm:text-3xl font-black tracking-tighter font-display ${momentum > 0 ? 'text-emerald-500' : momentum < 0 ? 'text-rose-500' : 'text-slate-900'}`}>
                             {momentum > 0 ? `+${momentum}%` : `${momentum}%`}
                         </p>
                         <Badge variant={momentum > 0 ? 'success' : momentum < 0 ? 'destructive' : 'secondary'}>
@@ -232,9 +232,9 @@ export const VisibilityTrendChart: React.FC = () => {
                     >
                         <div className="text-[11px] sm:text-xs text-text-secondary font-medium leading-relaxed">
                             <span className="text-primary font-black mr-2 uppercase tracking-widest text-[9px] sm:text-[10px] font-display">Trend Insight</span>
-                            Your visibility has {momentum > 0 ? 'increased' : momentum < 0 ? 'decreased' : 'stayed stable'} by <span className="text-white font-bold">{Math.abs(momentum)}%</span> over the last {timeframe === '7d' ? 'week' : timeframe === '30d' ? 'month' : 'quarter'}.
+                            Your visibility has {momentum > 0 ? 'increased' : momentum < 0 ? 'decreased' : 'stayed stable'} by <span className={momentum > 0 ? 'text-emerald-500 font-bold' : momentum < 0 ? 'text-rose-500 font-bold' : 'text-slate-900 font-bold'}>{Math.abs(momentum)}%</span> over the last {timeframe === '7d' ? 'week' : timeframe === '30d' ? 'month' : 'quarter'}.
                         </div>
-                        <Button variant="ghost" size="sm" className="text-primary hover:text-white uppercase text-[10px] tracking-widest font-black">
+                        <Button variant="ghost" size="sm" className="text-primary hover:text-text-primary uppercase text-[10px] tracking-widest font-black">
                             Full Analysis →
                         </Button>
                     </motion.div>
