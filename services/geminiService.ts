@@ -1,14 +1,51 @@
 import { Asset, Report, AssetType, DiscoveredPage } from "../types";
 import { ActionType, SandboxCompareResult } from "../supabase/functions/_shared/types";
 
+async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+}
+
+function isRetriableStatus(status: number): boolean {
+  return status === 408 || status === 429 || status === 502 || status === 503 || status === 504;
+}
+
 async function invokeAI<T>(action: ActionType, payload: Record<string, unknown>): Promise<T> {
-  const response = await fetch('/api/ai-audit', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ action, payload }),
-  });
+  let response: Response | null = null;
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      response = await fetchWithTimeout('/api/ai-audit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action, payload }),
+      }, 45000);
+
+      if (!isRetriableStatus(response.status) || attempt === 1) {
+        break;
+      }
+    } catch (error) {
+      lastError = error;
+      if (attempt === 1) {
+        throw error;
+      }
+    }
+
+    await new Promise((resolve) => window.setTimeout(resolve, 1200 * (attempt + 1)));
+  }
+
+  if (!response) {
+    throw lastError instanceof Error ? lastError : new Error('Audit request failed before the server responded.');
+  }
 
   if (response.ok) {
     return await response.json() as T;

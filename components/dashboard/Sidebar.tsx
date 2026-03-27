@@ -77,7 +77,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onRes
                 layout
                 transition={{ type: 'spring', stiffness: 350, damping: 35 }}
                 className={cn(
-                    'hidden lg:flex flex-col h-screen bg-surface border-r border-border shrink-0 fixed top-0 left-0 z-40 overflow-hidden',
+                    'hidden lg:flex flex-col h-screen bg-slate-950 border-r border-white/10 shrink-0 fixed top-0 left-0 z-40 overflow-hidden',
                     width
                 )}
             >
@@ -101,7 +101,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onRes
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
                                 onClick={() => setCollapsed(true)}
-                                className="ml-auto p-1.5 rounded-md text-text-muted hover:text-text-primary hover:bg-slate-100 transition-colors"
+                                className="ml-auto p-1.5 rounded-md text-text-muted hover:text-white hover:bg-white/5 transition-colors"
                                 title="Collapse sidebar (Ctrl+\\)"
                                 aria-label="Collapse sidebar"
                             >
@@ -116,7 +116,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onRes
                     <div className="px-3 pt-3">
                         <button
                             onClick={() => setCollapsed(false)}
-                            className="w-full flex items-center justify-center p-1.5 rounded-md text-text-muted hover:text-text-primary hover:bg-slate-100 transition-colors"
+                            className="w-full flex items-center justify-center p-1.5 rounded-md text-text-muted hover:text-white hover:bg-white/5 transition-colors"
                             title="Expand sidebar"
                             aria-label="Expand sidebar"
                         >
@@ -185,10 +185,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onRes
                                         collapsed ? 'justify-center p-3' : 'gap-3 px-3 py-2.5',
                                         isActive
                                             ? 'bg-primary/10 text-primary border border-primary/20 shadow-sm'
-                                            : 'text-text-secondary hover:text-text-primary hover:bg-slate-100 border border-transparent'
+                                            : 'text-text-secondary hover:text-white hover:bg-white/5 border border-transparent'
                                     )}
                                 >
-                                    <Icon className={cn('w-4 h-4 flex-shrink-0 transition-colors', isActive ? 'text-primary' : 'text-text-secondary group-hover:text-text-primary')} />
+                                    <Icon className={cn('w-4 h-4 flex-shrink-0 transition-colors', isActive ? 'text-primary' : 'text-text-secondary group-hover:text-white')} />
 
                                     <AnimatePresence initial={false}>
                                         {!collapsed && (
@@ -238,7 +238,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onRes
                         aria-label="Bulk Import"
                         className={cn(
                             'w-full flex items-center gap-2 rounded-lg text-xs font-bold uppercase tracking-wider',
-                            'bg-white/5 hover:bg-slate-100 text-text-secondary hover:text-text-primary border border-white/5 transition-colors',
+                            'bg-white/5 hover:bg-white/10 text-text-secondary hover:text-white border border-white/5 transition-colors',
                             collapsed ? 'justify-center p-3' : 'px-3 py-2.5'
                         )}
                     >

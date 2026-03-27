@@ -3,6 +3,10 @@ type RequestLike = {
     body?: unknown;
 };
 
+export const config = {
+    maxDuration: 45,
+};
+
 type ResponseLike = {
     setHeader: (name: string, value: string) => void;
     status: (code: number) => {
@@ -34,43 +38,77 @@ function normalizeUrl(input: string): string {
 }
 
 async function fetchWithBrowserHeaders(url: string): Promise<Response> {
-    return fetch(url, {
-        redirect: 'follow',
-        headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache',
-            'Upgrade-Insecure-Requests': '1',
-        },
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+    try {
+        return await fetch(url, {
+            redirect: 'follow',
+            signal: controller.signal,
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache',
+                'Upgrade-Insecure-Requests': '1',
+            },
+        });
+    } finally {
+        clearTimeout(timeoutId);
+    }
 }
 
 async function scrapeWithJina(url: string): Promise<CrawlResult> {
-    const response = await fetch(`https://r.jina.ai/${url}`, {
-        headers: {
-            'x-respond-with': 'markdown',
-            'x-no-cache': 'true',
-            'User-Agent': 'Mozilla/5.0',
-        },
-    });
+    let lastError: unknown;
 
-    if (!response.ok) {
-        throw new Error(`Jina Reader failed: ${response.status}`);
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 22000);
+
+        try {
+            const response = await fetch(`https://r.jina.ai/${url}`, {
+                signal: controller.signal,
+                headers: {
+                    'x-respond-with': 'markdown',
+                    'x-no-cache': 'true',
+                    'User-Agent': 'Mozilla/5.0',
+                },
+            });
+
+            if (!response.ok) {
+                const message = `Jina Reader failed: ${response.status}`;
+                if ((response.status === 429 || response.status >= 500) && attempt === 0) {
+                    lastError = new Error(message);
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
+                    continue;
+                }
+                throw new Error(message);
+            }
+
+            const markdown = (await response.text()).trim();
+            if (!markdown || markdown.length < 120) {
+                throw new Error('Jina Reader returned empty content.');
+            }
+
+            return {
+                markdown,
+                metadata: {
+                    source: 'jina-reader',
+                },
+            };
+        } catch (error) {
+            lastError = error;
+            if (attempt === 1) {
+                throw error;
+            }
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+        } finally {
+            clearTimeout(timeoutId);
+        }
     }
 
-    const markdown = (await response.text()).trim();
-    if (!markdown || markdown.length < 120) {
-        throw new Error('Jina Reader returned empty content.');
-    }
-
-    return {
-        markdown,
-        metadata: {
-            source: 'jina-reader',
-        },
-    };
+    throw lastError instanceof Error ? lastError : new Error('Jina Reader failed.');
 }
 
 function extractInternalLinks(html: string, baseUrl: string): string[] {

@@ -3,6 +3,10 @@ type RequestLike = {
     body?: unknown;
 };
 
+export const config = {
+    maxDuration: 60,
+};
+
 type ResponseLike = {
     setHeader: (name: string, value: string) => void;
     status: (code: number) => {
@@ -83,39 +87,65 @@ async function callGemini(prompt: string, responseMimeType?: string): Promise<st
         throw new Error('GEMINI_API_KEY is not configured on Vercel.');
     }
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            contents: [
-                {
-                    role: 'user',
-                    parts: [{ text: prompt }],
-                },
-            ],
-            generationConfig: {
-                temperature: 0.35,
-                maxOutputTokens: 4096,
-                ...(responseMimeType ? { responseMimeType } : {}),
-            },
-        }),
-    });
+    let lastError: unknown;
 
-    if (!response.ok) {
-        throw new Error(`Gemini request failed: ${response.status} ${await response.text()}`);
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 40000);
+
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    contents: [
+                        {
+                            role: 'user',
+                            parts: [{ text: prompt }],
+                        },
+                    ],
+                    generationConfig: {
+                        temperature: 0.35,
+                        maxOutputTokens: 4096,
+                        ...(responseMimeType ? { responseMimeType } : {}),
+                    },
+                }),
+                signal: controller.signal,
+            });
+
+            if (!response.ok) {
+                const body = await response.text();
+                if ((response.status === 429 || response.status >= 500) && attempt === 0) {
+                    lastError = new Error(`Gemini request failed: ${response.status} ${body}`);
+                    await new Promise((resolve) => setTimeout(resolve, 1200));
+                    continue;
+                }
+                throw new Error(`Gemini request failed: ${response.status} ${body}`);
+            }
+
+            const data = await response.json() as {
+                candidates?: Array<{
+                    content?: {
+                        parts?: Array<{ text?: string }>;
+                    };
+                }>;
+            };
+
+            return data.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('')?.trim() || '';
+        } catch (error) {
+            lastError = error;
+            if (attempt === 1) {
+                throw error;
+            }
+            await new Promise((resolve) => setTimeout(resolve, 1200));
+        } finally {
+            clearTimeout(timeoutId);
+        }
     }
 
-    const data = await response.json() as {
-        candidates?: Array<{
-            content?: {
-                parts?: Array<{ text?: string }>;
-            };
-        }>;
-    };
-
-    return data.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('')?.trim() || '';
+    throw lastError instanceof Error ? lastError : new Error('Gemini request failed.');
 }
 
 function extractJsonObject(text: string): string | null {

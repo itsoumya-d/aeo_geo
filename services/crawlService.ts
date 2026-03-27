@@ -3,6 +3,21 @@ interface CrawlResult {
     metadata: any;
 }
 
+async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit, timeoutMs: number): Promise<Response> {
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+        return await fetch(input, { ...init, signal: controller.signal });
+    } finally {
+        window.clearTimeout(timeoutId);
+    }
+}
+
+function isRetriableStatus(status: number): boolean {
+    return status === 408 || status === 429 || status === 502 || status === 503 || status === 504;
+}
+
 /**
  * Triggers the Supabase Edge Function to crawl a specific URL.
  * Requires an existing AuditPage ID to link the content to.
@@ -12,13 +27,35 @@ interface CrawlResult {
  * Requires an existing AuditPage ID to link the content to.
  */
 export const crawlPage = async (url: string, auditPageId: string): Promise<CrawlResult> => {
-    const response = await fetch('/api/crawl-site', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ action: 'SCRAPE', url, auditPageId }),
-    });
+    let response: Response | null = null;
+    let lastError: unknown;
+
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+        try {
+            response = await fetchWithTimeout('/api/crawl-site', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ action: 'SCRAPE', url, auditPageId }),
+            }, 30000);
+
+            if (!isRetriableStatus(response.status) || attempt === 1) {
+                break;
+            }
+        } catch (error) {
+            lastError = error;
+            if (attempt === 1) {
+                throw error;
+            }
+        }
+
+        await new Promise((resolve) => window.setTimeout(resolve, 1000 * (attempt + 1)));
+    }
+
+    if (!response) {
+        throw lastError instanceof Error ? lastError : new Error('Crawl request failed before the server responded.');
+    }
 
     let result: { data?: CrawlResult; error?: string } | null = null;
     try {
@@ -42,13 +79,13 @@ export const crawlPage = async (url: string, auditPageId: string): Promise<Crawl
  */
 export const discoverLinks = async (url: string): Promise<string[]> => {
     try {
-        const response = await fetch('/api/crawl-site', {
+        const response = await fetchWithTimeout('/api/crawl-site', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({ action: 'MAP', url })
-        });
+        }, 25000);
 
         let result: { data?: string[]; error?: string } | null = null;
         try {

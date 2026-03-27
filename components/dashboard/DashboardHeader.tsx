@@ -55,14 +55,14 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
     return (
         <>
-            <header className={`sticky top-0 z-30 w-full bg-background/80 backdrop-blur-md border-b border-border transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-[68px]' : 'lg:pl-64'}`}>
+            <header className={`sticky top-0 z-30 w-full bg-slate-950/90 backdrop-blur-md border-b border-white/10 transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-[68px]' : 'lg:pl-64'}`}>
                 <div className="w-full px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16 sm:h-20">
                         {/* Mobile: Logo & Menu Toggle */}
                         <div className="flex lg:hidden items-center gap-4">
                             <button
                                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                                className="p-2 -ml-2 text-text-secondary hover:text-text-primary transition-colors"
+                                className="p-2 -ml-2 text-text-secondary hover:text-white transition-colors"
                                 aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
                                 aria-expanded={mobileMenuOpen}
                                 aria-controls="mobile-nav-menu"
@@ -79,8 +79,8 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                             <Link to="/" className="transition-transform duration-300 hover:-translate-y-0.5">
                                 <BrandLockup showTagline={false} />
                             </Link>
-                            <div className="h-6 w-px bg-border" />
-                            <h2 className="text-xl font-display font-bold text-text-primary capitalize">{activeTab.replace('-', ' ')}</h2>
+                            <div className="h-6 w-px bg-white/10" />
+                            <h2 className="text-xl font-display font-bold text-white capitalize">{activeTab.replace('-', ' ')}</h2>
                         </div>
 
                         {/* Actions */}
@@ -97,7 +97,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                                 </Badge>
                             </button>
 
-                            <div className="h-6 w-px bg-border hidden sm:block"></div>
+                            <div className="h-6 w-px bg-white/10 hidden sm:block"></div>
 
                             {/* Tools */}
                             <div className="flex items-center gap-1 sm:gap-2">
@@ -107,11 +107,11 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                                 <div
                                     role="group"
                                     aria-label="Language selector"
-                                    className="hidden sm:flex items-center bg-surface p-1 rounded-lg border border-border mr-1"
+                                    className="hidden sm:flex items-center bg-slate-900 p-1 rounded-lg border border-white/10 mr-1"
                                 >
                                     <button
                                         onClick={() => i18n.changeLanguage('en')}
-                                        className={`px-2 py-1 text-xs font-bold rounded ${i18n.language.startsWith('en') ? 'bg-primary text-white' : 'text-text-secondary hover:text-text-primary'}`}
+                                        className={`px-2 py-1 text-xs font-bold rounded ${i18n.language.startsWith('en') ? 'bg-primary text-white' : 'text-text-secondary hover:text-white'}`}
                                         aria-label="English"
                                         aria-pressed={i18n.language.startsWith('en')}
                                     >
@@ -119,7 +119,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                                     </button>
                                     <button
                                         onClick={() => i18n.changeLanguage('es')}
-                                        className={`px-2 py-1 text-xs font-bold rounded ${i18n.language.startsWith('es') ? 'bg-primary text-white' : 'text-text-secondary hover:text-text-primary'}`}
+                                        className={`px-2 py-1 text-xs font-bold rounded ${i18n.language.startsWith('es') ? 'bg-primary text-white' : 'text-text-secondary hover:text-white'}`}
                                         aria-label="Español"
                                         aria-pressed={i18n.language.startsWith('es')}
                                     >
@@ -127,10 +127,10 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                                     </button>
                                 </div>
 
-                                <div className="hidden sm:flex items-center bg-surface p-1 rounded-lg border border-border">
+                                <div className="hidden sm:flex items-center bg-slate-900 p-1 rounded-lg border border-white/10">
                                     <button
                                         onClick={onExportPDF}
-                                        className="p-2 text-text-secondary hover:text-text-primary transition-colors tooltip"
+                                        className="p-2 text-text-secondary hover:text-white transition-colors tooltip"
                                         title="Export PDF"
                                         aria-label="Export as PDF"
                                     >
@@ -138,25 +138,25 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                                     </button>
                                     <button
                                         onClick={onExportCSV}
-                                        className="p-2 text-text-secondary hover:text-text-primary transition-colors tooltip"
+                                        className="p-2 text-text-secondary hover:text-white transition-colors tooltip"
                                         title="Export CSV"
                                         aria-label="Export as CSV"
                                     >
                                         <FileText className="w-4 h-4" aria-hidden="true" />
                                     </button>
-                                    <div className="w-px h-4 bg-border mx-1" aria-hidden="true" />
+                                    <div className="w-px h-4 bg-white/10 mx-1" aria-hidden="true" />
                                     <button
                                         onClick={handleLogout}
-                                        className="p-2 text-text-secondary hover:text-text-primary transition-colors tooltip"
+                                        className="p-2 text-text-secondary hover:text-white transition-colors tooltip"
                                         title="Logout"
                                         aria-label="Logout"
                                     >
                                         <LogOut className="w-4 h-4" aria-hidden="true" />
                                     </button>
-                                    <div className="w-px h-4 bg-border mx-1" aria-hidden="true" />
+                                    <div className="w-px h-4 bg-white/10 mx-1" aria-hidden="true" />
                                     <button
                                         onClick={handleShare}
-                                        className="p-2 text-text-secondary hover:text-text-primary transition-colors tooltip"
+                                        className="p-2 text-text-secondary hover:text-white transition-colors tooltip"
                                         title="Copy link"
                                         aria-label="Copy link to clipboard"
                                     >

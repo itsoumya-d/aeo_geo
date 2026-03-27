@@ -189,7 +189,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
     };
 
     return (
-        <div className={`min-h-screen transition-all duration-700 relative flex bg-background text-text-primary ${isExporting ? 'bg-white text-slate-900' : ''}`}>
+        <div className={`min-h-screen transition-all duration-700 relative flex bg-slate-950 text-white ${isExporting ? 'bg-white text-slate-900' : ''}`}>
 
             {/* Sidebar (Desktop) */}
             {!isExporting && (
@@ -226,7 +226,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     <>
                         <main
                             id="dashboard-content"
-                            className={`flex-1 p-4 pb-24 sm:p-6 sm:pb-24 lg:pb-6 lg:mt-0 transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-[68px]' : 'lg:ml-64'} ${isExporting ? 'bg-white !m-0 !p-0' : ''}`}
+                            className={`flex-1 p-4 pb-24 sm:p-6 sm:pb-24 lg:pb-6 lg:mt-0 transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-[68px]' : 'lg:ml-64'} ${isExporting ? 'bg-white !m-0 !p-0' : 'bg-slate-950'}`}
                         >
                             {isExporting && report ? (
                                 <PDFReportGenerator
@@ -250,9 +250,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                     )}
 
                                     {report && showActionHub && activeTab === 'overview' && (
-                                        <div className="mb-6 bg-slate-900/50 border border-white/10 rounded-2xl p-5">
+                                        <div className="mb-6 bg-slate-950 border border-white/10 rounded-2xl p-5 shadow-[0_24px_60px_rgba(2,6,23,0.4)]">
                                             <p className="text-xs font-bold uppercase tracking-[0.2em] text-text-muted mb-2">Top 3 Next Actions</p>
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-stretch">
                                                 {[
                                                     {
                                                         id: 'optimization' as TabType,
@@ -276,14 +276,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                                     <button
                                                         key={item.id}
                                                         onClick={() => handleSetActiveTab(item.id)}
-                                                        className="text-left bg-white/5 hover:bg-white/10 border border-white/10 hover:border-primary/40 rounded-xl p-4 transition-colors group"
+                                                        className="text-left bg-slate-900 hover:bg-slate-900/90 border border-white/10 hover:border-primary/40 rounded-xl p-5 transition-colors group h-full min-h-[156px] flex flex-col"
                                                     >
                                                         <div className="flex items-center justify-between mb-2 text-primary">
                                                             {item.icon}
                                                             <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                                                         </div>
                                                         <p className="text-sm font-semibold text-white">{item.title}</p>
-                                                        <p className="text-xs text-text-secondary mt-1">{item.desc}</p>
+                                                        <p className="text-xs text-slate-300 mt-2 leading-relaxed">{item.desc}</p>
                                                     </button>
                                                 ))}
                                             </div>
