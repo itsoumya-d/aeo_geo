@@ -10,7 +10,7 @@ interface MotionWrapperProps extends HTMLMotionProps<'div'> {
 export const FadeIn: React.FC<MotionWrapperProps> = ({
     children,
     delay = 0,
-    duration = 0.5,
+    duration = 0.65,
     className,
     ...props
 }) => {
@@ -18,9 +18,9 @@ export const FadeIn: React.FC<MotionWrapperProps> = ({
 
     return (
         <motion.div
-            initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 18 }}
+            initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 28 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-80px" }}
+            viewport={{ once: true, margin: "-40px" }}
             transition={{ duration, delay, ease: [0.22, 1, 0.36, 1] }}
             className={className}
             {...props}
@@ -33,7 +33,7 @@ export const FadeIn: React.FC<MotionWrapperProps> = ({
 export const SlideUp: React.FC<MotionWrapperProps> = ({
     children,
     delay = 0,
-    duration = 0.5,
+    duration = 0.7,
     className,
     ...props
 }) => {
@@ -41,9 +41,9 @@ export const SlideUp: React.FC<MotionWrapperProps> = ({
 
     return (
         <motion.div
-            initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 32, scale: 0.985 }}
+            initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 42, scale: 0.975 }}
             whileInView={{ opacity: 1, y: 0, scale: 1 }}
-            viewport={{ once: true, margin: "-80px" }}
+            viewport={{ once: true, margin: "-40px" }}
             transition={{ duration, delay, ease: [0.22, 1, 0.36, 1] }}
             className={className}
             {...props}

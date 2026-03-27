@@ -7,7 +7,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { TabType } from './DashboardTypes';
 import { cn } from '../ui/Button';
-import { BrandLockup, BrandMark } from '../branding/BrandLogo';
+import { BrandMark } from '../branding/BrandLogo';
 import { BulkImportModal } from './BulkImportModal';
 import { WorkspaceSwitcher } from '../WorkspaceSwitcher';
 import { CreateWorkspaceModal } from '../CreateWorkspaceModal';
@@ -85,25 +85,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onRes
                 <div className="h-20 flex items-center px-3 border-b border-border">
                     <button
                         type="button"
-                        className="flex items-center gap-3 cursor-pointer group hover:opacity-80 transition-opacity min-w-0 text-left bg-transparent border-0 p-0"
+                        className="flex items-center justify-center cursor-pointer group hover:opacity-80 transition-opacity w-10 h-10 text-left bg-transparent border-0 p-0"
                         onClick={onReset}
                         title="Back to home"
                         aria-label="Back to home"
                     >
                         <BrandMark className="h-10 w-10 shrink-0 rounded-xl" />
-                        <AnimatePresence initial={false}>
-                            {!collapsed && (
-                                <motion.div
-                                    initial={{ opacity: 0, width: 0 }}
-                                    animate={{ opacity: 1, width: 'auto' }}
-                                    exit={{ opacity: 0, width: 0 }}
-                                    transition={{ duration: 0.2 }}
-                                    className="overflow-hidden whitespace-nowrap"
-                                >
-                                    <BrandLockup showTagline />
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
                     </button>
 
                     {/* Collapse toggle — only visible when expanded */}

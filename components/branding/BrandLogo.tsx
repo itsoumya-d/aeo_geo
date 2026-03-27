@@ -17,7 +17,7 @@ export const BrandMark: React.FC<BrandMarkProps> = ({ className }) => (
     <img
         src="/logo.png"
         alt="GOATAEO logo"
-        className={cn('object-contain', className)}
+        className={cn('object-contain mix-blend-multiply', className)}
         loading="eager"
         decoding="async"
     />
@@ -31,7 +31,7 @@ export const BrandLockup: React.FC<BrandLockupProps> = ({
     showTagline = true,
 }) => (
     <div className={cn('flex items-center gap-3 min-w-0', className)}>
-        <BrandMark className="h-10 w-10 sm:h-11 sm:w-11 shrink-0" />
+        <BrandMark className="h-12 w-12 sm:h-[3.25rem] sm:w-[3.25rem] shrink-0" />
         <div className="min-w-0">
             <div className={cn(stacked ? 'flex flex-col' : 'flex items-baseline gap-2', textClassName)}>
                 <span className="font-display font-bold tracking-[0.04em] text-text-primary leading-none whitespace-nowrap">GOATAEO</span>

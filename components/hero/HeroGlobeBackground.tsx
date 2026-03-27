@@ -86,7 +86,7 @@ export const HeroGlobeBackground: React.FC<HeroGlobeBackgroundProps> = ({ classN
                 color: 0x41a8ff,
                 wireframe: true,
                 transparent: true,
-                opacity: 0.34,
+                opacity: 0.5,
             })
         );
         root.add(shell);
@@ -103,9 +103,9 @@ export const HeroGlobeBackground: React.FC<HeroGlobeBackgroundProps> = ({ classN
         root.add(halo);
 
         const ringMaterial = new THREE.MeshBasicMaterial({
-            color: 0xc7e4ff,
+            color: 0xe0f0ff,
             transparent: true,
-            opacity: 0.28,
+            opacity: 0.42,
         });
 
         const ringA = new THREE.Mesh(new THREE.TorusGeometry(2.4, 0.018, 16, 160), ringMaterial.clone());
@@ -140,9 +140,9 @@ export const HeroGlobeBackground: React.FC<HeroGlobeBackgroundProps> = ({ classN
         });
 
         const connectionMaterial = new THREE.LineBasicMaterial({
-            color: 0xb8dcff,
+            color: 0xd9ecff,
             transparent: true,
-            opacity: 0.42,
+            opacity: 0.58,
         });
 
         const connectionGroup = new THREE.Group();
@@ -193,11 +193,11 @@ export const HeroGlobeBackground: React.FC<HeroGlobeBackgroundProps> = ({ classN
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
             renderer.setSize(clientWidth, clientHeight, false);
             camera.aspect = clientWidth / clientHeight;
-            camera.position.z = clientWidth < 768 ? 9.3 : 7.2;
+            camera.position.z = clientWidth < 768 ? 10.1 : 7.2;
             camera.updateProjectionMatrix();
-            root.position.x = clientWidth < 768 ? -0.15 : clientWidth < 1024 ? -0.65 : -1.55;
-            root.position.y = clientWidth < 768 ? 0.28 : 0.1;
-            const scale = clientWidth < 768 ? 0.78 : clientWidth < 1024 ? 0.9 : 1;
+            root.position.x = clientWidth < 768 ? 0.48 : clientWidth < 1024 ? -0.65 : -1.55;
+            root.position.y = clientWidth < 768 ? 1.34 : 0.1;
+            const scale = clientWidth < 768 ? 0.9 : clientWidth < 1024 ? 0.9 : 1;
             root.scale.setScalar(scale);
         };
 
@@ -267,7 +267,7 @@ export const HeroGlobeBackground: React.FC<HeroGlobeBackgroundProps> = ({ classN
 
     return (
         <div ref={wrapperRef} className={`pointer-events-none absolute inset-0 overflow-hidden ${className}`} aria-hidden="true">
-            <canvas ref={canvasRef} className="absolute inset-0 h-full w-full opacity-80 md:opacity-95" />
+            <canvas ref={canvasRef} className="absolute inset-0 h-full w-full opacity-[0.9] md:opacity-95" />
 
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_42%,rgba(65,168,255,0.16),transparent_24%),radial-gradient(circle_at_24%_58%,rgba(95,225,240,0.1),transparent_32%),linear-gradient(90deg,rgba(10,20,36,0.88)_0%,rgba(10,20,36,0.38)_36%,rgba(10,20,36,0.48)_62%,rgba(10,20,36,0.84)_100%)]" />
             <div className="absolute inset-y-0 left-0 w-[55%] bg-[radial-gradient(circle_at_center,rgba(47,143,255,0.08),transparent_62%)]" />

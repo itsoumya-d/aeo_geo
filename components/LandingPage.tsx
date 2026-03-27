@@ -541,12 +541,12 @@ export const LandingPage: React.FC = () => {
 
             {/* ── Navigation ─────────────────────────────── */}
             <nav className={`sticky top-0 z-30 w-full backdrop-blur-xl border-b transition-all duration-300 ${scrolled ? 'bg-background/95 border-white/10 shadow-lg shadow-black/30' : 'bg-background/80 border-white/5'}`}>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center">
-                    <Link to="/" className="group cursor-pointer flex-shrink-0 mr-6 transition-transform duration-300 hover:-translate-y-0.5">
+                <div className="w-full px-4 sm:px-6 h-16 sm:h-20 flex items-center">
+                    <Link to="/" className="group cursor-pointer flex-shrink-0 transition-transform duration-300 hover:-translate-y-0.5">
                         <BrandLockup showTagline={false} />
                     </Link>
 
-                    <div className="hidden md:flex flex-1 items-center justify-center gap-6 lg:gap-8 text-sm font-semibold text-text-secondary">
+                    <div className="hidden md:flex flex-1 items-center justify-center gap-6 lg:gap-8 px-8 text-sm font-semibold text-text-secondary">
                         <a href="#how-it-works" className="hover:text-white transition-colors duration-300">How it works</a>
                         <a href="#features" className="hover:text-white transition-colors duration-300">Features</a>
                         <a href="#pricing" className="hover:text-white transition-colors duration-300">Pricing</a>
@@ -566,7 +566,7 @@ export const LandingPage: React.FC = () => {
                     </div>
 
                     <button
-                        className="md:hidden p-2.5 rounded-xl text-text-secondary hover:text-white hover:bg-white/10 transition-colors touch-manipulation"
+                        className="ml-auto md:hidden p-2.5 rounded-xl text-text-secondary hover:text-white hover:bg-white/10 transition-colors touch-manipulation"
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                         aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
                         aria-expanded={mobileMenuOpen}
@@ -624,7 +624,7 @@ export const LandingPage: React.FC = () => {
                     <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
                 </div>
 
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-14 pb-18 sm:pt-18 sm:pb-24 relative">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-12 pb-16 sm:pt-18 sm:pb-24 relative">
                     <div className="grid gap-12 lg:grid-cols-[minmax(0,1.02fr)_minmax(360px,0.98fr)] lg:gap-16 items-center">
                         <div className="min-w-0">
                             <SlideUp>
@@ -638,12 +638,12 @@ export const LandingPage: React.FC = () => {
                                     AI visibility for operator teams
                                 </motion.div>
 
-                                <h1 className="mt-6 max-w-4xl text-4xl sm:text-5xl lg:text-[3.65rem] xl:text-[4.2rem] font-display font-bold leading-[1.02] tracking-[-0.04em] text-white">
+                                <h1 className="mt-6 max-w-[12.5ch] sm:max-w-4xl text-[3.15rem] sm:text-5xl lg:text-[3.65rem] xl:text-[4.2rem] font-display font-bold leading-[0.96] sm:leading-[1.02] tracking-[-0.05em] sm:tracking-[-0.04em] text-white drop-shadow-[0_12px_36px_rgba(8,18,33,0.26)]">
                                     Know what AI says about your brand
-                                    <span className="block text-white/65">before your market does.</span>
+                                    <span className="block text-white/80">before your market does.</span>
                                 </h1>
 
-                                <p className="mt-6 max-w-xl text-base sm:text-lg leading-relaxed text-text-secondary">
+                                <p className="mt-5 max-w-xl text-[1.02rem] sm:text-lg leading-7 sm:leading-relaxed text-white/80 sm:text-text-secondary">
                                     Audit the pages, citations, and brand signals shaping how ChatGPT, Gemini, Claude, and Perplexity describe you. Then fix the specific gaps that actually matter.
                                 </p>
                             </SlideUp>
@@ -661,8 +661,8 @@ export const LandingPage: React.FC = () => {
                                 ))}
                             </FadeIn>
 
-                            <FadeIn delay={0.18} className="mt-8 rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-4 sm:p-5">
-                                <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-text-muted">
+                            <FadeIn delay={0.18} className="mt-8 rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-4 sm:p-5 backdrop-blur-[10px]">
+                                <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-white/70 sm:text-text-muted">
                                     Start with one URL. Create an account before the audit runs.
                                 </p>
                                 <div className="mt-4">
@@ -994,7 +994,7 @@ export const LandingPage: React.FC = () => {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6">
                     <FadeIn>
                         <p className="text-xs font-bold uppercase tracking-[0.25em] text-secondary text-center">Pricing</p>
-                        <h2 className="text-3xl sm:text-4xl font-display font-bold text-white text-center mt-3">
+                        <h2 className="text-3xl sm:text-4xl font-display font-bold text-text-primary text-center mt-3">
                             Start free, scale as you grow
                         </h2>
                         <p className="text-text-secondary text-center mt-4 max-w-2xl mx-auto leading-relaxed">
