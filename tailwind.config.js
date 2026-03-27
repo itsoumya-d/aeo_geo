@@ -12,32 +12,31 @@ export default {
     theme: {
         extend: {
             colors: {
-                // Mint Night Palette
-                background: '#07110f',
-                surface: '#0d1917',
-                surfaceHighlight: '#17302b',
+                background: '#eef4f9',
+                surface: '#ffffff',
+                surfaceHighlight: '#f6faff',
 
                 primary: {
-                    DEFAULT: '#8fe3c8',
-                    hover: '#73d6b7',
-                    foreground: '#06251f',
-                    glow: 'rgba(143, 227, 200, 0.42)'
+                    DEFAULT: '#2f8fff',
+                    hover: '#2179e0',
+                    foreground: '#ffffff',
+                    glow: 'rgba(47, 143, 255, 0.28)'
                 },
                 secondary: {
-                    DEFAULT: '#c6f1e4',
-                    hover: '#b0e8d8',
-                    foreground: '#06251f',
+                    DEFAULT: '#d7b44a',
+                    hover: '#c09b36',
+                    foreground: '#241b05',
                 },
                 cta: {
-                    DEFAULT: '#5fcfb0',
-                    hover: '#48bc9c',
+                    DEFAULT: '#2f8fff',
+                    hover: '#2179e0',
                 },
                 text: {
-                    primary: '#f1fffb',
-                    secondary: '#a8c8be',
-                    muted: '#76978e',
+                    primary: '#0f172a',
+                    secondary: '#516174',
+                    muted: '#7d8da1',
                 },
-                border: '#1b3732',
+                border: '#d6e4f0',
                 success: '#10b981', // Emerald 500
                 error: '#ef4444',   // Red 500
                 warning: '#f59e0b', // Amber 500
@@ -48,9 +47,9 @@ export default {
                 mono: ['Fira Code', 'monospace'],
             },
             boxShadow: {
-                'glow': '0 0 22px -6px rgba(143, 227, 200, 0.28)',
-                'glow-lg': '0 0 34px -8px rgba(143, 227, 200, 0.38)',
-                'glow-cyan': '0 0 20px -6px rgba(198, 241, 228, 0.22)',
+                'glow': '0 0 22px -6px rgba(47, 143, 255, 0.24)',
+                'glow-lg': '0 0 34px -8px rgba(47, 143, 255, 0.28)',
+                'glow-cyan': '0 0 20px -6px rgba(95, 225, 240, 0.22)',
                 'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
             },
             backdropBlur: {
@@ -86,7 +85,7 @@ export default {
             },
             backgroundImage: {
                 'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-                'hero-glow': 'conic-gradient(from 180deg at 50% 50%, #17302b 0deg, #0d1917 180deg, #17302b 360deg)',
+                'hero-glow': 'conic-gradient(from 180deg at 50% 50%, #f6faff 0deg, #edf4fa 180deg, #f6faff 360deg)',
             }
         },
     },

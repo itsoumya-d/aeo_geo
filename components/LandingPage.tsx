@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import {
-    ArrowRight, Check, Cpu, Globe, LayoutDashboard, ShieldCheck, Menu, X,
+    ArrowRight, Check, Globe, LayoutDashboard, ShieldCheck, Menu, X,
     ChevronDown, ChevronUp, Play, BarChart2, Brain, Zap, Users,
     Building2, Code2, TrendingUp, Target, Minus
 } from 'lucide-react';
@@ -11,6 +11,7 @@ import { Card } from './ui/Card';
 import { Input } from './ui/Input';
 import { FadeIn, SlideUp, StaggerContainer } from './ui/Motion';
 import { HeroGlobeBackground } from './hero/HeroGlobeBackground';
+import { BrandLockup, BrandMark } from './branding/BrandLogo';
 import { VideoModal } from './VideoModal';
 import { insertFreeAuditLead } from '../services/supabase';
 import { normalizeUrl, validateUrl } from '../utils/validation';
@@ -35,7 +36,7 @@ const FeatureCard: React.FC<{
                 {icon}
             </div>
             <div className="min-w-0">
-                <h3 className="text-white font-display font-bold text-lg leading-tight">{title}</h3>
+                <h3 className="text-text-primary font-display font-bold text-lg leading-tight">{title}</h3>
                 <p className="text-text-secondary mt-2 leading-relaxed text-sm">{desc}</p>
             </div>
         </div>
@@ -58,7 +59,7 @@ const PricingCard: React.FC<{
     >
         <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-                <h3 className="text-white font-display font-bold text-xl">{name}</h3>
+                <h3 className="text-text-primary font-display font-bold text-xl">{name}</h3>
                 <p className="text-text-secondary text-sm mt-1">{description}</p>
             </div>
             {featured ? (
@@ -70,7 +71,7 @@ const PricingCard: React.FC<{
 
         <div className="mt-6">
             <div className="flex items-end gap-2">
-                <p className="text-4xl font-display font-bold text-white">{price}</p>
+                <p className="text-4xl font-display font-bold text-text-primary">{price}</p>
                 <p className="text-sm text-text-muted mb-1">/month</p>
             </div>
             {annualBilling && annualTotal && (
@@ -137,7 +138,7 @@ const HeroPreview: React.FC = () => {
                             <LayoutDashboard className="w-5 h-5 text-primary" />
                         </div>
                         <div className="min-w-0">
-                            <p className="text-white font-display font-bold text-base truncate">Visibility command center</p>
+                            <p className="text-text-primary font-display font-bold text-base truncate">Visibility command center</p>
                             <p className="text-xs text-text-muted font-bold uppercase tracking-[0.22em] truncate">example.com · weekly snapshot</p>
                         </div>
                     </div>
@@ -197,7 +198,7 @@ const HeroPreview: React.FC = () => {
                                 {pageSignals.map((item) => (
                                     <div key={item.page} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
                                         <div className="flex items-center justify-between gap-3">
-                                            <p className="text-sm font-semibold text-white">{item.page}</p>
+                                            <p className="text-sm font-semibold text-text-primary">{item.page}</p>
                                             <p className={`text-xs font-semibold ${item.tone}`}>{item.state}</p>
                                         </div>
                                         <div className="mt-2 h-1.5 rounded-full bg-white/10 overflow-hidden">
@@ -223,7 +224,7 @@ const HeroPreview: React.FC = () => {
                                 {platformScores.map((platform) => (
                                     <div key={platform.name} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
                                         <div className="flex items-center justify-between gap-3">
-                                            <p className="text-sm font-semibold text-white">{platform.name}</p>
+                                            <p className="text-sm font-semibold text-text-primary">{platform.name}</p>
                                             <p className="text-xs font-bold text-text-muted">{platform.score}/100</p>
                                         </div>
                                         <div className="mt-2 h-1.5 rounded-full bg-white/10 overflow-hidden">
@@ -271,7 +272,7 @@ const FAQItem: React.FC<{ question: string; answer: string }> = ({ question, ans
                 className="w-full flex items-center justify-between p-5 text-left bg-white/5 hover:bg-white/10 transition-colors min-h-[60px] touch-manipulation"
                 aria-expanded={open}
             >
-                <span className="text-white font-semibold text-sm pr-4">{question}</span>
+                <span className="text-text-primary font-semibold text-sm pr-4">{question}</span>
                 {open
                     ? <ChevronUp className="w-4 h-4 text-primary flex-shrink-0" />
                     : <ChevronDown className="w-4 h-4 text-text-muted flex-shrink-0" />}
@@ -305,8 +306,8 @@ const FAQ_ITEMS = [
         answer: 'AEO is the practice of optimizing your content to be cited and recommended by AI assistants like ChatGPT, Gemini, Claude, and Perplexity. Unlike traditional SEO which focuses on Google rankings, AEO focuses on how LLMs perceive and reference your brand when users ask questions.'
     },
     {
-        question: 'How is Cognition AI different from traditional SEO tools?',
-        answer: 'Traditional SEO tools measure Google rankings. Cognition AI measures AI visibility — how likely your brand is to be cited, quoted, or recommended by AI search engines. We analyze your semantic positioning, entity linking, quotability, and cross-platform consistency.'
+        question: 'How is GOAT AEO different from traditional SEO tools?',
+        answer: 'Traditional SEO tools measure Google rankings. GOAT AEO measures AI visibility — how likely your brand is to be cited, quoted, or recommended by AI search engines. We analyze your semantic positioning, entity linking, quotability, and cross-platform consistency.'
     },
     {
         question: 'Which AI platforms do you track?',
@@ -322,7 +323,7 @@ const FAQ_ITEMS = [
     },
     {
         question: 'Is there an API for agencies?',
-        answer: 'Yes! Pro and Agency plans include full API access with SHA-256 authenticated API keys. You can run audits, fetch reports, and integrate Cognition data into your own dashboards and client workflows.'
+        answer: 'Yes! Pro and Agency plans include full API access with SHA-256 authenticated API keys. You can run audits, fetch reports, and integrate GOAT AEO data into your own dashboards and client workflows.'
     },
     {
         question: 'Do you offer white-label reports for agencies?',
@@ -540,17 +541,12 @@ export const LandingPage: React.FC = () => {
 
             {/* ── Navigation ─────────────────────────────── */}
             <nav className={`sticky top-0 z-30 w-full backdrop-blur-xl border-b transition-all duration-300 ${scrolled ? 'bg-background/95 border-white/10 shadow-lg shadow-black/30' : 'bg-background/80 border-white/5'}`}>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
-                    <Link to="/" className="flex items-center gap-2.5 group cursor-pointer flex-shrink-0 transition-transform duration-300 hover:-translate-y-0.5">
-                        <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-tr from-primary to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 transition-all duration-300 group-hover:shadow-[0_18px_45px_rgba(14,165,233,0.22)] group-hover:scale-[1.03]">
-                            <Cpu className="text-white w-4 h-4 sm:w-5 sm:h-5" />
-                        </div>
-                        <span className="font-display font-bold text-lg sm:text-xl tracking-tight text-white transition-colors duration-300 group-hover:text-white/80">
-                            Cognition AI
-                        </span>
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center">
+                    <Link to="/" className="group cursor-pointer flex-shrink-0 mr-6 transition-transform duration-300 hover:-translate-y-0.5">
+                        <BrandLockup showTagline={false} />
                     </Link>
 
-                    <div className="hidden md:flex items-center gap-6 lg:gap-8 text-sm font-semibold text-text-secondary">
+                    <div className="hidden md:flex flex-1 items-center justify-center gap-6 lg:gap-8 text-sm font-semibold text-text-secondary">
                         <a href="#how-it-works" className="hover:text-white transition-colors duration-300">How it works</a>
                         <a href="#features" className="hover:text-white transition-colors duration-300">Features</a>
                         <a href="#pricing" className="hover:text-white transition-colors duration-300">Pricing</a>
@@ -558,7 +554,7 @@ export const LandingPage: React.FC = () => {
                         <Link to="/help" className="hover:text-white transition-colors duration-300">Help</Link>
                     </div>
 
-                    <div className="hidden md:flex items-center gap-3">
+                    <div className="hidden md:flex items-center gap-3 ml-auto">
                         <Link to="/login">
                             <Button variant="ghost" className="px-4">Sign in</Button>
                         </Link>
@@ -722,7 +718,7 @@ export const LandingPage: React.FC = () => {
                     <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
                         <FadeIn>
                             <p className="text-xs font-bold uppercase tracking-[0.25em] text-secondary">What The First Audit Gives You</p>
-                            <h2 className="mt-3 text-3xl sm:text-4xl font-display font-bold text-white">
+                            <h2 className="mt-3 text-3xl sm:text-4xl font-display font-bold text-text-primary">
                                 A tighter view of what AI trusts, ignores, and repeats.
                             </h2>
                             <p className="mt-4 max-w-xl text-text-secondary leading-relaxed">
@@ -740,11 +736,11 @@ export const LandingPage: React.FC = () => {
                                     <Card variant="glass" className="h-full border-white/10 p-5 bg-surface/50 transition-all duration-300 hover:-translate-y-1 hover:border-white/15 hover:shadow-[0_22px_50px_rgba(15,23,42,0.24)]">
                                         <div className="flex items-center justify-between gap-3">
                                             {card.icon}
-                                            <p className="text-3xl font-display font-bold text-white">
+                                            <p className="text-3xl font-display font-bold text-text-primary">
                                                 <StaticStat value={card.value} />
                                             </p>
                                         </div>
-                                        <p className="mt-4 text-sm font-semibold text-white">{card.title}</p>
+                                        <p className="mt-4 text-sm font-semibold text-text-primary">{card.title}</p>
                                         <p className="mt-2 text-sm leading-relaxed text-text-secondary">{card.detail}</p>
                                     </Card>
                                 </motion.div>
@@ -760,7 +756,7 @@ export const LandingPage: React.FC = () => {
                     <div className="grid gap-10 lg:grid-cols-[0.82fr_1.18fr] lg:items-start">
                         <FadeIn>
                             <p className="text-xs font-bold uppercase tracking-[0.25em] text-secondary">Why Teams Switch</p>
-                            <h2 className="mt-3 text-3xl sm:text-4xl font-display font-bold text-white">
+                            <h2 className="mt-3 text-3xl sm:text-4xl font-display font-bold text-text-primary">
                                 Google rankings do not tell you if AI will cite you.
                             </h2>
                             <p className="mt-4 max-w-xl text-text-secondary leading-relaxed">
@@ -791,12 +787,12 @@ export const LandingPage: React.FC = () => {
                                         <div className="grid gap-4 sm:grid-cols-[180px_1fr] sm:items-start">
                                             <div>
                                                 <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-text-muted">{item.kicker}</p>
-                                                <h3 className="mt-2 text-lg font-display font-bold text-white">{item.title}</h3>
+                                                <h3 className="mt-2 text-lg font-display font-bold text-text-primary">{item.title}</h3>
                                             </div>
                                             <div className="grid gap-3 sm:grid-cols-2">
                                                 <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                                                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted">Signals</p>
-                                                    <p className="mt-2 text-sm leading-relaxed text-white">{item.signal}</p>
+                                                    <p className="mt-2 text-sm leading-relaxed text-text-primary">{item.signal}</p>
                                                 </div>
                                                 <div className="rounded-2xl border border-white/10 bg-background/50 p-4">
                                                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted">Why it matters</p>
@@ -818,7 +814,7 @@ export const LandingPage: React.FC = () => {
                     <div className="grid gap-10 lg:grid-cols-[0.84fr_1.16fr] lg:items-start">
                         <FadeIn>
                             <p className="text-xs font-bold uppercase tracking-[0.25em] text-secondary">Workflow</p>
-                            <h2 className="mt-3 text-3xl sm:text-4xl font-display font-bold text-white">
+                            <h2 className="mt-3 text-3xl sm:text-4xl font-display font-bold text-text-primary">
                                 A calmer way to run your first AI visibility audit.
                             </h2>
                             <p className="mt-4 max-w-xl text-text-secondary leading-relaxed">
@@ -849,12 +845,12 @@ export const LandingPage: React.FC = () => {
                                                 <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-text-muted">Step {item.step}</p>
                                             </div>
                                             <div>
-                                                <h3 className="text-lg font-display font-bold text-white">{item.title}</h3>
+                                                <h3 className="text-lg font-display font-bold text-text-primary">{item.title}</h3>
                                                 <p className="mt-2 text-sm leading-relaxed text-text-secondary">{item.description}</p>
                                             </div>
                                             <div className="rounded-2xl border border-white/10 bg-background/55 p-4">
                                                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted">Outcome</p>
-                                                <p className="mt-2 text-sm leading-relaxed text-white/85">{item.outcome}</p>
+                                                <p className="mt-2 text-sm leading-relaxed text-text-primary">{item.outcome}</p>
                                             </div>
                                         </div>
                                     </Card>
@@ -870,7 +866,7 @@ export const LandingPage: React.FC = () => {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6">
                     <FadeIn>
                         <p className="text-xs font-bold uppercase tracking-[0.25em] text-secondary text-center">Features</p>
-                        <h2 className="text-3xl sm:text-4xl font-display font-bold text-white text-center mt-3">
+                        <h2 className="text-3xl sm:text-4xl font-display font-bold text-text-primary text-center mt-3">
                             Everything you need to win in AI search
                         </h2>
                         <p className="text-text-secondary text-center mt-4 max-w-2xl mx-auto leading-relaxed">
@@ -923,12 +919,12 @@ export const LandingPage: React.FC = () => {
             <section className="relative z-10 py-20 sm:py-24 border-t border-white/5 bg-surface/20">
                 <div className="max-w-5xl mx-auto px-4 sm:px-6">
                     <FadeIn>
-                        <p className="text-xs font-bold uppercase tracking-[0.25em] text-secondary text-center">Why Cognition</p>
-                        <h2 className="text-3xl sm:text-4xl font-display font-bold text-white text-center mt-3">
+                        <p className="text-xs font-bold uppercase tracking-[0.25em] text-secondary text-center">Why GOAT AEO</p>
+                        <h2 className="text-3xl sm:text-4xl font-display font-bold text-text-primary text-center mt-3">
                             The only tool built for AI search
                         </h2>
                         <p className="text-text-secondary text-center mt-4 max-w-2xl mx-auto leading-relaxed">
-                            See how Cognition AI stacks up against traditional SEO platforms and other AI visibility tools.
+                            See how GOAT AEO stacks up against traditional SEO platforms and other AI visibility tools.
                         </p>
                     </FadeIn>
 
@@ -947,7 +943,7 @@ export const LandingPage: React.FC = () => {
                                     <th className="p-4 text-center">
                                         <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 border border-primary/30 rounded-full text-primary font-bold text-xs">
                                             <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                                            Cognition AI
+                                            GOAT AEO
                                         </span>
                                     </th>
                                     <th className="p-4 text-center text-text-muted font-semibold text-xs">Traditional SEO</th>
@@ -1008,7 +1004,7 @@ export const LandingPage: React.FC = () => {
 
                     {/* Annual/Monthly Toggle */}
                     <FadeIn delay={0.1} className="mt-8 flex items-center justify-center gap-3 sm:gap-4">
-                        <span className={`text-sm font-semibold transition-colors ${!annualBilling ? 'text-white' : 'text-text-muted'}`}>Monthly</span>
+                        <span className={`text-sm font-semibold transition-colors ${!annualBilling ? 'text-text-primary' : 'text-text-muted'}`}>Monthly</span>
                         <button
                             type="button"
                             onClick={() => setAnnualBilling(!annualBilling)}
@@ -1022,7 +1018,7 @@ export const LandingPage: React.FC = () => {
                                 transition={{ type: 'spring', stiffness: 520, damping: 34 }}
                             />
                         </button>
-                        <span className={`flex items-center gap-2 text-sm font-semibold transition-colors ${annualBilling ? 'text-white' : 'text-text-muted'}`}>
+                        <span className={`flex items-center gap-2 text-sm font-semibold transition-colors ${annualBilling ? 'text-text-primary' : 'text-text-muted'}`}>
                             Annual
                             <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
                                 Save 20%
@@ -1123,7 +1119,7 @@ export const LandingPage: React.FC = () => {
                 <div className="max-w-3xl mx-auto px-4 sm:px-6">
                     <FadeIn>
                         <p className="text-xs font-bold uppercase tracking-[0.25em] text-secondary text-center">FAQ</p>
-                        <h2 className="text-3xl sm:text-4xl font-display font-bold text-white text-center mt-3">
+                        <h2 className="text-3xl sm:text-4xl font-display font-bold text-text-primary text-center mt-3">
                             Questions? We have answers.
                         </h2>
                         <p className="text-text-secondary text-center mt-4 leading-relaxed">
@@ -1156,10 +1152,10 @@ export const LandingPage: React.FC = () => {
                 </div>
                 <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
                     <FadeIn>
-                        <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-primary to-purple-600 flex items-center justify-center shadow-xl shadow-primary/20 mb-6">
-                            <Cpu className="w-7 h-7 text-white" />
+                        <div className="mx-auto mb-6 flex justify-center">
+                            <BrandMark className="h-14 w-14" />
                         </div>
-                        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold text-white leading-tight">
+                        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold text-text-primary leading-tight">
                             Find out how AI sees<br />your brand — for free
                         </h2>
                         <p className="mt-5 text-lg text-text-secondary leading-relaxed max-w-xl mx-auto">
@@ -1185,33 +1181,31 @@ export const LandingPage: React.FC = () => {
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
                         <div className="min-w-0">
                             <div className="flex items-center gap-2.5">
-                                <div className="w-8 h-8 bg-gradient-to-tr from-primary to-purple-600 rounded-lg flex items-center justify-center">
-                                    <Cpu className="text-white w-4 h-4" />
-                                </div>
-                                <p className="text-white font-display font-bold">Cognition AI</p>
+                                <BrandMark className="h-8 w-8 rounded-lg" />
+                                <p className="text-text-primary font-display font-bold">GOAT AEO</p>
                             </div>
                             <p className="text-sm text-text-secondary mt-3 max-w-md leading-relaxed">
                                 Measure and improve how AI assistants cite and understand your brand. Built for the AI-first search era.
                             </p>
                             <div className="flex items-center gap-5 mt-4">
-                                <a href="https://twitter.com/cognition_ai" target="_blank" rel="noopener noreferrer" aria-label="Follow on Twitter/X" className="text-text-muted hover:text-white transition-colors text-xs font-semibold">Twitter / X</a>
-                                <a href="https://linkedin.com/company/cognition-ai" target="_blank" rel="noopener noreferrer" aria-label="Follow on LinkedIn" className="text-text-muted hover:text-white transition-colors text-xs font-semibold">LinkedIn</a>
+                                <a href="#" aria-label="Follow on Twitter/X" className="text-text-muted hover:text-text-primary transition-colors text-xs font-semibold">Twitter / X</a>
+                                <a href="#" aria-label="Follow on LinkedIn" className="text-text-muted hover:text-text-primary transition-colors text-xs font-semibold">LinkedIn</a>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-12 gap-y-3 text-sm font-semibold text-text-secondary">
-                            <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
-                            <Link to="/docs/api" className="hover:text-white transition-colors">API Docs</Link>
-                            <Link to="/help" className="hover:text-white transition-colors">Help Center</Link>
-                            <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
-                            <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
-                            <a href="mailto:support@cognition-ai.com" className="hover:text-white transition-colors">Contact</a>
+                            <a href="#pricing" className="hover:text-text-primary transition-colors">Pricing</a>
+                            <Link to="/docs/api" className="hover:text-text-primary transition-colors">API Docs</Link>
+                            <Link to="/help" className="hover:text-text-primary transition-colors">Help Center</Link>
+                            <Link to="/terms" className="hover:text-text-primary transition-colors">Terms</Link>
+                            <Link to="/privacy" className="hover:text-text-primary transition-colors">Privacy</Link>
+                            <a href="mailto:support@cognition-ai.com" className="hover:text-text-primary transition-colors">Contact</a>
                         </div>
                     </div>
 
                     <div className="mt-10 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                         <p className="text-xs text-text-muted font-semibold">
-                            © {new Date().getFullYear()} Cognition AI. All rights reserved.
+                            © {new Date().getFullYear()} GOAT AEO. All rights reserved.
                         </p>
                         <p className="text-xs text-text-muted font-semibold">
                             Payments by Paddle · Available worldwide

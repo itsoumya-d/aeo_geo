@@ -150,9 +150,9 @@ export const SignupPage: React.FC = () => {
                     <div className="flex items-start gap-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4">
                         <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
                         <div className="min-w-0">
-                            <p className="text-sm text-white font-semibold">Email sent</p>
+                            <p className="text-sm text-text-primary font-semibold">Email sent</p>
                             <p className="text-sm text-text-secondary mt-1">
-                                We&apos;ve sent a confirmation link to <span className="font-semibold text-white">{email.trim()}</span>.
+                                We&apos;ve sent a confirmation link to <span className="font-semibold text-text-primary">{email.trim()}</span>.
                             </p>
                         </div>
                     </div>
@@ -163,7 +163,7 @@ export const SignupPage: React.FC = () => {
                         type="button"
                         onClick={handleResend}
                         disabled={resending || resendDone}
-                        className="w-full flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-text-secondary hover:text-white text-sm font-medium py-2.5 rounded-xl transition-colors disabled:opacity-50"
+                        className="w-full flex items-center justify-center gap-2 bg-surfaceHighlight hover:bg-surfaceHighlight/80 border border-border text-text-secondary hover:text-text-primary text-sm font-medium py-2.5 rounded-xl transition-colors disabled:opacity-50"
                     >
                         {resending ? (
                             <Loader2 className="w-4 h-4 animate-spin" />

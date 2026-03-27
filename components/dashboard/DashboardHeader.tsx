@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, Zap, Download, FileText, PlusCircle, X, Brain, Share2, LogOut, Settings } from 'lucide-react';
+import { Menu, Zap, Download, FileText, PlusCircle, X, Share2, LogOut, Settings } from 'lucide-react';
 import { useToast } from '../Toast';
 import { TabType } from './DashboardTypes';
 import { NotificationDropdown } from '../NotificationDropdown';
@@ -9,6 +9,7 @@ import { Badge } from '../ui/Badge';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
+import { BrandLockup } from '../branding/BrandLogo';
 // import { MobileMenu } from './MobileMenu'; // Could extract mobile menu separately
 
 interface DashboardHeaderProps {
@@ -68,21 +69,15 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                             >
                                 {mobileMenuOpen ? <X className="w-6 h-6" aria-hidden="true" /> : <Menu className="w-6 h-6" aria-hidden="true" />}
                             </button>
-                            <Link to="/" className="flex items-center gap-2 transition-transform duration-300 hover:-translate-y-0.5">
-                                <div className="bg-primary/20 p-1.5 rounded-lg transition-all duration-300 hover:bg-primary/25 hover:shadow-[0_14px_34px_rgba(14,165,233,0.16)]">
-                                    <Brain className="text-primary w-4 h-4" />
-                                </div>
-                                <span className="font-bold text-white tracking-tight">Cognition</span>
+                            <Link to="/" className="transition-transform duration-300 hover:-translate-y-0.5">
+                                <BrandLockup showTagline={false} />
                             </Link>
                         </div>
 
                         {/* Title / Breadcrumbs (Desktop) */}
                         <div className="hidden lg:flex items-center gap-4">
-                            <Link to="/" className="flex items-center gap-2.5 transition-transform duration-300 hover:-translate-y-0.5">
-                                <div className="bg-primary/20 p-2 rounded-xl transition-all duration-300 hover:bg-primary/25 hover:shadow-[0_16px_38px_rgba(14,165,233,0.18)]">
-                                    <Brain className="text-primary w-4 h-4" />
-                                </div>
-                                <span className="font-display font-bold text-white tracking-tight">Cognition</span>
+                            <Link to="/" className="transition-transform duration-300 hover:-translate-y-0.5">
+                                <BrandLockup showTagline={false} />
                             </Link>
                             <div className="h-6 w-px bg-border" />
                             <h2 className="text-xl font-display font-bold text-white capitalize">{activeTab.replace('-', ' ')}</h2>

@@ -7,6 +7,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { TabType } from './DashboardTypes';
 import { cn } from '../ui/Button';
+import { BrandLockup, BrandMark } from '../branding/BrandLogo';
 import { BulkImportModal } from './BulkImportModal';
 import { WorkspaceSwitcher } from '../WorkspaceSwitcher';
 import { CreateWorkspaceModal } from '../CreateWorkspaceModal';
@@ -89,9 +90,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onRes
                         title="Back to home"
                         aria-label="Back to home"
                     >
-                        <div className="flex-shrink-0 bg-gradient-to-tr from-primary to-purple-600 p-2 rounded-lg shadow-lg shadow-primary/20">
-                            <Brain className="text-white w-5 h-5 group-hover:rotate-12 transition-transform" />
-                        </div>
+                        <BrandMark className="h-10 w-10 shrink-0 rounded-xl" />
                         <AnimatePresence initial={false}>
                             {!collapsed && (
                                 <motion.div
@@ -101,8 +100,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onRes
                                     transition={{ duration: 0.2 }}
                                     className="overflow-hidden whitespace-nowrap"
                                 >
-                                    <span className="font-display font-bold text-lg text-white tracking-tight">Cognition</span>
-                                    <span className="text-[10px] text-text-secondary block -mt-1 font-bold uppercase tracking-widest">Visibility Engine</span>
+                                    <BrandLockup showTagline />
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -284,7 +282,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onRes
                                 className="bg-background/50 rounded-lg p-3 border border-border"
                             >
                                 <p className="text-[10px] text-text-muted">
-                                    Cognition AI &middot; v{import.meta.env.VITE_APP_VERSION || '1.0.0'}
+                                    GOAT AEO &middot; v{import.meta.env.VITE_APP_VERSION || '1.0.0'}
                                 </p>
                             </motion.div>
                         ) : (

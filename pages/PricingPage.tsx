@@ -18,7 +18,7 @@ export const PricingPage: React.FC = () => {
             <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
                 <div className="text-center max-w-2xl mx-auto">
                     <p className="text-xs font-bold uppercase tracking-[0.24em] text-secondary">Pricing</p>
-                    <h1 className="mt-4 text-4xl sm:text-5xl font-display font-bold text-white">
+                    <h1 className="mt-4 text-4xl sm:text-5xl font-display font-bold text-text-primary">
                         Simple pricing for one focused plan
                     </h1>
                     <p className="mt-5 text-base sm:text-lg text-text-secondary leading-relaxed">
@@ -31,7 +31,7 @@ export const PricingPage: React.FC = () => {
                         <div className="flex items-start justify-between gap-4">
                             <div>
                                 <p className="text-xs font-bold uppercase tracking-[0.24em] text-text-muted">Core Plan</p>
-                                <h2 className="mt-3 text-3xl font-display font-bold text-white">$29<span className="text-lg text-text-muted">/month</span></h2>
+                                <h2 className="mt-3 text-3xl font-display font-bold text-text-primary">$29<span className="text-lg text-text-muted">/month</span></h2>
                                 <p className="mt-3 text-sm text-text-secondary">
                                     One premium plan for teams that want a clean, simple starting point.
                                 </p>

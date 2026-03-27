@@ -56,14 +56,14 @@ export const HeroGlobeBackground: React.FC<HeroGlobeBackgroundProps> = ({ classN
         root.position.set(-1.55, 0.1, 0);
         scene.add(root);
 
-        const ambient = new THREE.AmbientLight(0xbef5e7, 1.05);
+        const ambient = new THREE.AmbientLight(0xd8ecff, 1.05);
         scene.add(ambient);
 
-        const rim = new THREE.PointLight(0x8fe3c8, 1.65, 18, 2);
+        const rim = new THREE.PointLight(0x41a8ff, 1.65, 18, 2);
         rim.position.set(4.5, 2.6, 5.8);
         scene.add(rim);
 
-        const fill = new THREE.PointLight(0xc6f1e4, 0.95, 18, 2);
+        const fill = new THREE.PointLight(0x5fe1f0, 0.95, 18, 2);
         fill.position.set(-3.5, -2.2, 4.8);
         scene.add(fill);
 
@@ -71,7 +71,7 @@ export const HeroGlobeBackground: React.FC<HeroGlobeBackgroundProps> = ({ classN
             new THREE.SphereGeometry(1.72, 48, 48),
             new THREE.MeshPhongMaterial({
                 color: 0x081513,
-                emissive: 0x0f2723,
+                emissive: 0x12345a,
                 emissiveIntensity: 0.32,
                 shininess: 70,
                 transparent: true,
@@ -83,10 +83,10 @@ export const HeroGlobeBackground: React.FC<HeroGlobeBackgroundProps> = ({ classN
         const shell = new THREE.Mesh(
             new THREE.SphereGeometry(1.86, 40, 40),
             new THREE.MeshBasicMaterial({
-                color: 0x8fe3c8,
+                color: 0x41a8ff,
                 wireframe: true,
                 transparent: true,
-                opacity: 0.18,
+                opacity: 0.34,
             })
         );
         root.add(shell);
@@ -94,18 +94,18 @@ export const HeroGlobeBackground: React.FC<HeroGlobeBackgroundProps> = ({ classN
         const halo = new THREE.Mesh(
             new THREE.SphereGeometry(2.18, 32, 32),
             new THREE.MeshBasicMaterial({
-                color: 0x5fcfb0,
+                color: 0x2f8fff,
                 transparent: true,
-                opacity: 0.04,
+                opacity: 0.08,
                 side: THREE.BackSide,
             })
         );
         root.add(halo);
 
         const ringMaterial = new THREE.MeshBasicMaterial({
-            color: 0xa7ead8,
+            color: 0xc7e4ff,
             transparent: true,
-            opacity: 0.14,
+            opacity: 0.28,
         });
 
         const ringA = new THREE.Mesh(new THREE.TorusGeometry(2.4, 0.018, 16, 160), ringMaterial.clone());
@@ -122,7 +122,7 @@ export const HeroGlobeBackground: React.FC<HeroGlobeBackgroundProps> = ({ classN
         const nodeGeometry = new THREE.SphereGeometry(0.042, 12, 12);
         const nodeMaterial = new THREE.MeshBasicMaterial({ color: 0xe9fffa });
         const nodeGlowMaterial = new THREE.MeshBasicMaterial({
-            color: 0x8fe3c8,
+            color: 0x41a8ff,
             transparent: true,
             opacity: 0.16,
         });
@@ -140,9 +140,9 @@ export const HeroGlobeBackground: React.FC<HeroGlobeBackgroundProps> = ({ classN
         });
 
         const connectionMaterial = new THREE.LineBasicMaterial({
-            color: 0xc6f1e4,
+            color: 0xb8dcff,
             transparent: true,
-            opacity: 0.24,
+            opacity: 0.42,
         });
 
         const connectionGroup = new THREE.Group();
@@ -175,7 +175,7 @@ export const HeroGlobeBackground: React.FC<HeroGlobeBackgroundProps> = ({ classN
         const stars = new THREE.Points(
             starGeometry,
             new THREE.PointsMaterial({
-                color: 0xe8fff8,
+                color: 0xeaf5ff,
                 size: 0.03,
                 transparent: true,
                 opacity: 0.72,
@@ -269,8 +269,8 @@ export const HeroGlobeBackground: React.FC<HeroGlobeBackgroundProps> = ({ classN
         <div ref={wrapperRef} className={`pointer-events-none absolute inset-0 overflow-hidden ${className}`} aria-hidden="true">
             <canvas ref={canvasRef} className="absolute inset-0 h-full w-full opacity-80 md:opacity-95" />
 
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_42%,rgba(143,227,200,0.14),transparent_24%),radial-gradient(circle_at_24%_58%,rgba(198,241,228,0.08),transparent_32%),linear-gradient(90deg,rgba(4,13,11,0.9)_0%,rgba(4,13,11,0.42)_36%,rgba(4,13,11,0.52)_62%,rgba(4,13,11,0.88)_100%)]" />
-            <div className="absolute inset-y-0 left-0 w-[55%] bg-[radial-gradient(circle_at_center,rgba(143,227,200,0.07),transparent_62%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_42%,rgba(65,168,255,0.16),transparent_24%),radial-gradient(circle_at_24%_58%,rgba(95,225,240,0.1),transparent_32%),linear-gradient(90deg,rgba(10,20,36,0.88)_0%,rgba(10,20,36,0.38)_36%,rgba(10,20,36,0.48)_62%,rgba(10,20,36,0.84)_100%)]" />
+            <div className="absolute inset-y-0 left-0 w-[55%] bg-[radial-gradient(circle_at_center,rgba(47,143,255,0.08),transparent_62%)]" />
 
             {PLATFORM_BADGES.map((badge, index) => (
                 <motion.div

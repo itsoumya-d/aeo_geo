@@ -6,8 +6,9 @@
   body {
     @apply bg-background text-text-primary font-sans antialiased overflow-x-hidden;
     background-image:
-      radial-gradient(circle at 50% 0%, rgba(143, 227, 200, 0.14) 0%, transparent 48%),
-      radial-gradient(circle at 100% 0%, rgba(198, 241, 228, 0.12) 0%, transparent 42%);
+      radial-gradient(circle at 50% 0%, rgba(47, 143, 255, 0.12) 0%, transparent 42%),
+      radial-gradient(circle at 100% 0%, rgba(95, 225, 240, 0.12) 0%, transparent 38%),
+      linear-gradient(180deg, #f5f9fd 0%, #edf3f8 100%);
   }
 
   h1,
@@ -24,35 +25,42 @@
 
   /* Premium Glassmorphism */
   .glass-panel {
-    @apply bg-surface/40 backdrop-blur-xl border border-white/10 rounded-card shadow-glass;
+    @apply bg-surface backdrop-blur-xl border border-border rounded-card shadow-[0_18px_42px_rgba(74,123,173,0.12)];
     @apply hover:border-primary/30 transition-all duration-300;
   }
 
   .glass-card {
-    @apply bg-surface/60 backdrop-blur-md border border-white/5 rounded-card p-6 shadow-lg;
-    @apply hover:bg-surface/80 hover:border-primary/20 hover:shadow-glow transition-all duration-300;
+    @apply bg-surface backdrop-blur-md border border-border rounded-card p-6 shadow-[0_14px_36px_rgba(74,123,173,0.1)];
+    @apply hover:bg-surface hover:border-primary/25 hover:shadow-glow transition-all duration-300;
   }
 
   /* Buttons */
   .btn-primary {
-    @apply bg-primary text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300;
-    @apply hover:bg-primary-hover hover:scale-[1.02] hover:shadow-glow active:scale-[0.98] cursor-pointer;
-    @apply border border-white/10;
+    @apply text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300;
+    background-color: #2f8fff;
+    @apply hover:scale-[1.02] active:scale-[0.98] cursor-pointer;
+    box-shadow: 0 14px 34px rgba(47, 143, 255, 0.2);
+    @apply border border-[#d7e7f4];
+  }
+
+  .btn-primary:hover {
+    background-color: #2179e0;
+    box-shadow: 0 20px 48px rgba(47, 143, 255, 0.28);
   }
 
   .btn-secondary {
-    @apply bg-transparent border border-white/10 text-text-primary px-6 py-3 rounded-xl font-semibold transition-all duration-300;
-    @apply hover:bg-white/5 hover:border-primary/50 hover:text-primary cursor-pointer;
+    @apply bg-surface border border-border text-text-primary px-6 py-3 rounded-xl font-semibold transition-all duration-300;
+    @apply hover:bg-surfaceHighlight hover:border-primary/40 hover:text-primary cursor-pointer;
   }
 
   .btn-cta {
-    @apply bg-gradient-to-r from-cta to-orange-600 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg;
-    @apply hover:shadow-glow-cta hover:scale-[1.02] transition-all duration-300 border border-white/20;
+    @apply bg-gradient-to-r from-[#2f8fff] via-[#41a8ff] to-[#5fe1f0] text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg;
+    @apply hover:scale-[1.02] transition-all duration-300 border border-[#d7e7f4];
   }
 
   /* Inputs */
   .input-glass {
-    @apply bg-surface/30 border border-white/10 rounded-xl px-4 py-3 text-text-primary backdrop-blur-sm;
+    @apply bg-surface border border-border rounded-xl px-4 py-3 text-text-primary backdrop-blur-sm;
     @apply focus:border-primary/50 focus:ring-1 focus:ring-primary/50 focus:outline-none transition-all duration-200;
     @apply placeholder:text-text-muted;
   }
@@ -60,7 +68,7 @@
 
 /* Utilities */
 .text-gradient {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-emerald-100 to-secondary;
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-sky-400 to-secondary;
 }
 
 .text-gradient-gold {
@@ -68,7 +76,7 @@
 }
 
 .text-glow {
-  text-shadow: 0 0 20px rgba(143, 227, 200, 0.4);
+  text-shadow: 0 0 20px rgba(47, 143, 255, 0.22);
 }
 
 /* Scrollbar */
