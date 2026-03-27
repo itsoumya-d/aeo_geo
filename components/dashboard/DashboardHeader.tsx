@@ -62,7 +62,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                         <div className="flex lg:hidden items-center gap-4">
                             <button
                                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                                className="p-2 -ml-2 text-text-secondary hover:text-white transition-colors"
+                                className="p-2 -ml-2 text-text-secondary hover:text-text-primary transition-colors"
                                 aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
                                 aria-expanded={mobileMenuOpen}
                                 aria-controls="mobile-nav-menu"
@@ -80,7 +80,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                                 <BrandLockup showTagline={false} />
                             </Link>
                             <div className="h-6 w-px bg-border" />
-                            <h2 className="text-xl font-display font-bold text-white capitalize">{activeTab.replace('-', ' ')}</h2>
+                            <h2 className="text-xl font-display font-bold text-text-primary capitalize">{activeTab.replace('-', ' ')}</h2>
                         </div>
 
                         {/* Actions */}
@@ -111,7 +111,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                                 >
                                     <button
                                         onClick={() => i18n.changeLanguage('en')}
-                                        className={`px-2 py-1 text-xs font-bold rounded ${i18n.language.startsWith('en') ? 'bg-primary text-white' : 'text-text-secondary hover:text-white'}`}
+                                        className={`px-2 py-1 text-xs font-bold rounded ${i18n.language.startsWith('en') ? 'bg-primary text-white' : 'text-text-secondary hover:text-text-primary'}`}
                                         aria-label="English"
                                         aria-pressed={i18n.language.startsWith('en')}
                                     >
@@ -119,7 +119,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                                     </button>
                                     <button
                                         onClick={() => i18n.changeLanguage('es')}
-                                        className={`px-2 py-1 text-xs font-bold rounded ${i18n.language.startsWith('es') ? 'bg-primary text-white' : 'text-text-secondary hover:text-white'}`}
+                                        className={`px-2 py-1 text-xs font-bold rounded ${i18n.language.startsWith('es') ? 'bg-primary text-white' : 'text-text-secondary hover:text-text-primary'}`}
                                         aria-label="Español"
                                         aria-pressed={i18n.language.startsWith('es')}
                                     >
@@ -130,7 +130,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                                 <div className="hidden sm:flex items-center bg-surface p-1 rounded-lg border border-border">
                                     <button
                                         onClick={onExportPDF}
-                                        className="p-2 text-text-secondary hover:text-white transition-colors tooltip"
+                                        className="p-2 text-text-secondary hover:text-text-primary transition-colors tooltip"
                                         title="Export PDF"
                                         aria-label="Export as PDF"
                                     >
@@ -138,7 +138,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                                     </button>
                                     <button
                                         onClick={onExportCSV}
-                                        className="p-2 text-text-secondary hover:text-white transition-colors tooltip"
+                                        className="p-2 text-text-secondary hover:text-text-primary transition-colors tooltip"
                                         title="Export CSV"
                                         aria-label="Export as CSV"
                                     >
@@ -147,7 +147,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                                     <div className="w-px h-4 bg-border mx-1" aria-hidden="true" />
                                     <button
                                         onClick={handleLogout}
-                                        className="p-2 text-text-secondary hover:text-white transition-colors tooltip"
+                                        className="p-2 text-text-secondary hover:text-text-primary transition-colors tooltip"
                                         title="Logout"
                                         aria-label="Logout"
                                     >
@@ -156,7 +156,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                                     <div className="w-px h-4 bg-border mx-1" aria-hidden="true" />
                                     <button
                                         onClick={handleShare}
-                                        className="p-2 text-text-secondary hover:text-white transition-colors tooltip"
+                                        className="p-2 text-text-secondary hover:text-text-primary transition-colors tooltip"
                                         title="Copy link"
                                         aria-label="Copy link to clipboard"
                                     >
@@ -202,7 +202,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                             <div className="space-y-2">
                                 <button
                                     onClick={() => { setActiveTab('overview'); setMobileMenuOpen(false); }}
-                                    className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium ${activeTab === 'overview' ? 'bg-primary/10 text-primary border border-primary/20' : 'text-text-secondary hover:bg-white/5 hover:text-white border border-transparent'}`}
+                                    className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium ${activeTab === 'overview' ? 'bg-primary/10 text-primary border border-primary/20' : 'text-text-secondary hover:bg-slate-100 hover:text-text-primary border border-transparent'}`}
                                     aria-current={activeTab === 'overview' ? 'page' : undefined}
                                 >
                                     Dashboard
@@ -215,13 +215,13 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                                 </button>
                                 <button
                                     onClick={() => { navigate('/settings'); setMobileMenuOpen(false); }}
-                                    className="w-full flex items-center gap-2 px-4 py-3 text-text-secondary rounded-lg text-sm font-medium hover:bg-white/5 hover:text-white"
+                                    className="w-full flex items-center gap-2 px-4 py-3 text-text-secondary rounded-lg text-sm font-medium hover:bg-slate-100 hover:text-text-primary"
                                 >
                                     <Settings className="w-4 h-4" /> Settings
                                 </button>
                                 <button
                                     onClick={async () => { await handleLogout(); setMobileMenuOpen(false); }}
-                                    className="w-full flex items-center gap-2 px-4 py-3 text-text-secondary rounded-lg text-sm font-medium hover:bg-white/5 hover:text-white"
+                                    className="w-full flex items-center gap-2 px-4 py-3 text-text-secondary rounded-lg text-sm font-medium hover:bg-slate-100 hover:text-text-primary"
                                 >
                                     <LogOut className="w-4 h-4" /> Sign Out
                                 </button>
