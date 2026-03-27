@@ -197,7 +197,7 @@ export const HeroGlobeBackground: React.FC<HeroGlobeBackgroundProps> = ({ classN
             camera.updateProjectionMatrix();
             root.position.x = clientWidth < 768 ? 0.48 : clientWidth < 1024 ? -0.65 : -1.55;
             root.position.y = clientWidth < 768 ? 1.34 : 0.1;
-            const scale = clientWidth < 768 ? 0.82 : clientWidth < 1024 ? 0.84 : 0.88;
+            const scale = clientWidth < 768 ? 0.9 : clientWidth < 1024 ? 0.9 : 1;
             root.scale.setScalar(scale);
         };
 
