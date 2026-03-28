@@ -131,18 +131,18 @@ const HeroPreview: React.FC = () => {
             viewport={{ once: true, amount: 0.35 }}
         >
             <div className="pointer-events-none absolute inset-0 rounded-[2rem] bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.08),transparent_32%)]" aria-hidden="true" />
-            <Card variant="glass" className="relative overflow-hidden border-white/10 bg-surface/80 shadow-2xl shadow-black/30">
-                <div className="border-b border-white/10 px-5 py-4 flex items-center justify-between gap-4">
+            <Card variant="glass" className="relative overflow-hidden border-white/70 bg-white/90 shadow-2xl shadow-black/25">
+                <div className="border-b border-slate-200/80 px-5 py-4 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
-                            <LayoutDashboard className="w-5 h-5 text-primary" />
+                        <div className="w-10 h-10 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center">
+                            <LayoutDashboard className="w-5 h-5 text-sky-500" />
                         </div>
                         <div className="min-w-0">
-                            <p className="text-text-primary font-display font-bold text-base truncate">Visibility command center</p>
+                            <p className="text-slate-700 font-display font-bold text-base truncate">Visibility command center</p>
                             <p className="text-xs text-text-muted font-bold uppercase tracking-[0.22em] truncate">example.com · weekly snapshot</p>
                         </div>
                     </div>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-sky-300 bg-sky-500/10 border border-sky-500/20 px-3 py-1 rounded-full whitespace-nowrap flex-shrink-0">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-sky-500 bg-sky-100 border border-sky-200 px-3 py-1 rounded-full whitespace-nowrap flex-shrink-0">
                         Operator view
                     </span>
                 </div>
