@@ -3,6 +3,11 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: #7a8ea8 #e8eef5;
+  }
+
   body {
     @apply bg-background text-text-primary font-sans antialiased overflow-x-hidden;
     background-image:
@@ -81,16 +86,22 @@
 
 /* Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-background;
+  background: #e8eef5;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-surfaceHighlight rounded-full hover:bg-primary/50 transition-colors;
+  background: linear-gradient(180deg, #8aa4c3 0%, #5c7899 100%);
+  border-radius: 9999px;
+  border: 2px solid #e8eef5;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #6e8fb7 0%, #456586 100%);
 }
 
 /* ===== WCAG 2.1 AA Accessibility ===== */

@@ -68,35 +68,35 @@ export const HeroGlobeBackground: React.FC<HeroGlobeBackgroundProps> = ({ classN
         scene.add(fill);
 
         const core = new THREE.Mesh(
-            new THREE.SphereGeometry(1.72, 48, 48),
+            new THREE.SphereGeometry(1.76, 48, 48),
             new THREE.MeshPhongMaterial({
-                color: 0x081513,
-                emissive: 0x12345a,
-                emissiveIntensity: 0.32,
+                color: 0x06101f,
+                emissive: 0x102947,
+                emissiveIntensity: 0.26,
                 shininess: 70,
                 transparent: true,
-                opacity: 0.9,
+                opacity: 0.94,
             })
         );
         root.add(core);
 
         const shell = new THREE.Mesh(
-            new THREE.SphereGeometry(1.86, 40, 40),
+            new THREE.SphereGeometry(1.93, 40, 40),
             new THREE.MeshBasicMaterial({
                 color: 0x41a8ff,
                 wireframe: true,
                 transparent: true,
-                opacity: 0.5,
+                opacity: 0.58,
             })
         );
         root.add(shell);
 
         const halo = new THREE.Mesh(
-            new THREE.SphereGeometry(2.18, 32, 32),
+            new THREE.SphereGeometry(2.24, 32, 32),
             new THREE.MeshBasicMaterial({
-                color: 0x2f8fff,
+                color: 0x235d9a,
                 transparent: true,
-                opacity: 0.08,
+                opacity: 0.1,
                 side: THREE.BackSide,
             })
         );
@@ -195,9 +195,9 @@ export const HeroGlobeBackground: React.FC<HeroGlobeBackgroundProps> = ({ classN
             camera.aspect = clientWidth / clientHeight;
             camera.position.z = clientWidth < 768 ? 10.1 : 7.2;
             camera.updateProjectionMatrix();
-            root.position.x = clientWidth < 768 ? 0.48 : clientWidth < 1024 ? -0.65 : -1.55;
-            root.position.y = clientWidth < 768 ? 1.34 : 0.1;
-            const scale = clientWidth < 768 ? 0.9 : clientWidth < 1024 ? 0.9 : 1;
+            root.position.x = clientWidth < 768 ? 0.48 : clientWidth < 1024 ? -0.76 : -1.74;
+            root.position.y = clientWidth < 768 ? 1.34 : 0.18;
+            const scale = clientWidth < 768 ? 0.93 : clientWidth < 1024 ? 0.96 : 1.02;
             root.scale.setScalar(scale);
         };
 
@@ -221,7 +221,8 @@ export const HeroGlobeBackground: React.FC<HeroGlobeBackgroundProps> = ({ classN
             const tick = time * 0.001;
 
             root.rotation.y = tick * 0.18;
-            root.rotation.x = Math.sin(tick * 0.35) * 0.08;
+            root.rotation.x = 0.12 + Math.sin(tick * 0.35) * 0.08;
+            root.rotation.z = -0.08 + Math.sin(tick * 0.2) * 0.015;
             shell.rotation.y = -tick * 0.12;
             ringA.rotation.z = tick * 0.22;
             ringB.rotation.x = Math.PI / 2.2 + Math.sin(tick * 0.5) * 0.1;

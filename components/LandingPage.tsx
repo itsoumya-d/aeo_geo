@@ -704,7 +704,7 @@ export const LandingPage: React.FC = () => {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true, margin: "-40px" }}
                             transition={{ duration: 0.45, ease: 'easeOut' }}
-                            className="min-w-0 w-full justify-self-end"
+                            className="min-w-0 w-full justify-self-end lg:pt-5 xl:pt-7"
                         >
                             <HeroPreview />
                         </motion.div>
