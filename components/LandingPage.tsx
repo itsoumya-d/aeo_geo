@@ -1138,7 +1138,7 @@ export const LandingPage: React.FC = () => {
                                 <Button variant="secondary" className="w-full sm:w-auto">Browse Help Center</Button>
                             </Link>
                             <a href="mailto:support@cognition-ai.com">
-                                <Button variant="ghost" className="w-full sm:w-auto border border-white/10">Email Support</Button>
+                                <Button variant="secondary" className="w-full sm:w-auto">Email Support</Button>
                             </a>
                         </div>
                     </FadeIn>

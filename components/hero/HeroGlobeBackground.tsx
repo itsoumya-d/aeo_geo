@@ -70,12 +70,12 @@ export const HeroGlobeBackground: React.FC<HeroGlobeBackgroundProps> = ({ classN
         const core = new THREE.Mesh(
             new THREE.SphereGeometry(1.76, 48, 48),
             new THREE.MeshPhongMaterial({
-                color: 0x06101f,
-                emissive: 0x102947,
-                emissiveIntensity: 0.26,
+                color: 0x081513,
+                emissive: 0x12345a,
+                emissiveIntensity: 0.32,
                 shininess: 70,
                 transparent: true,
-                opacity: 0.94,
+                opacity: 0.9,
             })
         );
         root.add(core);
@@ -86,7 +86,7 @@ export const HeroGlobeBackground: React.FC<HeroGlobeBackgroundProps> = ({ classN
                 color: 0x41a8ff,
                 wireframe: true,
                 transparent: true,
-                opacity: 0.58,
+                opacity: 0.5,
             })
         );
         root.add(shell);
@@ -94,9 +94,9 @@ export const HeroGlobeBackground: React.FC<HeroGlobeBackgroundProps> = ({ classN
         const halo = new THREE.Mesh(
             new THREE.SphereGeometry(2.24, 32, 32),
             new THREE.MeshBasicMaterial({
-                color: 0x235d9a,
+                color: 0x2f8fff,
                 transparent: true,
-                opacity: 0.1,
+                opacity: 0.08,
                 side: THREE.BackSide,
             })
         );

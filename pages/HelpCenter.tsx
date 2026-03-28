@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
     HelpCircle, Book, MessageCircle, ChevronDown, ChevronUp,
     Zap, Shield, CreditCard, Users, Key, Search,
@@ -6,6 +7,8 @@ import {
 } from 'lucide-react';
 import { sanitizeUiCopy } from '../utils/uiCopy';
 import { supabase } from '../services/supabase';
+import { Button } from '../components/ui/Button';
+import { BrandLockup, BrandMark } from '../components/branding/BrandLogo';
 
 interface FAQItem {
     question: string;
@@ -71,20 +74,20 @@ const CATEGORIES = ['Getting Started', 'Audits', 'Billing', 'Teams', 'API', 'Sec
 const FAQAccordion: React.FC<{ item: FAQItem; isOpen: boolean; onToggle: () => void }> = ({
     item, isOpen, onToggle
 }) => (
-    <div className="border border-slate-800 rounded-xl overflow-hidden">
+    <div className="border border-slate-200 rounded-xl overflow-hidden bg-white">
         <button
             onClick={onToggle}
-            className="w-full flex items-center justify-between p-4 text-left hover:bg-slate-800/50 transition-colors"
+            className="w-full flex items-center justify-between p-4 text-left hover:bg-slate-50 transition-colors"
         >
-            <span className="font-medium text-white">{item.question}</span>
+            <span className="font-medium text-slate-900">{item.question}</span>
             {isOpen ? (
-                <ChevronUp className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                <ChevronUp className="w-5 h-5 text-slate-500 flex-shrink-0" />
             ) : (
-                <ChevronDown className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                <ChevronDown className="w-5 h-5 text-slate-500 flex-shrink-0" />
             )}
         </button>
         {isOpen && (
-            <div className="px-4 pb-4 text-slate-400 text-sm leading-relaxed animate-in fade-in duration-200">
+            <div className="px-4 pb-4 text-slate-600 text-sm leading-relaxed animate-in fade-in duration-200">
                 {item.answer}
             </div>
         )}
@@ -146,17 +149,17 @@ const ContactForm: React.FC = () => {
 
     if (submitted) {
         return (
-            <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-8 text-center">
+            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-8 text-center">
                 <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-2">Message received!</h3>
+                <h3 className="text-xl font-semibold text-slate-900 mb-2">Message received!</h3>
                 {ticketId && (
-                    <div className="inline-flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-1.5 mb-3">
+                    <div className="inline-flex items-center gap-1.5 bg-white border border-emerald-200 rounded-lg px-3 py-1.5 mb-3">
                         <Hash className="w-3.5 h-3.5 text-emerald-400" />
                         <span className="text-emerald-300 text-sm font-mono font-semibold">{ticketId}</span>
                     </div>
                 )}
-                <p className="text-slate-400 mb-4">
-                    We've received your message and sent a confirmation to <span className="text-white">{email}</span>. We aim to respond within 24 hours.
+                <p className="text-slate-600 mb-4">
+                    We've received your message and sent a confirmation to <span className="text-slate-900">{email}</span>. We aim to respond within 24 hours.
                 </p>
                 <button
                     onClick={() => { setSubmitted(false); setName(''); setEmail(''); setTopic(''); setMessage(''); setErrors({}); setTicketId(''); }}
@@ -169,15 +172,15 @@ const ContactForm: React.FC = () => {
     }
 
     return (
-        <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-8">
+        <div className="bg-white border border-slate-200 rounded-2xl p-8">
             <div className="flex items-start gap-4 mb-8">
-                <div className="w-12 h-12 bg-purple-500/20 rounded-2xl flex items-center justify-center flex-shrink-0">
-                    <MessageCircle className="w-6 h-6 text-purple-400" />
+                <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center flex-shrink-0">
+                    <MessageCircle className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                    <h3 className="text-xl font-semibold text-white mb-1">Still have questions?</h3>
-                    <p className="text-slate-400 text-sm">
-                        Our team typically responds within <span className="text-white font-medium">24 hours</span>.
+                    <h3 className="text-xl font-semibold text-slate-900 mb-1">Still have questions?</h3>
+                    <p className="text-slate-600 text-sm">
+                        Our team typically responds within <span className="text-slate-900 font-medium">24 hours</span>.
                     </p>
                 </div>
             </div>
@@ -185,35 +188,35 @@ const ContactForm: React.FC = () => {
             <form onSubmit={handleSubmit} noValidate className="space-y-5">
                 <div className="grid sm:grid-cols-2 gap-5">
                     <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1.5">Your name</label>
+                        <label className="block text-sm font-medium text-slate-700 mb-1.5">Your name</label>
                         <input
                             type="text"
                             value={name}
                             onChange={e => { setName(e.target.value); setErrors(prev => ({ ...prev, name: '' })); }}
                             placeholder="Jane Smith"
-                            className={`w-full bg-slate-800 border rounded-xl px-4 py-2.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary transition-colors ${errors.name ? 'border-rose-500' : 'border-slate-700'}`}
+                            className={`w-full bg-white border rounded-xl px-4 py-2.5 text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary transition-colors ${errors.name ? 'border-rose-500' : 'border-slate-200'}`}
                         />
                         {errors.name && <p className="text-xs text-rose-400 mt-1">{errors.name}</p>}
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1.5">Email address</label>
+                        <label className="block text-sm font-medium text-slate-700 mb-1.5">Email address</label>
                         <input
                             type="email"
                             value={email}
                             onChange={e => { setEmail(e.target.value); setErrors(prev => ({ ...prev, email: '' })); }}
                             placeholder="jane@company.com"
-                            className={`w-full bg-slate-800 border rounded-xl px-4 py-2.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary transition-colors ${errors.email ? 'border-rose-500' : 'border-slate-700'}`}
+                            className={`w-full bg-white border rounded-xl px-4 py-2.5 text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary transition-colors ${errors.email ? 'border-rose-500' : 'border-slate-200'}`}
                         />
                         {errors.email && <p className="text-xs text-rose-400 mt-1">{errors.email}</p>}
                     </div>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1.5">Topic</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Topic</label>
                     <select
                         value={topic}
                         onChange={e => { setTopic(e.target.value); setErrors(prev => ({ ...prev, topic: '' })); }}
-                        className={`w-full bg-slate-800 border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-primary transition-colors ${errors.topic ? 'border-rose-500' : 'border-slate-700'}`}
+                        className={`w-full bg-white border rounded-xl px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary transition-colors ${errors.topic ? 'border-rose-500' : 'border-slate-200'}`}
                     >
                         <option value="" disabled>Select a topic…</option>
                         {TOPICS.map(t => <option key={t} value={t}>{t}</option>)}
@@ -222,13 +225,13 @@ const ContactForm: React.FC = () => {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1.5">Message</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Message</label>
                     <textarea
                         rows={4}
                         value={message}
                         onChange={e => { setMessage(e.target.value); setErrors(prev => ({ ...prev, message: '' })); }}
                         placeholder="Describe your question or issue in detail…"
-                        className={`w-full bg-slate-800 border rounded-xl px-4 py-2.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary transition-colors resize-none ${errors.message ? 'border-rose-500' : 'border-slate-700'}`}
+                        className={`w-full bg-white border rounded-xl px-4 py-2.5 text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary transition-colors resize-none ${errors.message ? 'border-rose-500' : 'border-slate-200'}`}
                     />
                     {errors.message && <p className="text-xs text-rose-400 mt-1">{errors.message}</p>}
                 </div>
@@ -240,7 +243,7 @@ const ContactForm: React.FC = () => {
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-1">
                     <a
                         href="/docs/api"
-                        className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors"
+                        className="flex items-center gap-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors"
                     >
                         <Book className="w-4 h-4" />
                         View documentation
@@ -287,14 +290,34 @@ export const HelpCenter: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-background">
-            {/* Header */}
-            <div className="bg-gradient-to-b from-primary/10 to-transparent border-b border-slate-800">
+            <header className="relative z-10 border-b border-white/10 bg-white/80 backdrop-blur-md">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
+                    <Link to="/" className="min-w-0">
+                        <BrandLockup className="gap-2.5" stacked={false} />
+                    </Link>
+
+                    <div className="flex items-center gap-3">
+                        <Link to="/login">
+                            <Button variant="ghost" className="border border-slate-200 hover:bg-slate-50">
+                                Sign in
+                            </Button>
+                        </Link>
+                        <Link to="/signup">
+                            <Button variant="cta">
+                                Get started free
+                            </Button>
+                        </Link>
+                    </div>
+                </div>
+            </header>
+
+            <div className="bg-gradient-to-b from-primary/10 to-transparent border-b border-slate-200/80">
                 <div className="max-w-4xl mx-auto px-6 py-16 text-center">
                     <div className="w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
                         <HelpCircle className="w-8 h-8 text-primary" />
                     </div>
-                    <h1 className="text-3xl font-bold text-white mb-4">Help Center</h1>
-                    <p className="text-slate-400 mb-8 max-w-xl mx-auto">
+                    <h1 className="text-3xl font-bold text-slate-900 mb-4">Help Center</h1>
+                    <p className="text-slate-600 mb-8 max-w-xl mx-auto">
                         Find answers to common questions about AI visibility, audits, billing, and more.
                     </p>
 
@@ -306,7 +329,7 @@ export const HelpCenter: React.FC = () => {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Search for help..."
-                            className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl pl-12 pr-4 py-3 focus:ring-2 focus:ring-primary outline-none placeholder:text-slate-500"
+                            className="w-full bg-white border border-slate-200 text-slate-900 rounded-xl pl-12 pr-4 py-3 focus:ring-2 focus:ring-primary outline-none placeholder:text-slate-500"
                         />
                     </div>
                 </div>
@@ -319,7 +342,7 @@ export const HelpCenter: React.FC = () => {
                         onClick={() => setSelectedCategory(null)}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${!selectedCategory
                                 ? 'bg-primary text-white'
-                                : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
                             }`}
                     >
                         All Topics
@@ -330,7 +353,7 @@ export const HelpCenter: React.FC = () => {
                             onClick={() => setSelectedCategory(category)}
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedCategory === category
                                     ? 'bg-primary text-white'
-                                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                                    : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
                                 }`}
                         >
                             {getCategoryIcon(category)}
@@ -343,8 +366,8 @@ export const HelpCenter: React.FC = () => {
                 <div className="space-y-3 mb-12">
                     {filteredFAQs.length === 0 ? (
                         <div className="text-center py-12">
-                            <HelpCircle className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                            <p className="text-slate-400">No matching questions found.</p>
+                            <HelpCircle className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                            <p className="text-slate-500">No matching questions found.</p>
                         </div>
                     ) : (
                         filteredFAQs.map((item, index) => (
@@ -361,6 +384,31 @@ export const HelpCenter: React.FC = () => {
                 {/* Contact Section */}
                 <ContactForm />
             </div>
+
+            <footer className="relative z-10 border-t border-slate-200 py-12 sm:py-14">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+                        <div className="min-w-0">
+                            <div className="flex items-center gap-2.5">
+                                <BrandMark className="h-8 w-8 rounded-lg" />
+                                <p className="text-slate-900 font-display font-bold">GOATAEO</p>
+                            </div>
+                            <p className="text-sm text-slate-600 mt-3 max-w-md leading-relaxed">
+                                Measure and improve how AI assistants cite and understand your brand. Built for the AI-first search era.
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-12 gap-y-3 text-sm font-semibold text-slate-600">
+                            <Link to="/pricing" className="hover:text-slate-900 transition-colors">Pricing</Link>
+                            <Link to="/docs/api" className="hover:text-slate-900 transition-colors">API Docs</Link>
+                            <Link to="/help" className="hover:text-slate-900 transition-colors">Help Center</Link>
+                            <Link to="/terms" className="hover:text-slate-900 transition-colors">Terms</Link>
+                            <Link to="/privacy" className="hover:text-slate-900 transition-colors">Privacy</Link>
+                            <a href="mailto:support@cognition-ai.com" className="hover:text-slate-900 transition-colors">Contact</a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
         </div>
     );
 };
