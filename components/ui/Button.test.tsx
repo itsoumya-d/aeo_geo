@@ -19,13 +19,13 @@ describe('Button Component', () => {
     it('applies primary variant by default', () => {
         render(<Button>Primary</Button>);
         const button = screen.getByRole('button');
-        expect(button).toHaveClass('bg-primary');
+        expect(button).toHaveClass('bg-[#2f8fff]');
     });
 
     it('applies secondary variant correctly', () => {
         render(<Button variant="secondary">Secondary</Button>);
         const button = screen.getByRole('button');
-        expect(button).toHaveClass('bg-surface/50');
+        expect(button).toHaveClass('bg-surface/90');
     });
 
     it('applies ghost variant correctly', () => {
