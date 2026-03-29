@@ -1,10 +1,24 @@
 import React, { useState } from 'react';
 import { PageAnalysis, Recommendation } from '../types';
-import { ChevronDown, RefreshCw, Layout, FileCode, Search, Code, Check, Zap, Target, ArrowRight, CheckCircle } from 'lucide-react';
+import { ChevronDown, RefreshCw, Layout, FileCode, Search, Code, Check, Zap, Target, ArrowRight, CheckCircle, AlertTriangle, Lightbulb } from 'lucide-react';
 import { simulateRewriteAnalysis } from '../services/geminiService';
 import { useAuth } from '../contexts/AuthContext';
 import { saveRewriteSimulation } from '../services/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
+
+function scoreChip(label: string, score: number | undefined) {
+    if (score === undefined) return null;
+    const color = score < 40
+        ? 'bg-red-50 text-red-600 border-red-200'
+        : score < 70
+            ? 'bg-amber-50 text-amber-600 border-amber-200'
+            : 'bg-green-50 text-green-600 border-green-200';
+    return (
+        <span key={label} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[10px] font-bold ${color}`}>
+            {label} {score}
+        </span>
+    );
+}
 
 interface PageBreakdownProps {
     page: PageAnalysis;
@@ -38,8 +52,26 @@ export const PageBreakdown: React.FC<PageBreakdownProps> = ({ page, auditId }) =
                         <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mb-1 sm:mb-2">
                             <h3 className="text-base sm:text-xl font-bold text-white group-hover:text-primary transition-colors tracking-tight truncate">{page.title}</h3>
                             <span className="w-fit text-[9px] font-black uppercase tracking-[0.2em] bg-white/[0.05] text-slate-400 px-2 py-0.5 rounded-full border border-white/[0.05]">{page.pageType}</span>
+                            {page.offMessage && (
+                                <span className="w-fit inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-full">
+                                    <AlertTriangle className="w-2.5 h-2.5" />
+                                    Off-Message
+                                </span>
+                            )}
                         </div>
                         <p className="text-[10px] sm:text-xs text-slate-500 font-medium font-mono truncate max-w-[200px] sm:max-w-md bg-white/[0.02] px-2 py-0.5 rounded border border-white/[0.03]">{page.url}</p>
+                        {/* Score chips */}
+                        {(page.aeoScore !== undefined || page.geoScore !== undefined || page.seoScore !== undefined) && (
+                            <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                                {scoreChip('AEO', page.aeoScore)}
+                                {scoreChip('GEO', page.geoScore)}
+                                {scoreChip('SEO', page.seoScore)}
+                            </div>
+                        )}
+                        {/* 2-line summary */}
+                        {page.summary && (
+                            <p className="text-xs text-slate-400 mt-1.5 max-w-lg line-clamp-2">{page.summary}</p>
+                        )}
                     </div>
                 </div>
 
@@ -98,6 +130,24 @@ export const PageBreakdown: React.FC<PageBreakdownProps> = ({ page, auditId }) =
                                 </p>
                             </div>
                         </div>
+
+                        {/* Top 3 quick improvements */}
+                        {page.topImprovements && page.topImprovements.length > 0 && (
+                            <div className="px-4 sm:px-10 py-6 border-t border-white/[0.05] bg-white/[0.01]">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <Lightbulb className="w-4 h-4 text-amber-400" />
+                                    <h4 className="text-xs font-black text-slate-300 uppercase tracking-widest">Top Improvements</h4>
+                                </div>
+                                <div className="space-y-2">
+                                    {page.topImprovements.slice(0, 3).map((item, i) => (
+                                        <div key={i} className="flex items-start gap-2.5">
+                                            <span className="flex-shrink-0 w-5 h-5 bg-amber-500/10 border border-amber-500/20 rounded-full text-amber-400 text-[10px] font-black flex items-center justify-center mt-0.5">{i + 1}</span>
+                                            <p className="text-sm text-slate-300">{item}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         <div className="p-4 sm:p-10">
                             <div className="flex items-center justify-between mb-6 sm:mb-10">

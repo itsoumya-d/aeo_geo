@@ -71,23 +71,20 @@ export const SSOConfig: React.FC = () => {
 
     if (!isEnterprise) {
         return (
-            <div className="bg-gradient-to-r from-blue-900/20 to-indigo-900/20 border border-blue-500/30 rounded-2xl p-8 text-center relative overflow-hidden group">
-                <div className="absolute inset-0 bg-blue-500/5 group-hover:bg-blue-500/10 transition-colors" />
-                <div className="relative z-10">
-                    <Shield className="w-16 h-16 text-blue-400 mx-auto mb-6" />
-                    <h2 className="text-2xl font-bold text-white mb-2">Enterprise Grade Security</h2>
-                    <p className="text-slate-400 max-w-lg mx-auto mb-8 text-lg">
-                        Enforce Single Sign-On (SAML/OIDC) via Okta, Azure AD, or Google Workspace.
-                        Protect your data with bank-grade encryption and compliance logs.
-                    </p>
-                    <a
-                        href="/settings/billing"
-                        className="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-400 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-blue-500/20 hover:scale-105"
-                    >
-                        <Lock className="w-5 h-5" />
-                        Upgrade to Enterprise
-                    </a>
-                </div>
+            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-8 text-center">
+                <Shield className="w-16 h-16 text-blue-600 mx-auto mb-6" />
+                <h2 className="text-2xl font-bold text-blue-900 mb-2">Enterprise Grade Security</h2>
+                <p className="text-blue-700 max-w-lg mx-auto mb-8 text-lg">
+                    Enforce Single Sign-On (SAML/OIDC) via Okta, Azure AD, or Google Workspace.
+                    Protect your data with bank-grade encryption and compliance logs.
+                </p>
+                <a
+                    href="/settings/billing"
+                    className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-md hover:shadow-lg"
+                >
+                    <Lock className="w-5 h-5" />
+                    Upgrade to Enterprise
+                </a>
             </div>
         );
     }

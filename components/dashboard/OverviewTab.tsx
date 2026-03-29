@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Report } from '../../types';
 import { TabType } from './DashboardTypes';
@@ -11,6 +11,7 @@ import { VisibilityTrendChart } from '../VisibilityTrendChart';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
+import { ScoreExplainerDrawer } from './ScoreExplainerDrawer';
 
 interface OverviewTabProps {
     report: Report;
@@ -33,6 +34,8 @@ const itemVariants = {
 };
 
 export const OverviewTab: React.FC<OverviewTabProps> = ({ report, setActiveTab }) => {
+    const [drawerScore, setDrawerScore] = useState<'overall' | 'aeo' | 'geo' | 'seo' | null>(null);
+
     // Colors from Design System
     // Good: Emerald 500 (#10b981), Warning: Amber 500 (#f59e0b), Bad: Red 500 (#ef4444)
     // Primary: Blue 600 (#2563eb)
@@ -63,6 +66,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ report, setActiveTab }
                 : { label: 'Low', color: 'text-emerald-400' };
 
     return (
+        <>
         <motion.div
             variants={containerVariants}
             initial="hidden"
@@ -72,10 +76,15 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ report, setActiveTab }
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 {/* Score Card */}
                 <motion.div variants={itemVariants} className="lg:col-span-4">
-                    <Card className="h-full flex flex-col items-center justify-center relative overflow-hidden group shadow-glow hover:shadow-xl transition-all p-8 bg-surface border-border">
+                    <Card
+                        className="h-full flex flex-col items-center justify-center relative overflow-hidden group shadow-glow hover:shadow-xl transition-all p-8 bg-surface border-border cursor-pointer"
+                        onClick={() => setDrawerScore('overall')}
+                        title="Click to see score breakdown"
+                    >
                         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                         <h3 className="text-text-secondary text-xs font-bold uppercase tracking-[0.2em] mb-8 flex items-center gap-2 font-display">
                             <Target className="w-4 h-4 text-primary" /> Overall Visibility
+                            <span className="text-[9px] text-text-muted border border-white/10 px-1.5 py-0.5 rounded-md ml-auto">Click for breakdown</span>
                         </h3>
                         <div className="w-48 h-48 sm:w-64 sm:h-64 relative">
                             <ResponsiveContainer width="100%" height="100%">
@@ -263,5 +272,16 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ report, setActiveTab }
                 </div>
             </motion.div>
         </motion.div>
+
+        {/* Score Explainer Drawer */}
+        {drawerScore && (
+            <ScoreExplainerDrawer
+                isOpen={true}
+                onClose={() => setDrawerScore(null)}
+                report={report}
+                scoreType={drawerScore}
+            />
+        )}
+        </>
     );
 };

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
     LayoutDashboard, FileText, Search, Users, ShieldCheck,
     Zap, History, Sparkles, Settings, Brain, Upload,
-    ChevronLeft, ChevronRight, Plus,
+    ChevronLeft, ChevronRight, Plus, Target,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TabType } from './DashboardTypes';
@@ -44,8 +44,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onRes
         { id: 'search' as const,       label: t('sidebar.search', 'Search'),            icon: Search,          shortcut: '3' },
         { id: 'benchmark' as const,    label: t('sidebar.benchmark', 'Benchmark'),      icon: Users,           shortcut: '4' },
         { id: 'consistency' as const,  label: t('sidebar.consistency', 'Consistency'),  icon: ShieldCheck,     shortcut: '5' },
-        { id: 'optimization' as const, label: t('sidebar.optimization', 'Optimize'),    icon: Zap,             shortcut: '6' },
-        { id: 'sandbox' as const,      label: t('sidebar.sandbox', 'Sandbox'),          icon: Sparkles,        shortcut: '7' },
+        { id: 'optimization' as const,     label: t('sidebar.optimization', 'Optimize'),       icon: Zap,    shortcut: '6' },
+        { id: 'recommendations' as const, label: t('sidebar.recommendations', 'Actions'),      icon: Target, shortcut: '7' },
+        { id: 'sandbox' as const,         label: t('sidebar.sandbox', 'Sandbox'),              icon: Sparkles, shortcut: '8' },
         { id: 'reports' as const,      label: t('sidebar.reports', 'Reports'),          icon: FileText,        shortcut: '8' },
         { id: 'history' as const,      label: t('sidebar.history', 'History'),          icon: History,         shortcut: '9' },
         { id: 'integrations' as const, label: t('sidebar.integrations', 'Integrations'),icon: Zap,             shortcut: '' },

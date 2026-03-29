@@ -105,6 +105,13 @@ export interface PageAnalysis {
   aiMissed: string; // What AI missed
   quoteLikelihood: number; // 0-100
   recommendations: Recommendation[];
+  // Per-page scores (added T-05)
+  aeoScore?: number; // 0-100
+  geoScore?: number; // 0-100
+  seoScore?: number; // 0-100
+  summary?: string;  // 2-sentence AI summary of the page
+  topImprovements?: string[]; // top 3 specific improvement actions
+  offMessage?: boolean; // true if page topic doesn't match site's primary theme
 }
 
 export interface SearchQuery {
@@ -117,6 +124,43 @@ export interface SeoAudit {
   implemented: string[];
   missing: string[];
   technicalHealth: number; // 0-100
+}
+
+export interface SchemaPageResult {
+  url: string;
+  existingSchemas: string[]; // @type values found e.g. ["Organization", "WebPage"]
+  issues: string[]; // validation problems
+  missingTypes: string[]; // e.g. ["FAQPage", "BreadcrumbList"]
+  generatedSchema: string; // copy-ready JSON-LD for missing types
+  impactStatement: string; // e.g. "Adding FAQPage schema could improve AI citation by ~30%"
+}
+
+export interface SchemaAnalysis {
+  overallHealth: number; // 0-100
+  pagesAnalyzed: number;
+  pagesWithSchema: number;
+  missingTypesAcrossSite: string[];
+  pages: SchemaPageResult[];
+}
+
+export interface SocialPlatformResult {
+  platform: 'Twitter/X' | 'LinkedIn' | 'YouTube' | 'Instagram';
+  url: string;
+  present: boolean;
+  activityScore: number; // 0-100
+  brandConsistency: number; // 0-100
+  bio?: string;
+  issues?: string[]; // e.g. "Bio says 'productivity tool' but site says 'collaboration platform'"
+}
+
+export interface SocialAnalysis {
+  overallPresenceScore: number; // 0-100
+  activityScore: number; // 0-100
+  brandConsistencyScore: number; // 0-100
+  platforms: SocialPlatformResult[];
+  platformCoverage: number; // % of major platforms active (0-100)
+  keyMismatches: string[];
+  recommendations: string[];
 }
 
 export interface Report {
@@ -139,4 +183,9 @@ export interface Report {
     citationFound: boolean;
   }[];
   vectorMap?: VectorMapPoint[];
+  socialAnalysis?: SocialAnalysis;
+  schemaAnalysis?: SchemaAnalysis;
+  // Cache metadata — present when result was served from analysis_cache
+  _fromCache?: boolean;
+  _cachedAt?: string; // ISO timestamp
 }

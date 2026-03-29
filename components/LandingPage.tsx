@@ -30,17 +30,17 @@ const FeatureCard: React.FC<{
     title: string;
     desc: string;
 }> = ({ icon, title, desc }) => (
-    <Card variant="glass" className="group h-full p-6 border-white/10 hover:border-white/20 transition-all duration-300 hover:shadow-[0_24px_60px_rgba(15,23,42,0.28)] bg-surface/45">
+    <div className="group h-full p-6 border border-blue-100 rounded-2xl hover:border-blue-300 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(37,99,235,0.10)] bg-white">
         <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-primary flex-shrink-0 transition-all duration-300 group-hover:scale-105">
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 flex-shrink-0 transition-all duration-300 group-hover:scale-105">
                 {icon}
             </div>
             <div className="min-w-0">
-                <h3 className="text-text-primary font-display font-bold text-lg leading-tight">{title}</h3>
-                <p className="text-text-secondary mt-2 leading-relaxed text-sm">{desc}</p>
+                <h3 className="text-slate-800 font-bold text-lg leading-tight">{title}</h3>
+                <p className="text-slate-600 mt-2 leading-relaxed text-sm">{desc}</p>
             </div>
         </div>
-    </Card>
+    </div>
 );
 
 const PricingCard: React.FC<{
@@ -53,17 +53,16 @@ const PricingCard: React.FC<{
     featured?: boolean;
     annualBilling?: boolean;
 }> = ({ name, price, annualTotal, description, features, cta, featured, annualBilling }) => (
-    <Card
-        variant="glass"
-        className={`h-full p-7 border-white/10 flex flex-col transition-all duration-300 hover:border-white/20 hover:shadow-[0_28px_72px_rgba(15,23,42,0.3)] ${featured ? 'ring-1 ring-primary/40 shadow-glow bg-white/[0.04]' : 'bg-surface/45'}`}
+    <div
+        className={`h-full p-7 flex flex-col transition-all duration-300 rounded-2xl border ${featured ? 'ring-2 ring-blue-600 border-blue-600 bg-white shadow-[0_8px_40px_rgba(37,99,235,0.18)]' : 'border-blue-100 bg-white hover:border-blue-300 hover:shadow-[0_8px_30px_rgba(37,99,235,0.10)]'}`}
     >
         <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-                <h3 className="text-text-primary font-display font-bold text-xl">{name}</h3>
-                <p className="text-text-secondary text-sm mt-1">{description}</p>
+                <h3 className="text-slate-800 font-bold text-xl">{name}</h3>
+                <p className="text-slate-500 text-sm mt-1">{description}</p>
             </div>
             {featured ? (
-                <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-full whitespace-nowrap flex-shrink-0">
+                <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-white bg-blue-600 px-3 py-1 rounded-full whitespace-nowrap flex-shrink-0">
                     Popular
                 </span>
             ) : null}
@@ -71,11 +70,11 @@ const PricingCard: React.FC<{
 
         <div className="mt-6">
             <div className="flex items-end gap-2">
-                <p className="text-4xl font-display font-bold text-text-primary">{price}</p>
-                <p className="text-sm text-text-muted mb-1">/month</p>
+                <p className="text-4xl font-bold text-slate-800">{price}</p>
+                <p className="text-sm text-slate-400 mb-1">/month</p>
             </div>
             {annualBilling && annualTotal && (
-                <p className="text-xs text-emerald-400 font-semibold mt-1">
+                <p className="text-xs text-emerald-600 font-semibold mt-1">
                     Billed annually — {annualTotal}/yr
                 </p>
             )}
@@ -83,8 +82,8 @@ const PricingCard: React.FC<{
 
         <ul className="mt-6 space-y-3 flex-1">
             {features.map((f) => (
-                <li key={f} className="flex items-start gap-3 text-sm text-text-secondary">
-                    <span className="mt-0.5 text-emerald-400 flex-shrink-0">
+                <li key={f} className="flex items-start gap-3 text-sm text-slate-600">
+                    <span className="mt-0.5 text-emerald-500 flex-shrink-0">
                         <Check className="w-4 h-4" />
                     </span>
                     <span className="min-w-0">{f}</span>
@@ -99,7 +98,7 @@ const PricingCard: React.FC<{
                 </Button>
             </Link>
         </div>
-    </Card>
+    </div>
 );
 
 const HeroPreview: React.FC = () => {
@@ -149,19 +148,19 @@ const HeroPreview: React.FC = () => {
 
                 <div className="grid gap-4 p-5 lg:grid-cols-[1.08fr_0.92fr]">
                     <div className="space-y-4">
-                        <div className="rounded-[1.5rem] border border-white/10 bg-[#08111f] p-5">
+                        <div className="rounded-[1.5rem] border border-blue-100 bg-blue-600 p-5">
                             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                                 <div>
-                                    <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-text-muted">Current posture</p>
+                                    <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-blue-200">Current posture</p>
                                     <div className="mt-3 flex items-end gap-3">
-                                        <p className="text-5xl font-display font-bold text-white leading-none">74</p>
+                                        <p className="text-5xl font-bold text-white leading-none">74</p>
                                         <p className="text-sm font-semibold text-emerald-300 pb-1">+6 this week</p>
                                     </div>
-                                    <p className="mt-3 max-w-sm text-sm leading-relaxed text-text-secondary">
+                                    <p className="mt-3 max-w-sm text-sm leading-relaxed text-blue-100">
                                         Strong commercial pages. Weak supporting evidence on docs and help content.
                                     </p>
                                 </div>
-                                <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 sm:max-w-[180px]">
+                                <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/20 px-4 py-3 sm:max-w-[180px]">
                                     <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-emerald-300">Movement</p>
                                     <p className="mt-2 text-sm font-semibold text-white">Citation readiness is climbing</p>
                                     <p className="mt-1 text-xs leading-relaxed text-emerald-200/80">Pricing copy and FAQ clarity improved recall signals.</p>
@@ -174,34 +173,34 @@ const HeroPreview: React.FC = () => {
                                     { label: 'Entity Trust', value: '71', note: 'Mostly consistent' },
                                     { label: 'Technical', value: '83', note: 'Healthy baseline' },
                                 ].map((metric) => (
-                                    <div key={metric.label} className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
-                                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-text-muted">{metric.label}</p>
-                                        <p className="mt-2 text-2xl font-display font-bold text-white">{metric.value}</p>
-                                        <p className="mt-1 text-xs text-text-muted">{metric.note}</p>
+                                    <div key={metric.label} className="rounded-2xl border border-white/20 bg-white/10 p-3">
+                                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-200">{metric.label}</p>
+                                        <p className="mt-2 text-2xl font-bold text-white">{metric.value}</p>
+                                        <p className="mt-1 text-xs text-blue-200">{metric.note}</p>
                                     </div>
                                 ))}
                             </div>
                         </div>
 
-                        <div className="rounded-[1.5rem] border border-white/10 bg-background/50 p-4">
+                        <div className="rounded-[1.5rem] border border-blue-100 bg-white p-4">
                             <div className="flex items-center justify-between gap-3">
                                 <div>
-                                    <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-text-muted">Pages shaping brand recall</p>
-                                    <p className="mt-1 text-sm text-text-secondary">The pages most likely to influence how AI describes you.</p>
+                                    <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-400">Pages shaping brand recall</p>
+                                    <p className="mt-1 text-sm text-slate-600">The pages most likely to influence how AI describes you.</p>
                                 </div>
-                                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-text-muted">
+                                <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-blue-600">
                                     page level
                                 </span>
                             </div>
 
                             <div className="mt-4 space-y-3">
                                 {pageSignals.map((item) => (
-                                    <div key={item.page} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+                                    <div key={item.page} className="rounded-2xl border border-blue-50 bg-slate-50 px-4 py-3">
                                         <div className="flex items-center justify-between gap-3">
-                                            <p className="text-sm font-semibold text-text-primary">{item.page}</p>
+                                            <p className="text-sm font-semibold text-slate-700">{item.page}</p>
                                             <p className={`text-xs font-semibold ${item.tone}`}>{item.state}</p>
                                         </div>
-                                        <div className="mt-2 h-1.5 rounded-full bg-white/10 overflow-hidden">
+                                        <div className="mt-2 h-1.5 rounded-full bg-slate-200 overflow-hidden">
                                             <motion.div
                                                 className={`h-full ${item.bar}`}
                                                 initial={{ width: 0 }}
@@ -217,17 +216,17 @@ const HeroPreview: React.FC = () => {
                     </div>
 
                     <div className="space-y-4">
-                        <div className="rounded-[1.5rem] border border-white/10 bg-background/50 p-4">
-                            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-text-muted">Answer-engine spread</p>
-                            <p className="mt-1 text-sm text-text-secondary">Compare how each platform currently interprets the same brand.</p>
+                        <div className="rounded-[1.5rem] border border-blue-100 bg-white p-4">
+                            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-400">Answer-engine spread</p>
+                            <p className="mt-1 text-sm text-slate-600">Compare how each platform currently interprets the same brand.</p>
                             <div className="mt-4 space-y-3">
                                 {platformScores.map((platform) => (
-                                    <div key={platform.name} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+                                    <div key={platform.name} className="rounded-2xl border border-blue-50 bg-slate-50 px-4 py-3">
                                         <div className="flex items-center justify-between gap-3">
-                                            <p className="text-sm font-semibold text-text-primary">{platform.name}</p>
-                                            <p className="text-xs font-bold text-text-muted">{platform.score}/100</p>
+                                            <p className="text-sm font-semibold text-slate-700">{platform.name}</p>
+                                            <p className="text-xs font-bold text-slate-400">{platform.score}/100</p>
                                         </div>
-                                        <div className="mt-2 h-1.5 rounded-full bg-white/10 overflow-hidden">
+                                        <div className="mt-2 h-1.5 rounded-full bg-slate-200 overflow-hidden">
                                             <motion.div
                                                 className={`h-full ${platform.color}`}
                                                 initial={{ width: 0 }}
@@ -241,16 +240,16 @@ const HeroPreview: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="rounded-[1.5rem] border border-white/10 bg-background/50 p-4">
-                            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-text-muted">Next moves</p>
-                            <p className="mt-1 text-sm text-text-secondary">A focused list your content, SEO, and growth teams can ship this week.</p>
+                        <div className="rounded-[1.5rem] border border-blue-100 bg-white p-4">
+                            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-400">Next moves</p>
+                            <p className="mt-1 text-sm text-slate-600">A focused list your content, SEO, and growth teams can ship this week.</p>
                             <div className="mt-4 space-y-3">
                                 {nextMoves.map((item, index) => (
-                                    <div key={item} className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
-                                        <span className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[10px] font-bold text-text-muted">
+                                    <div key={item} className="flex items-start gap-3 rounded-2xl border border-blue-50 bg-slate-50 px-4 py-3">
+                                        <span className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full border border-blue-200 bg-blue-50 text-[10px] font-bold text-blue-600">
                                             0{index + 1}
                                         </span>
-                                        <p className="text-sm leading-relaxed text-text-secondary">{item}</p>
+                                        <p className="text-sm leading-relaxed text-slate-600">{item}</p>
                                     </div>
                                 ))}
                             </div>
@@ -266,16 +265,16 @@ const FAQItem: React.FC<{ question: string; answer: string }> = ({ question, ans
     const [open, setOpen] = React.useState(false);
     const shouldReduceMotion = useReducedMotion();
     return (
-        <div className="border border-white/10 rounded-xl overflow-hidden">
+        <div className="border border-blue-100 rounded-xl overflow-hidden">
             <button
                 onClick={() => setOpen(!open)}
-                className="w-full flex items-center justify-between p-5 text-left bg-white/5 hover:bg-white/10 transition-colors min-h-[60px] touch-manipulation"
+                className="w-full flex items-center justify-between p-5 text-left bg-white hover:bg-blue-50 transition-colors min-h-[60px] touch-manipulation"
                 aria-expanded={open}
             >
-                <span className="text-text-primary font-semibold text-sm pr-4">{question}</span>
+                <span className="text-slate-800 font-semibold text-sm pr-4">{question}</span>
                 {open
-                    ? <ChevronUp className="w-4 h-4 text-primary flex-shrink-0" />
-                    : <ChevronDown className="w-4 h-4 text-text-muted flex-shrink-0" />}
+                    ? <ChevronUp className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                    : <ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0" />}
             </button>
             <AnimatePresence initial={false}>
                 {open && (
@@ -286,7 +285,7 @@ const FAQItem: React.FC<{ question: string; answer: string }> = ({ question, ans
                         transition={{ duration: 0.2, ease: 'easeInOut' }}
                         className="overflow-hidden"
                     >
-                        <p className="px-5 py-4 text-sm text-text-secondary leading-relaxed border-t border-white/5">
+                        <p className="px-5 py-4 text-sm text-slate-600 leading-relaxed border-t border-blue-50">
                             {answer}
                         </p>
                     </motion.div>
@@ -713,15 +712,15 @@ export const LandingPage: React.FC = () => {
             </header>
 
             {/* ── Stats Bar ──────────────────────────────── */}
-            <section className="relative z-10 border-b border-white/5 bg-white/[0.02]">
+            <section className="relative z-10 border-b border-blue-100 bg-blue-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14 sm:py-16">
                     <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
                         <FadeIn>
-                            <p className="text-xs font-bold uppercase tracking-[0.25em] text-secondary">What The First Audit Gives You</p>
-                            <h2 className="mt-3 text-3xl sm:text-4xl font-display font-bold text-text-primary">
+                            <p className="text-xs font-bold uppercase tracking-[0.25em] text-blue-600">What The First Audit Gives You</p>
+                            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-slate-800">
                                 A tighter view of what AI trusts, ignores, and repeats.
                             </h2>
-                            <p className="mt-4 max-w-xl text-text-secondary leading-relaxed">
+                            <p className="mt-4 max-w-xl text-slate-600 leading-relaxed">
                                 The point is not another vanity dashboard. It is one practical read on brand visibility that your team can use to make sharper content and product marketing decisions.
                             </p>
                         </FadeIn>
@@ -733,16 +732,16 @@ export const LandingPage: React.FC = () => {
                                     variants={{ hidden: { opacity: 0, y: 24, scale: 0.985 }, show: { opacity: 1, y: 0, scale: 1 } }}
                                     transition={{ duration: 0.45, delay: index * 0.05, ease: [0.22, 1, 0.36, 1] }}
                                 >
-                                    <Card variant="glass" className="h-full border-white/10 p-5 bg-surface/50 transition-all duration-300 hover:-translate-y-1 hover:border-white/15 hover:shadow-[0_22px_50px_rgba(15,23,42,0.24)]">
+                                    <div className="h-full border border-blue-100 p-5 bg-white rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:border-blue-300 hover:shadow-[0_8px_24px_rgba(37,99,235,0.10)]">
                                         <div className="flex items-center justify-between gap-3">
                                             {card.icon}
-                                            <p className="text-3xl font-display font-bold text-text-primary">
+                                            <p className="text-3xl font-bold text-slate-800">
                                                 <StaticStat value={card.value} />
                                             </p>
                                         </div>
-                                        <p className="mt-4 text-sm font-semibold text-text-primary">{card.title}</p>
-                                        <p className="mt-2 text-sm leading-relaxed text-text-secondary">{card.detail}</p>
-                                    </Card>
+                                        <p className="mt-4 text-sm font-semibold text-slate-700">{card.title}</p>
+                                        <p className="mt-2 text-sm leading-relaxed text-slate-500">{card.detail}</p>
+                                    </div>
                                 </motion.div>
                             ))}
                         </StaggerContainer>
@@ -751,15 +750,15 @@ export const LandingPage: React.FC = () => {
             </section>
 
             {/* ── Problem Section ────────────────────────── */}
-            <section className="relative z-10 py-20 sm:py-24">
+            <section className="relative z-10 py-20 sm:py-24 bg-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6">
                     <div className="grid gap-10 lg:grid-cols-[0.82fr_1.18fr] lg:items-start">
                         <FadeIn>
-                            <p className="text-xs font-bold uppercase tracking-[0.25em] text-secondary">Why Teams Switch</p>
-                            <h2 className="mt-3 text-3xl sm:text-4xl font-display font-bold text-text-primary">
+                            <p className="text-xs font-bold uppercase tracking-[0.25em] text-blue-600">Why Teams Switch</p>
+                            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-slate-800">
                                 Google rankings do not tell you if AI will cite you.
                             </h2>
-                            <p className="mt-4 max-w-xl text-text-secondary leading-relaxed">
+                            <p className="mt-4 max-w-xl text-slate-600 leading-relaxed">
                                 Buyers are increasingly getting their first recommendation from an answer engine, not a search results page. That changes what your team needs to measure.
                             </p>
                             <div className="mt-6 space-y-3">
@@ -769,8 +768,8 @@ export const LandingPage: React.FC = () => {
                                     'Turn abstract model behavior into page-level work your team can actually ship.',
                                 ].map((point) => (
                                     <div key={point} className="flex items-start gap-3">
-                                        <ShieldCheck className="w-5 h-5 text-emerald-300 mt-0.5 flex-shrink-0" />
-                                        <p className="text-sm leading-relaxed text-text-secondary">{point}</p>
+                                        <ShieldCheck className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                                        <p className="text-sm leading-relaxed text-slate-600">{point}</p>
                                     </div>
                                 ))}
                             </div>
@@ -783,24 +782,24 @@ export const LandingPage: React.FC = () => {
                                     variants={{ hidden: { opacity: 0, y: 22, scale: 0.99 }, show: { opacity: 1, y: 0, scale: 1 } }}
                                     transition={{ duration: 0.42, delay: index * 0.05, ease: [0.22, 1, 0.36, 1] }}
                                 >
-                                    <Card variant="glass" className="border-white/10 bg-surface/45 p-5 sm:p-6 transition-all duration-300 hover:-translate-y-1 hover:border-white/15 hover:shadow-[0_24px_58px_rgba(15,23,42,0.26)]">
+                                    <div className="border border-blue-100 bg-white p-5 sm:p-6 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-[0_8px_24px_rgba(37,99,235,0.10)]">
                                         <div className="grid gap-4 sm:grid-cols-[180px_1fr] sm:items-start">
                                             <div>
-                                                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-text-muted">{item.kicker}</p>
-                                                <h3 className="mt-2 text-lg font-display font-bold text-text-primary">{item.title}</h3>
+                                                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">{item.kicker}</p>
+                                                <h3 className="mt-2 text-lg font-bold text-slate-800">{item.title}</h3>
                                             </div>
                                             <div className="grid gap-3 sm:grid-cols-2">
-                                                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted">Signals</p>
-                                                    <p className="mt-2 text-sm leading-relaxed text-text-primary">{item.signal}</p>
+                                                <div className="rounded-2xl border border-blue-50 bg-blue-50 p-4">
+                                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-500">Signals</p>
+                                                    <p className="mt-2 text-sm leading-relaxed text-slate-700">{item.signal}</p>
                                                 </div>
-                                                <div className="rounded-2xl border border-white/10 bg-background/50 p-4">
-                                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted">Why it matters</p>
-                                                    <p className="mt-2 text-sm leading-relaxed text-text-secondary">{item.detail}</p>
+                                                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Why it matters</p>
+                                                    <p className="mt-2 text-sm leading-relaxed text-slate-600">{item.detail}</p>
                                                 </div>
                                             </div>
                                         </div>
-                                    </Card>
+                                    </div>
                                 </motion.div>
                             ))}
                         </StaggerContainer>
@@ -809,15 +808,15 @@ export const LandingPage: React.FC = () => {
             </section>
 
             {/* ── How It Works ───────────────────────────── */}
-            <section id="how-it-works" className="relative z-10 py-20 sm:py-24 border-t border-white/5 bg-surface/20">
+            <section id="how-it-works" className="relative z-10 py-20 sm:py-24 border-t border-blue-100 bg-blue-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6">
                     <div className="grid gap-10 lg:grid-cols-[0.84fr_1.16fr] lg:items-start">
                         <FadeIn>
-                            <p className="text-xs font-bold uppercase tracking-[0.25em] text-secondary">Workflow</p>
-                            <h2 className="mt-3 text-3xl sm:text-4xl font-display font-bold text-text-primary">
+                            <p className="text-xs font-bold uppercase tracking-[0.25em] text-blue-600">Workflow</p>
+                            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-slate-800">
                                 A calmer way to run your first AI visibility audit.
                             </h2>
-                            <p className="mt-4 max-w-xl text-text-secondary leading-relaxed">
+                            <p className="mt-4 max-w-xl text-slate-600 leading-relaxed">
                                 The product is designed to get you from raw website to focused next move without making you wade through a maze of charts.
                             </p>
                             <div className="mt-6">
@@ -836,24 +835,24 @@ export const LandingPage: React.FC = () => {
                                     variants={{ hidden: { opacity: 0, y: 24, scale: 0.99 }, show: { opacity: 1, y: 0, scale: 1 } }}
                                     transition={{ duration: 0.45, delay: index * 0.06, ease: [0.22, 1, 0.36, 1] }}
                                 >
-                                    <Card variant="glass" className="border-white/10 bg-surface/45 p-5 sm:p-6 transition-all duration-300 hover:-translate-y-1 hover:border-white/15 hover:shadow-[0_24px_58px_rgba(15,23,42,0.26)]">
+                                    <div className="border border-blue-100 bg-white p-5 sm:p-6 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-[0_8px_24px_rgba(37,99,235,0.10)]">
                                         <div className="grid gap-4 md:grid-cols-[82px_1fr_220px] md:items-start">
                                             <div className="flex md:flex-col items-center md:items-start gap-3">
-                                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
+                                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-blue-100 bg-blue-50">
                                                     {item.icon}
                                                 </div>
-                                                <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-text-muted">Step {item.step}</p>
+                                                <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-slate-400">Step {item.step}</p>
                                             </div>
                                             <div>
-                                                <h3 className="text-lg font-display font-bold text-text-primary">{item.title}</h3>
-                                                <p className="mt-2 text-sm leading-relaxed text-text-secondary">{item.description}</p>
+                                                <h3 className="text-lg font-bold text-slate-800">{item.title}</h3>
+                                                <p className="mt-2 text-sm leading-relaxed text-slate-600">{item.description}</p>
                                             </div>
-                                            <div className="rounded-2xl border border-white/10 bg-background/55 p-4">
-                                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted">Outcome</p>
-                                                <p className="mt-2 text-sm leading-relaxed text-text-primary">{item.outcome}</p>
+                                            <div className="rounded-2xl border border-blue-50 bg-blue-50 p-4">
+                                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-500">Outcome</p>
+                                                <p className="mt-2 text-sm leading-relaxed text-slate-700">{item.outcome}</p>
                                             </div>
                                         </div>
-                                    </Card>
+                                    </div>
                                 </motion.div>
                             ))}
                         </StaggerContainer>
@@ -862,14 +861,14 @@ export const LandingPage: React.FC = () => {
             </section>
 
             {/* ── Features ───────────────────────────────── */}
-            <section id="features" className="relative z-10 py-20 sm:py-24 border-t border-white/5">
+            <section id="features" className="relative z-10 py-20 sm:py-24 border-t border-blue-100 bg-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6">
                     <FadeIn>
-                        <p className="text-xs font-bold uppercase tracking-[0.25em] text-secondary text-center">Features</p>
-                        <h2 className="text-3xl sm:text-4xl font-display font-bold text-text-primary text-center mt-3">
+                        <p className="text-xs font-bold uppercase tracking-[0.25em] text-blue-600 text-center">Features</p>
+                        <h2 className="text-3xl sm:text-4xl font-bold text-slate-800 text-center mt-3">
                             Everything you need to win in AI search
                         </h2>
-                        <p className="text-text-secondary text-center mt-4 max-w-2xl mx-auto leading-relaxed">
+                        <p className="text-slate-600 text-center mt-4 max-w-2xl mx-auto leading-relaxed">
                             One unified report across all major AI platforms — designed to turn complex data into clear, shippable actions.
                         </p>
                     </FadeIn>
@@ -916,14 +915,14 @@ export const LandingPage: React.FC = () => {
             </section>
 
             {/* ── Comparison Table ──────────────────────── */}
-            <section className="relative z-10 py-20 sm:py-24 border-t border-white/5 bg-surface/20">
+            <section className="relative z-10 py-20 sm:py-24 border-t border-blue-100 bg-blue-50">
                 <div className="max-w-5xl mx-auto px-4 sm:px-6">
                     <FadeIn>
-                        <p className="text-xs font-bold uppercase tracking-[0.25em] text-secondary text-center">Why GOATAEO</p>
-                        <h2 className="text-3xl sm:text-4xl font-display font-bold text-text-primary text-center mt-3">
+                        <p className="text-xs font-bold uppercase tracking-[0.25em] text-blue-600 text-center">Why GOATAEO</p>
+                        <h2 className="text-3xl sm:text-4xl font-bold text-slate-800 text-center mt-3">
                             The only tool built for AI search
                         </h2>
-                        <p className="text-text-secondary text-center mt-4 max-w-2xl mx-auto leading-relaxed">
+                        <p className="text-slate-600 text-center mt-4 max-w-2xl mx-auto leading-relaxed">
                             See how GOATAEO stacks up against traditional SEO platforms and other AI visibility tools.
                         </p>
                     </FadeIn>
@@ -934,20 +933,20 @@ export const LandingPage: React.FC = () => {
                         whileHover={{ y: -4 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                        className="mt-12 overflow-x-auto rounded-2xl border border-white/10 bg-surface/35 shadow-[0_24px_60px_rgba(15,23,42,0.22)]"
+                        className="mt-12 overflow-x-auto rounded-2xl border border-blue-100 bg-white shadow-[0_8px_30px_rgba(37,99,235,0.10)]"
                     >
                         <table className="w-full min-w-[560px] text-sm">
                             <thead>
-                                <tr className="border-b border-white/10">
-                                    <th className="text-left p-4 pl-6 text-text-muted font-semibold w-[38%]">Feature</th>
+                                <tr className="border-b border-blue-100">
+                                    <th className="text-left p-4 pl-6 text-slate-400 font-semibold w-[38%]">Feature</th>
                                     <th className="p-4 text-center">
-                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 border border-primary/30 rounded-full text-primary font-bold text-xs">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-600 rounded-full text-white font-bold text-xs">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-white" />
                                             GOATAEO
                                         </span>
                                     </th>
-                                    <th className="p-4 text-center text-text-muted font-semibold text-xs">Traditional SEO</th>
-                                    <th className="p-4 text-center text-text-muted font-semibold text-xs pr-6">Other AI SEO</th>
+                                    <th className="p-4 text-center text-slate-400 font-semibold text-xs">Traditional SEO</th>
+                                    <th className="p-4 text-center text-slate-400 font-semibold text-xs pr-6">Other AI SEO</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -962,13 +961,13 @@ export const LandingPage: React.FC = () => {
                                     { feature: 'Free tier available', cognition: '3 audits/mo', seo: false, other: false },
                                 ].map((row, i) => {
                                     const renderCell = (val: boolean | string) => {
-                                        if (val === true) return <span className="inline-flex justify-center"><Check className="w-5 h-5 text-emerald-400" /></span>;
-                                        if (val === false) return <span className="text-rose-400/70 font-bold text-lg leading-none">–</span>;
-                                        return <span className="text-text-secondary text-xs font-medium">{val}</span>;
+                                        if (val === true) return <span className="inline-flex justify-center"><Check className="w-5 h-5 text-emerald-500" /></span>;
+                                        if (val === false) return <span className="text-red-400 font-bold text-lg leading-none">–</span>;
+                                        return <span className="text-slate-600 text-xs font-medium">{val}</span>;
                                     };
                                     return (
-                                        <tr key={row.feature} className={`border-b border-white/5 ${i % 2 === 0 ? 'bg-white/[0.01]' : ''}`}>
-                                            <td className="p-4 pl-6 text-text-secondary font-medium">{row.feature}</td>
+                                        <tr key={row.feature} className={`border-b border-blue-50 ${i % 2 === 0 ? 'bg-white' : 'bg-blue-50/50'}`}>
+                                            <td className="p-4 pl-6 text-slate-600 font-medium">{row.feature}</td>
                                             <td className="p-4 text-center">{renderCell(row.cognition)}</td>
                                             <td className="p-4 text-center">{renderCell(row.seo)}</td>
                                             <td className="p-4 pr-6 text-center">{renderCell(row.other)}</td>
@@ -990,21 +989,21 @@ export const LandingPage: React.FC = () => {
             </section>
 
             {/* ── Pricing ────────────────────────────────── */}
-            <section id="pricing" className="relative z-10 py-20 sm:py-24 border-t border-white/5 bg-surface/20">
+            <section id="pricing" className="relative z-10 py-20 sm:py-24 border-t border-blue-100 bg-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6">
                     <FadeIn>
-                        <p className="text-xs font-bold uppercase tracking-[0.25em] text-secondary text-center">Pricing</p>
-                        <h2 className="text-3xl sm:text-4xl font-display font-bold text-text-primary text-center mt-3">
+                        <p className="text-xs font-bold uppercase tracking-[0.25em] text-blue-600 text-center">Pricing</p>
+                        <h2 className="text-3xl sm:text-4xl font-bold text-slate-800 text-center mt-3">
                             Start free, scale as you grow
                         </h2>
-                        <p className="text-text-secondary text-center mt-4 max-w-2xl mx-auto leading-relaxed">
+                        <p className="text-slate-600 text-center mt-4 max-w-2xl mx-auto leading-relaxed">
                             No hidden fees. Transparent pricing. Upgrade or cancel anytime.
                         </p>
                     </FadeIn>
 
                     {/* Annual/Monthly Toggle */}
                     <FadeIn delay={0.1} className="mt-8 flex items-center justify-center gap-3 sm:gap-4">
-                        <span className={`text-sm font-semibold transition-colors ${!annualBilling ? 'text-text-primary' : 'text-text-muted'}`}>Monthly</span>
+                        <span className={`text-sm font-semibold transition-colors ${!annualBilling ? 'text-slate-800' : 'text-slate-400'}`}>Monthly</span>
                         <button
                             type="button"
                             onClick={() => setAnnualBilling(!annualBilling)}
@@ -1018,9 +1017,9 @@ export const LandingPage: React.FC = () => {
                                 transition={{ type: 'spring', stiffness: 520, damping: 34 }}
                             />
                         </button>
-                        <span className={`flex items-center gap-2 text-sm font-semibold transition-colors ${annualBilling ? 'text-text-primary' : 'text-text-muted'}`}>
+                        <span className={`flex items-center gap-2 text-sm font-semibold transition-colors ${annualBilling ? 'text-slate-800' : 'text-slate-400'}`}>
                             Annual
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
                                 Save 20%
                             </span>
                         </span>
@@ -1103,9 +1102,9 @@ export const LandingPage: React.FC = () => {
                     )}
 
                     <FadeIn delay={0.2} className="mt-10 text-center">
-                        <p className="text-xs text-text-muted">
+                        <p className="text-xs text-slate-500">
                             Need a custom plan?{' '}
-                            <a href="mailto:support@cognition-ai.com" className="text-primary hover:text-white transition-colors font-semibold">
+                            <a href="mailto:support@cognition-ai.com" className="text-blue-600 hover:text-blue-800 transition-colors font-semibold">
                                 Contact us
                             </a>
                             {' '}— enterprise pricing available.
@@ -1115,14 +1114,14 @@ export const LandingPage: React.FC = () => {
             </section>
 
             {/* ── FAQ ────────────────────────────────────── */}
-            <section id="faq" className="relative z-10 py-20 sm:py-24 border-t border-white/5">
+            <section id="faq" className="relative z-10 py-20 sm:py-24 border-t border-blue-100 bg-blue-50">
                 <div className="max-w-3xl mx-auto px-4 sm:px-6">
                     <FadeIn>
-                        <p className="text-xs font-bold uppercase tracking-[0.25em] text-secondary text-center">FAQ</p>
-                        <h2 className="text-3xl sm:text-4xl font-display font-bold text-text-primary text-center mt-3">
+                        <p className="text-xs font-bold uppercase tracking-[0.25em] text-blue-600 text-center">FAQ</p>
+                        <h2 className="text-3xl sm:text-4xl font-bold text-slate-800 text-center mt-3">
                             Questions? We have answers.
                         </h2>
-                        <p className="text-text-secondary text-center mt-4 leading-relaxed">
+                        <p className="text-slate-600 text-center mt-4 leading-relaxed">
                             Everything you need to know before getting started.
                         </p>
                     </FadeIn>
@@ -1132,7 +1131,7 @@ export const LandingPage: React.FC = () => {
                         ))}
                     </div>
                     <FadeIn delay={0.1} className="mt-10 text-center">
-                        <p className="text-text-secondary text-sm mb-4">Still have questions?</p>
+                        <p className="text-slate-600 text-sm mb-4">Still have questions?</p>
                         <div className="flex flex-col sm:flex-row gap-3 justify-center">
                             <Link to="/help">
                                 <Button variant="secondary" className="w-full sm:w-auto">Browse Help Center</Button>
@@ -1146,24 +1145,24 @@ export const LandingPage: React.FC = () => {
             </section>
 
             {/* ── Final CTA ──────────────────────────────── */}
-            <section className="relative z-10 py-20 sm:py-28 border-t border-white/5 overflow-hidden">
+            <section className="relative z-10 py-20 sm:py-28 border-t border-blue-100 overflow-hidden bg-white">
                 <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-primary/15 blur-[120px] rounded-full" />
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-blue-500/8 blur-[120px] rounded-full" />
                 </div>
                 <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
                     <FadeIn>
                         <div className="mx-auto mb-6 flex justify-center">
                             <BrandMark className="h-14 w-14" />
                         </div>
-                        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold text-text-primary leading-tight">
+                        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-800 leading-tight">
                             Find out how AI sees<br />your brand — for free
                         </h2>
-                        <p className="mt-5 text-lg text-text-secondary leading-relaxed max-w-xl mx-auto">
+                        <p className="mt-5 text-lg text-slate-600 leading-relaxed max-w-xl mx-auto">
                             Get your first audit free. No credit card, no setup — just paste your URL and see your AI visibility score in minutes.
                         </p>
                         <div className="mt-8 flex justify-center">
                             <Link to="/help" className="w-full sm:w-auto">
-                                <Button variant="ghost" size="lg" className="w-full sm:w-auto border border-white/10 hover:bg-white/5">
+                                <Button variant="secondary" size="lg" className="w-full sm:w-auto border border-blue-200 hover:bg-blue-50 text-slate-700">
                                     Browse Help Center
                                 </Button>
                             </Link>
@@ -1176,38 +1175,38 @@ export const LandingPage: React.FC = () => {
             {false && <MobileStickyCTA />}
 
             {/* ── Footer ─────────────────────────────────── */}
-            <footer className="relative z-10 border-t border-white/5 py-12 sm:py-14 pb-32 sm:pb-14">
+            <footer className="relative z-10 border-t border-blue-100 bg-blue-50 py-12 sm:py-14 pb-32 sm:pb-14">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6">
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
                         <div className="min-w-0">
                             <div className="flex items-center gap-2.5">
                                 <BrandMark className="h-8 w-8 rounded-lg" />
-                                <p className="text-text-primary font-display font-bold">GOATAEO</p>
+                                <p className="text-slate-800 font-bold">GOATAEO</p>
                             </div>
-                            <p className="text-sm text-text-secondary mt-3 max-w-md leading-relaxed">
+                            <p className="text-sm text-slate-600 mt-3 max-w-md leading-relaxed">
                                 Measure and improve how AI assistants cite and understand your brand. Built for the AI-first search era.
                             </p>
                             <div className="flex items-center gap-5 mt-4">
-                                <a href="#" aria-label="Follow on Twitter/X" className="text-text-muted hover:text-text-primary transition-colors text-xs font-semibold">Twitter / X</a>
-                                <a href="#" aria-label="Follow on LinkedIn" className="text-text-muted hover:text-text-primary transition-colors text-xs font-semibold">LinkedIn</a>
+                                <a href="#" aria-label="Follow on Twitter/X" className="text-slate-400 hover:text-slate-700 transition-colors text-xs font-semibold">Twitter / X</a>
+                                <a href="#" aria-label="Follow on LinkedIn" className="text-slate-400 hover:text-slate-700 transition-colors text-xs font-semibold">LinkedIn</a>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-12 gap-y-3 text-sm font-semibold text-text-secondary">
-                            <a href="#pricing" className="hover:text-text-primary transition-colors">Pricing</a>
-                            <Link to="/docs/api" className="hover:text-text-primary transition-colors">API Docs</Link>
-                            <Link to="/help" className="hover:text-text-primary transition-colors">Help Center</Link>
-                            <Link to="/terms" className="hover:text-text-primary transition-colors">Terms</Link>
-                            <Link to="/privacy" className="hover:text-text-primary transition-colors">Privacy</Link>
-                            <a href="mailto:support@cognition-ai.com" className="hover:text-text-primary transition-colors">Contact</a>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-12 gap-y-3 text-sm font-semibold text-slate-600">
+                            <a href="#pricing" className="hover:text-slate-900 transition-colors">Pricing</a>
+                            <Link to="/docs/api" className="hover:text-slate-900 transition-colors">API Docs</Link>
+                            <Link to="/help" className="hover:text-slate-900 transition-colors">Help Center</Link>
+                            <Link to="/terms" className="hover:text-slate-900 transition-colors">Terms</Link>
+                            <Link to="/privacy" className="hover:text-slate-900 transition-colors">Privacy</Link>
+                            <a href="mailto:support@cognition-ai.com" className="hover:text-slate-900 transition-colors">Contact</a>
                         </div>
                     </div>
 
-                    <div className="mt-10 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                        <p className="text-xs text-text-muted font-semibold">
+                    <div className="mt-10 pt-6 border-t border-blue-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <p className="text-xs text-slate-400 font-semibold">
                             © {new Date().getFullYear()} GOATAEO. All rights reserved.
                         </p>
-                        <p className="text-xs text-text-muted font-semibold">
+                        <p className="text-xs text-slate-400 font-semibold">
                             Payments by Paddle · Available worldwide
                         </p>
                     </div>

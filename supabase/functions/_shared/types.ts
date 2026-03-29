@@ -15,6 +15,7 @@ export interface AnalyzePayload {
     competitors?: string[];
     otherAssets?: string;
     mainContent?: string;
+    forceRefresh?: boolean; // bypass analysis_cache when true
 }
 
 export interface RewritePayload {
@@ -140,6 +141,9 @@ export interface AnalysisReport {
     winProbability?: number; // 0-100
     projectedRevenueLift?: number; // 0-100 (percentage)
     marketShareCapture?: number; // 0-100
+    // Cache metadata (set when result is served from analysis_cache)
+    _fromCache?: boolean;
+    _cachedAt?: string; // ISO timestamp of when the cached entry was created
 }
 
 export interface RewriteResult {

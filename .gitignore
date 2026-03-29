@@ -32,3 +32,4 @@ dist-ssr
 .vercel
 .env.vercel.check
 .env.vercel.production
+.worktrees/

@@ -311,19 +311,19 @@ export const TeamSettings: React.FC = () => {
             {activeTab === 'members' && (
                 <div className="space-y-8 animate-in fade-in duration-300">
                     {isOwnerOrAdmin && !isTeamEnabled && (
-                        <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
                             <div className="flex items-center gap-4">
-                                <div className="bg-purple-500/20 p-3 rounded-xl">
-                                    <Users className="w-6 h-6 text-purple-400" />
+                                <div className="bg-blue-100 p-3 rounded-xl">
+                                    <Users className="w-6 h-6 text-blue-600" />
                                 </div>
                                 <div>
-                                    <h4 className="font-bold text-white text-lg">Unlock Team Management</h4>
-                                    <p className="text-sm text-slate-400">Upgrade to the Agency plan to invite members and manage roles.</p>
+                                    <h4 className="font-bold text-blue-900 text-lg">Unlock Team Management</h4>
+                                    <p className="text-sm text-slate-600">Upgrade to the Agency plan to invite members and manage roles.</p>
                                 </div>
                             </div>
                             <a
                                 href="/settings/billing"
-                                className="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-lg font-bold text-sm transition-colors whitespace-nowrap"
+                                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold text-sm transition-colors whitespace-nowrap"
                             >
                                 Upgrade Now
                             </a>
