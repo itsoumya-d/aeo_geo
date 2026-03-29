@@ -39,7 +39,7 @@ export const OptimizationDashboard: React.FC = () => {
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-3xl p-16 text-center flex flex-col items-center justify-center shadow-2xl"
+                className="bg-blue-50 backdrop-blur-xl border border-white/5 rounded-3xl p-16 text-center flex flex-col items-center justify-center shadow-2xl"
             >
                 <div className="w-20 h-20 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center justify-center mb-8 shadow-inner">
                     <Sparkles className="w-10 h-10 text-slate-700" />
@@ -107,7 +107,7 @@ export const OptimizationDashboard: React.FC = () => {
                         className="grid grid-cols-1 gap-8"
                     >
                         {simulations.length === 0 ? (
-                            <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-3xl p-24 text-center flex flex-col items-center justify-center">
+                            <div className="bg-blue-50 backdrop-blur-xl border border-white/5 rounded-3xl p-24 text-center flex flex-col items-center justify-center">
                                 <Sparkles className="w-12 h-12 text-slate-800 mb-6" />
                                 <h3 className="text-white font-black text-xl mb-3">Library Empty</h3>
                                 <p className="text-slate-500 max-w-sm font-medium text-sm">Forge your first optimization to start building your library.</p>
@@ -119,7 +119,7 @@ export const OptimizationDashboard: React.FC = () => {
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: idx * 0.1 }}
                                     key={sim.id}
-                                    className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden shadow-2xl group hover:border-white/10 transition-all"
+                                    className="bg-blue-50 backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden shadow-2xl group hover:border-white/10 transition-all"
                                 >
                                     <div className="bg-white/[0.02] border-b border-white/[0.05] flex items-center justify-between px-8 py-4">
                                         <div className="flex items-center gap-4">
@@ -143,7 +143,7 @@ export const OptimizationDashboard: React.FC = () => {
                                     <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-white/[0.05]">
                                         <div className="p-8 bg-black/20">
                                             <div className="text-[9px] text-slate-600 uppercase font-black mb-4 tracking-[0.2em]">Baseline Fragment</div>
-                                            <p className="text-sm text-slate-400 italic leading-relaxed font-medium">"{sim.original_text}"</p>
+                                            <p className="text-sm text-text-muted italic leading-relaxed font-medium">"{sim.original_text}"</p>
                                         </div>
                                         <div className="p-8 bg-primary/5">
                                             <div className="text-[9px] text-primary uppercase font-black mb-4 tracking-[0.2em] flex justify-between items-center">
@@ -160,7 +160,7 @@ export const OptimizationDashboard: React.FC = () => {
                                         </div>
                                         <div>
                                             <span className="text-emerald-500 font-black uppercase tracking-[0.1em] text-[9px] block mb-1">Strategic Neural Logic</span>
-                                            <div className="text-xs text-slate-400 font-medium leading-relaxed">{sim.reasoning}</div>
+                                            <div className="text-xs text-text-muted font-medium leading-relaxed">{sim.reasoning}</div>
                                         </div>
                                     </div>
                                 </motion.div>

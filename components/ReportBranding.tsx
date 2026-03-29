@@ -30,19 +30,19 @@ const ColorPicker: React.FC<{
     onChange: (color: string) => void;
 }> = ({ label, value, onChange }) => (
     <div>
-        <label className="block text-sm text-slate-400 mb-2">{label}</label>
+        <label className="block text-sm text-text-muted mb-2">{label}</label>
         <div className="flex items-center gap-3">
             <input
                 type="color"
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
-                className="w-12 h-12 rounded-lg cursor-pointer border border-slate-700 bg-transparent"
+                className="w-12 h-12 rounded-lg cursor-pointer border border-border bg-transparent"
             />
             <input
                 type="text"
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
-                className="flex-1 bg-slate-800 border border-slate-700 text-white rounded-lg px-4 py-2 font-mono text-sm focus:ring-2 focus:ring-primary outline-none uppercase"
+                className="flex-1 bg-surfaceHighlight border border-border text-white rounded-lg px-4 py-2 font-mono text-sm focus:ring-2 focus:ring-primary outline-none uppercase"
                 placeholder="#3b82f6"
             />
         </div>
@@ -176,10 +176,10 @@ export const ReportBranding: React.FC = () => {
 
     if (!isAgencyPlan) {
         return (
-            <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 text-center">
+            <div className="bg-surfaceHighlight border border-border rounded-xl p-6 text-center">
                 <Palette className="w-12 h-12 text-slate-600 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-white mb-2">White-Label Reports</h3>
-                <p className="text-sm text-slate-400 mb-4">
+                <p className="text-sm text-text-muted mb-4">
                     Customize reports with your branding on Agency and Enterprise plans.
                 </p>
                 <a
@@ -210,7 +210,7 @@ export const ReportBranding: React.FC = () => {
                     </div>
                     <div>
                         <h3 className="text-lg font-semibold text-white">Report Branding</h3>
-                        <p className="text-sm text-slate-400">Customize exported PDF reports</p>
+                        <p className="text-sm text-text-muted">Customize exported PDF reports</p>
                     </div>
                 </div>
                 {hasChanges && isOwnerOrAdmin && (
@@ -231,26 +231,26 @@ export const ReportBranding: React.FC = () => {
                 <div className="space-y-6">
                     {/* Company Name */}
                     <div>
-                        <label className="block text-sm text-slate-400 mb-2">Company Name</label>
+                        <label className="block text-sm text-text-muted mb-2">Company Name</label>
                         <input
                             type="text"
                             value={branding.company_name}
                             onChange={(e) => updateBranding({ company_name: e.target.value })}
                             placeholder="Your Company Name"
-                            className="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none placeholder:text-slate-500"
+                            className="w-full bg-surfaceHighlight border border-border text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none placeholder:text-slate-500"
                         />
                     </div>
 
                     {/* Logo Upload/URL */}
                     <div>
-                        <label className="block text-sm text-slate-400 mb-2">Company Logo</label>
+                        <label className="block text-sm text-text-muted mb-2">Company Logo</label>
                         <div className="flex gap-3">
                             <input
                                 type="url"
                                 value={branding.logo_url || ''}
                                 onChange={(e) => updateBranding({ logo_url: e.target.value || null })}
                                 placeholder="https://example.com/logo.png"
-                                className="flex-1 bg-slate-800 border border-slate-700 text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none placeholder:text-slate-500"
+                                className="flex-1 bg-surfaceHighlight border border-border text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none placeholder:text-slate-500"
                             />
                             <label className="flex items-center gap-2 bg-primary/20 hover:bg-primary/30 text-primary px-4 py-2.5 rounded-lg cursor-pointer transition-colors">
                                 <Upload className="w-4 h-4" />
@@ -279,10 +279,10 @@ export const ReportBranding: React.FC = () => {
                     />
 
                     {/* Hide Cognition Branding */}
-                    <div className="flex items-center justify-between py-4 border-t border-slate-800">
+                    <div className="flex items-center justify-between py-4 border-t border-border">
                         <div>
                             <p className="font-medium text-white">Hide Cognition Branding</p>
-                            <p className="text-sm text-slate-400">Remove "Powered by Cognition" from reports</p>
+                            <p className="text-sm text-text-muted">Remove "Powered by Cognition" from reports</p>
                         </div>
                         <button
                             onClick={() => updateBranding({ hide_cognition_branding: !branding.hide_cognition_branding })}
@@ -296,10 +296,10 @@ export const ReportBranding: React.FC = () => {
                 </div>
 
                 {/* Right Column - Preview */}
-                <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6">
+                <div className="bg-surfaceHighlight border border-border rounded-xl p-6">
                     <div className="flex items-center gap-2 mb-4">
-                        <Eye className="w-4 h-4 text-slate-400" />
-                        <span className="text-sm font-medium text-slate-400">Report Header Preview</span>
+                        <Eye className="w-4 h-4 text-text-muted" />
+                        <span className="text-sm font-medium text-text-muted">Report Header Preview</span>
                     </div>
 
                     <div
@@ -346,7 +346,7 @@ export const ReportBranding: React.FC = () => {
                         </div>
 
                         {!branding.hide_cognition_branding && (
-                            <div className="pt-4 border-t border-slate-200 text-xs text-slate-400 text-center">
+                            <div className="pt-4 border-t border-slate-200 text-xs text-text-muted text-center">
                                 Powered by Cognition AI Visibility Engine
                             </div>
                         )}
@@ -355,10 +355,10 @@ export const ReportBranding: React.FC = () => {
             </div>
 
             {/* Info Notice */}
-            <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-4 flex items-start gap-3">
+            <div className="bg-surfaceHighlight border border-border rounded-xl p-4 flex items-start gap-3">
                 <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0" />
-                <div className="text-sm text-slate-400">
-                    <p className="font-medium text-slate-300 mb-1">Branding applies to exports only</p>
+                <div className="text-sm text-text-muted">
+                    <p className="font-medium text-text-secondary mb-1">Branding applies to exports only</p>
                     <p>Custom branding will appear on PDF exports and shared report links.</p>
                 </div>
             </div>

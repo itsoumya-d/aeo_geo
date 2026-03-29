@@ -171,7 +171,7 @@ export const APIDocs: React.FC = () => {
     };
 
     return (
-        <div className="flex min-h-screen bg-[#020617] text-slate-300 font-inter">
+        <div className="flex min-h-screen bg-surface text-text-secondary font-inter">
             {/* Left Sidebar: Navigation */}
             <div className="w-72 border-r border-white/5 flex flex-col pt-8 bg-slate-950/50">
                 <div className="px-6 mb-8 flex items-center gap-2">
@@ -183,19 +183,19 @@ export const APIDocs: React.FC = () => {
 
                 <nav className="flex-1 overflow-y-auto px-4 space-y-1 custom-scrollbar">
                     <div className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-2 px-2 mt-4">Getting Started</div>
-                    <button onClick={() => scrollToSection('section-introduction')} className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${activeSection === 'section-introduction' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'hover:bg-white/5 text-slate-400'}`}>
+                    <button onClick={() => scrollToSection('section-introduction')} className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${activeSection === 'section-introduction' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'hover:bg-white/5 text-text-muted'}`}>
                         <BookOpen className="w-4 h-4" />
                         Introduction
                     </button>
-                    <button onClick={() => scrollToSection('section-authentication')} className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${activeSection === 'section-authentication' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'hover:bg-white/5 text-slate-400'}`}>
+                    <button onClick={() => scrollToSection('section-authentication')} className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${activeSection === 'section-authentication' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'hover:bg-white/5 text-text-muted'}`}>
                         <Shield className="w-4 h-4" />
                         Authentication
                     </button>
-                    <button onClick={() => scrollToSection('section-errors')} className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${activeSection === 'section-errors' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'hover:bg-white/5 text-slate-400'}`}>
+                    <button onClick={() => scrollToSection('section-errors')} className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${activeSection === 'section-errors' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'hover:bg-white/5 text-text-muted'}`}>
                         <Activity className="w-4 h-4" />
                         Errors
                     </button>
-                    <button onClick={() => scrollToSection('section-webhooks')} className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${activeSection === 'section-webhooks' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'hover:bg-white/5 text-slate-400'}`}>
+                    <button onClick={() => scrollToSection('section-webhooks')} className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${activeSection === 'section-webhooks' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'hover:bg-white/5 text-text-muted'}`}>
                         <WebhookIcon className="w-4 h-4" />
                         Webhooks
                     </button>
@@ -205,7 +205,7 @@ export const APIDocs: React.FC = () => {
                         <button
                             key={ep.id}
                             onClick={() => { setActiveEndpointId(ep.id); setActiveSection(null); const el = document.getElementById(ep.id); if (el) el.scrollIntoView({ behavior: 'smooth' }); }}
-                            className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${activeEndpointId === ep.id ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'hover:bg-white/5 text-slate-400'
+                            className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${activeEndpointId === ep.id ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'hover:bg-white/5 text-text-muted'
                                 }`}
                         >
                             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${ep.method === 'GET' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-blue-500/10 text-blue-500'
@@ -232,27 +232,27 @@ export const APIDocs: React.FC = () => {
                     {/* Getting Started Sections */}
                     <div id="section-introduction" className="mb-24">
                         <h2 className="text-3xl font-bold text-white mb-4 tracking-tight">Introduction</h2>
-                        <p className="text-slate-400 leading-relaxed mb-6 max-w-2xl text-lg">
+                        <p className="text-text-muted leading-relaxed mb-6 max-w-2xl text-lg">
                             The Cognition API lets you programmatically run AI visibility audits, track competitors, and retrieve analysis data. All endpoints return JSON and use standard HTTP response codes.
                         </p>
-                        <div className="bg-[#0f172a] rounded-xl border border-white/5 p-4 font-mono text-sm">
+                        <div className="bg-surface rounded-xl border border-white/5 p-4 font-mono text-sm">
                             <code className="text-indigo-300">Base URL: <span className="text-emerald-400">{API_BASE_URL}</span></code>
                         </div>
                     </div>
 
                     <div id="section-authentication" className="mb-24">
                         <h2 className="text-3xl font-bold text-white mb-4 tracking-tight">Authentication</h2>
-                        <p className="text-slate-400 leading-relaxed mb-6 max-w-2xl text-lg">
+                        <p className="text-text-muted leading-relaxed mb-6 max-w-2xl text-lg">
                             All API requests require an API key passed via the <code className="text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded text-sm">x-api-key</code> header. You can generate and manage API keys from your dashboard Settings &gt; API Keys.
                         </p>
-                        <div className="bg-[#0f172a] rounded-xl border border-white/5 p-4 font-mono text-sm">
+                        <div className="bg-surface rounded-xl border border-white/5 p-4 font-mono text-sm">
                             <code className="text-indigo-300 whitespace-pre">{`curl -X GET ${API_BASE_URL}/usage \\\n  -H "x-api-key: YOUR_API_KEY"`}</code>
                         </div>
                     </div>
 
                     <div id="section-errors" className="mb-24">
                         <h2 className="text-3xl font-bold text-white mb-4 tracking-tight">Errors</h2>
-                        <p className="text-slate-400 leading-relaxed mb-6 max-w-2xl text-lg">
+                        <p className="text-text-muted leading-relaxed mb-6 max-w-2xl text-lg">
                             The API uses standard HTTP status codes. Errors include a JSON body with an <code className="text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded text-sm">error</code> field describing the issue.
                         </p>
                         <div className="space-y-3">
@@ -264,11 +264,11 @@ export const APIDocs: React.FC = () => {
                                 { code: '429', desc: 'Too Many Requests — Rate limit exceeded' },
                                 { code: '500', desc: 'Internal Server Error — Something went wrong on our end' },
                             ].map(e => (
-                                <div key={e.code} className="flex items-center gap-4 bg-[#0f172a] rounded-xl border border-white/5 p-4">
+                                <div key={e.code} className="flex items-center gap-4 bg-surface rounded-xl border border-white/5 p-4">
                                     <span className={`text-xs font-bold px-2 py-1 rounded ${parseInt(e.code) >= 500 ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20' : parseInt(e.code) >= 400 ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'}`}>
                                         {e.code}
                                     </span>
-                                    <span className="text-sm text-slate-400">{e.desc}</span>
+                                    <span className="text-sm text-text-muted">{e.desc}</span>
                                 </div>
                             ))}
                         </div>
@@ -276,10 +276,10 @@ export const APIDocs: React.FC = () => {
 
                     <div id="section-webhooks" className="mb-24">
                         <h2 className="text-3xl font-bold text-white mb-4 tracking-tight">Webhooks</h2>
-                        <p className="text-slate-400 leading-relaxed mb-6 max-w-2xl text-lg">
+                        <p className="text-text-muted leading-relaxed mb-6 max-w-2xl text-lg">
                             Configure webhooks from your dashboard to receive real-time notifications when audits complete, scores change, or scheduled tasks run. Webhooks send POST requests with a JSON payload signed using your webhook secret.
                         </p>
-                        <div className="bg-[#0f172a] rounded-xl border border-white/5 p-4 font-mono text-sm overflow-x-auto">
+                        <div className="bg-surface rounded-xl border border-white/5 p-4 font-mono text-sm overflow-x-auto">
                             <pre className="text-blue-300">{JSON.stringify({
                                 event: "audit.completed",
                                 data: { audit_id: "aud_123", domain: "example.com", score: 85, completed_at: "2024-03-20T12:00:00Z" }
@@ -298,10 +298,10 @@ export const APIDocs: React.FC = () => {
                                     }`}>
                                     {ep.method}
                                 </span>
-                                <code className="text-sm font-mono text-slate-400">{ep.path}</code>
+                                <code className="text-sm font-mono text-text-muted">{ep.path}</code>
                             </div>
                             <h2 className="text-3xl font-bold text-white mb-4 tracking-tight">{ep.title}</h2>
-                            <p className="text-slate-400 leading-relaxed mb-8 max-w-2xl text-lg">
+                            <p className="text-text-muted leading-relaxed mb-8 max-w-2xl text-lg">
                                 {ep.description}
                             </p>
 
@@ -322,7 +322,7 @@ export const APIDocs: React.FC = () => {
                                                         <input
                                                             type="text"
                                                             placeholder={`Value for ${p.name}`}
-                                                            className="w-full mt-2 bg-slate-900 border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-indigo-500 outline-none"
+                                                            className="w-full mt-2 bg-surface border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-indigo-500 outline-none"
                                                             onChange={e => setParams(prev => ({ ...prev, [p.name]: e.target.value }))}
                                                         />
                                                     )}
@@ -334,7 +334,7 @@ export const APIDocs: React.FC = () => {
                             )}
 
                             {/* Try It Section */}
-                            <div className="mb-8 p-6 bg-slate-900/50 rounded-xl border border-white/5">
+                            <div className="mb-8 p-6 bg-surfaceHighlight rounded-xl border border-white/5">
                                 <div className="flex justify-between items-center mb-4">
                                     <h4 className="text-sm uppercase tracking-wider font-bold text-slate-500">Test Request</h4>
                                     <button
@@ -402,7 +402,7 @@ export const APIDocs: React.FC = () => {
 
                             <div>
                                 <h4 className="text-sm uppercase tracking-wider font-bold text-slate-500 mb-4">Response Sample</h4>
-                                <div className="bg-[#0f172a] rounded-xl border border-white/5 p-4 overflow-x-auto font-mono text-sm group relative">
+                                <div className="bg-surface rounded-xl border border-white/5 p-4 overflow-x-auto font-mono text-sm group relative">
                                     <pre className="text-blue-300">{JSON.stringify(ep.response, null, 2)}</pre>
                                 </div>
                             </div>
@@ -411,7 +411,7 @@ export const APIDocs: React.FC = () => {
                 </div>
 
                 {/* Right: Code Samples */}
-                <div className="w-[450px] bg-slate-900/30 border-l border-white/5 overflow-y-auto px-6 py-16 hidden lg:block custom-scrollbar">
+                <div className="w-[450px] bg-blue-50 border-l border-white/5 overflow-y-auto px-6 py-16 hidden lg:block custom-scrollbar">
                     {ENDPOINTS.map(ep => (
                         <div
                             key={`${ep.id}-sample`}
@@ -439,7 +439,7 @@ export const APIDocs: React.FC = () => {
                                                 onClick={() => handleCopy(s.code, `${ep.id}-${idx}`)}
                                                 className="p-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors border border-white/10"
                                             >
-                                                {copied === `${ep.id}-${idx}` ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-slate-400" />}
+                                                {copied === `${ep.id}-${idx}` ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-text-muted" />}
                                             </button>
                                         </div>
                                         <div className="bg-slate-950 rounded-xl border border-white/10 p-5 font-mono text-[13px] leading-relaxed overflow-x-auto min-h-[120px] flex items-center">

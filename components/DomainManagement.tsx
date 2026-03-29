@@ -140,23 +140,23 @@ export const DomainManagement: React.FC = () => {
         <div className="space-y-8 animate-pulse">
             <div className="flex items-center justify-between">
                 <div>
-                    <div className="h-6 w-48 bg-slate-800 rounded-lg mb-2" />
-                    <div className="h-4 w-72 bg-slate-800 rounded-lg" />
+                    <div className="h-6 w-48 bg-surfaceHighlight rounded-lg mb-2" />
+                    <div className="h-4 w-72 bg-surfaceHighlight rounded-lg" />
                 </div>
             </div>
-            <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+            <div className="bg-surfaceHighlight border border-border rounded-2xl p-6">
                 <div className="flex gap-4">
-                    <div className="flex-1 h-12 bg-slate-800 rounded-xl" />
-                    <div className="h-12 w-36 bg-slate-800 rounded-xl" />
+                    <div className="flex-1 h-12 bg-surfaceHighlight rounded-xl" />
+                    <div className="h-12 w-36 bg-surfaceHighlight rounded-xl" />
                 </div>
             </div>
             {[1, 2].map(i => (
-                <div key={i} className="bg-surface border border-slate-700 rounded-2xl p-6">
+                <div key={i} className="bg-surface border border-border rounded-2xl p-6">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-slate-800 rounded-xl" />
+                        <div className="w-12 h-12 bg-surfaceHighlight rounded-xl" />
                         <div>
-                            <div className="h-5 w-40 bg-slate-800 rounded-lg mb-2" />
-                            <div className="h-3 w-28 bg-slate-800 rounded-lg" />
+                            <div className="h-5 w-40 bg-surfaceHighlight rounded-lg mb-2" />
+                            <div className="h-3 w-28 bg-surfaceHighlight rounded-lg" />
                         </div>
                     </div>
                 </div>
@@ -177,7 +177,7 @@ export const DomainManagement: React.FC = () => {
             </div>
 
             {/* Add Domain */}
-            <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+            <div className="bg-surfaceHighlight border border-border rounded-2xl p-6">
                 <div className="flex gap-4">
                     <div className="flex-1 relative">
                         <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
@@ -187,7 +187,7 @@ export const DomainManagement: React.FC = () => {
                             value={newDomain}
                             onChange={(e) => setNewDomain(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleAddDomain()}
-                            className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl pl-11 pr-4 py-3 focus:ring-2 focus:ring-primary outline-none"
+                            className="w-full bg-surfaceHighlight border border-border text-white rounded-xl pl-11 pr-4 py-3 focus:ring-2 focus:ring-primary outline-none"
                         />
                     </div>
                     <button
@@ -207,7 +207,7 @@ export const DomainManagement: React.FC = () => {
             {/* Domain List */}
             <div className="grid grid-cols-1 gap-6">
                 {domains.map((domain) => (
-                    <div key={domain.id} className="bg-surface border border-slate-700 rounded-2xl overflow-hidden shadow-lg group">
+                    <div key={domain.id} className="bg-surface border border-border rounded-2xl overflow-hidden shadow-lg group">
                         <div className="p-6 flex items-center justify-between">
                             <div className="flex items-center gap-4">
                                 <div className={`p-3 rounded-xl ${domain.verified ? 'bg-emerald-500/10' : 'bg-amber-500/10'}`}>
@@ -249,7 +249,7 @@ export const DomainManagement: React.FC = () => {
                         </div>
 
                         {!domain.verified && (
-                            <div className="bg-slate-800/20 border-t border-slate-800 p-6 space-y-6">
+                            <div className="bg-surfaceHighlight/20 border-t border-border p-6 space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     {/* DNS Method */}
                                     <div className="space-y-4">
@@ -257,9 +257,9 @@ export const DomainManagement: React.FC = () => {
                                             <span className="w-5 h-5 rounded-full bg-primary/20 text-primary text-[10px] flex items-center justify-center">1</span>
                                             Via DNS TXT Record (Recommended)
                                         </h5>
-                                        <div className="bg-slate-900/80 rounded-xl p-4 border border-slate-700">
-                                            <p className="text-xs text-slate-400 mb-3 leading-relaxed">Add the following TXT record to your DNS configuration:</p>
-                                            <div className="flex items-center justify-between gap-3 bg-black/40 p-3 rounded-lg border border-slate-700/50">
+                                        <div className="bg-surface rounded-xl p-4 border border-border">
+                                            <p className="text-xs text-text-muted mb-3 leading-relaxed">Add the following TXT record to your DNS configuration:</p>
+                                            <div className="flex items-center justify-between gap-3 bg-black/40 p-3 rounded-lg border border-border/50">
                                                 <code className="text-xs text-emerald-400 font-mono break-all">cognition-v-token={domain.verification_token}</code>
                                                 <button onClick={() => copyToClipboard(`cognition-v-token=${domain.verification_token}`)} className="text-slate-500 hover:text-white transition-colors">
                                                     <Copy className="w-4 h-4" />
@@ -274,9 +274,9 @@ export const DomainManagement: React.FC = () => {
                                             <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 text-[10px] flex items-center justify-center">2</span>
                                             Via HTML Meta Tag
                                         </h5>
-                                        <div className="bg-slate-900/80 rounded-xl p-4 border border-slate-700">
-                                            <p className="text-xs text-slate-400 mb-3 leading-relaxed">Add this meta tag to the {`<head>`} section of your homepage:</p>
-                                            <div className="flex items-center justify-between gap-3 bg-black/40 p-3 rounded-lg border border-slate-700/50">
+                                        <div className="bg-surface rounded-xl p-4 border border-border">
+                                            <p className="text-xs text-text-muted mb-3 leading-relaxed">Add this meta tag to the {`<head>`} section of your homepage:</p>
+                                            <div className="flex items-center justify-between gap-3 bg-black/40 p-3 rounded-lg border border-border/50">
                                                 <code className="text-[10px] text-blue-400 font-mono break-all">
                                                     {`<meta name="cognition-verification" content="${domain.verification_token}" />`}
                                                 </code>
@@ -293,7 +293,7 @@ export const DomainManagement: React.FC = () => {
                 ))}
 
                 {domains.length === 0 && (
-                    <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-12 text-center">
+                    <div className="bg-surfaceHighlight border border-border rounded-2xl p-12 text-center">
                         <Globe className="w-12 h-12 text-slate-700 mx-auto mb-4" />
                         <h4 className="text-white font-bold mb-1">No domains added yet</h4>
                         <p className="text-sm text-slate-500">Add your first domain to begin the verification process.</p>

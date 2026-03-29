@@ -53,8 +53,8 @@ export const ProgressSteps: React.FC<ProgressStepsProps> = ({
                     ${isCompleted
                                             ? 'bg-gradient-to-br from-primary to-secondary text-white shadow-lg shadow-primary/25'
                                             : isCurrent
-                                                ? 'bg-slate-800 border-2 border-primary text-primary shadow-lg shadow-primary/20'
-                                                : 'bg-slate-800 border-2 border-slate-700 text-slate-500'
+                                                ? 'bg-surfaceHighlight border-2 border-primary text-primary shadow-lg shadow-primary/20'
+                                                : 'bg-surfaceHighlight border-2 border-border text-slate-500'
                                         }
                   `}
                                 >

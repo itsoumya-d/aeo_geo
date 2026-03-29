@@ -36,12 +36,12 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 
     return (
         <div className={`flex flex-col items-center justify-center py-12 px-6 text-center ${className}`}>
-            <div className="bg-slate-800/50 p-4 rounded-2xl mb-4">
+            <div className="bg-surfaceHighlight p-4 rounded-2xl mb-4">
                 {customIcon ? customIcon : IconComponent && <IconComponent className="w-10 h-10 text-slate-500" />}
             </div>
             <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
             {description && (
-                <p className="text-sm text-slate-400 max-w-sm mb-6">{description}</p>
+                <p className="text-sm text-text-muted max-w-sm mb-6">{description}</p>
             )}
             {action && (
                 <button

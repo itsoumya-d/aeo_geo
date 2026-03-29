@@ -21,7 +21,7 @@ export const VectorMap: React.FC<VectorMapProps> = ({ data }) => {
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-3xl p-16 text-center h-full flex flex-col items-center justify-center shadow-2xl"
+                className="bg-blue-50 backdrop-blur-xl border border-white/5 rounded-3xl p-16 text-center h-full flex flex-col items-center justify-center shadow-2xl"
             >
                 <div className="w-20 h-20 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center justify-center mb-6 shadow-inner">
                     <Target className="w-10 h-10 text-slate-700" />
@@ -42,13 +42,13 @@ export const VectorMap: React.FC<VectorMapProps> = ({ data }) => {
         if (active && payload && payload.length) {
             const item = payload[0].payload as VectorData;
             return (
-                <div className="bg-slate-900/95 backdrop-blur-xl border border-white/10 p-5 rounded-2xl shadow-2xl">
+                <div className="bg-surface backdrop-blur-xl border border-white/10 p-5 rounded-2xl shadow-2xl">
                     <div className="flex items-center gap-3 mb-3">
                         <div className={`w-3 h-3 rounded-full ${item.type === 'brand' ? 'bg-primary shadow-[0_0_10px_rgba(99,102,241,0.5)]' : item.type === 'competitor' ? 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]' : 'bg-blue-400 shadow-[0_0_10px_rgba(96,165,250,0.5)]'}`} />
                         <span className="text-[10px] font-black text-white uppercase tracking-widest">{item.type}</span>
                     </div>
                     <p className="text-sm font-black text-white tracking-tight">{item.label}</p>
-                    <p className="mt-2 text-xs text-slate-400">
+                    <p className="mt-2 text-xs text-text-muted">
                         Relative position based on this audit’s semantic signals.
                     </p>
                 </div>
@@ -61,7 +61,7 @@ export const VectorMap: React.FC<VectorMapProps> = ({ data }) => {
         <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-slate-900/40 backdrop-blur-xl rounded-3xl border border-white/5 p-10 shadow-2xl relative overflow-hidden h-full group"
+            className="bg-blue-50 backdrop-blur-xl rounded-3xl border border-white/5 p-10 shadow-2xl relative overflow-hidden h-full group"
         >
             <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none group-hover:rotate-12 transition-transform duration-1000">
                 <Target className="w-48 h-48 text-primary" />

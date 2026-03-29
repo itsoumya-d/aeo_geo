@@ -234,10 +234,10 @@ export const ScheduledAudits: React.FC = () => {
 
     if (!isPaidPlan) {
         return (
-            <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 text-center">
+            <div className="bg-surfaceHighlight border border-border rounded-xl p-6 text-center">
                 <Clock className="w-12 h-12 text-slate-600 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-white mb-2">Scheduled Audits</h3>
-                <p className="text-sm text-slate-400 mb-4">
+                <p className="text-sm text-text-muted mb-4">
                     Automate recurring audits on Pro and Agency plans.
                 </p>
                 <a
@@ -255,21 +255,21 @@ export const ScheduledAudits: React.FC = () => {
             <div className="space-y-6 animate-pulse">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-slate-800 rounded-xl" />
+                        <div className="w-12 h-12 bg-surfaceHighlight rounded-xl" />
                         <div>
-                            <div className="h-5 w-36 bg-slate-800 rounded-lg mb-2" />
-                            <div className="h-3 w-24 bg-slate-800 rounded-lg" />
+                            <div className="h-5 w-36 bg-surfaceHighlight rounded-lg mb-2" />
+                            <div className="h-3 w-24 bg-surfaceHighlight rounded-lg" />
                         </div>
                     </div>
-                    <div className="h-10 w-32 bg-slate-800 rounded-lg" />
+                    <div className="h-10 w-32 bg-surfaceHighlight rounded-lg" />
                 </div>
                 {[1, 2, 3].map(i => (
-                    <div key={i} className="bg-slate-900/50 border border-slate-800 rounded-xl p-4">
+                    <div key={i} className="bg-surfaceHighlight border border-border rounded-xl p-4">
                         <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-slate-800 rounded-lg" />
+                            <div className="w-10 h-10 bg-surfaceHighlight rounded-lg" />
                             <div>
-                                <div className="h-4 w-40 bg-slate-800 rounded-lg mb-2" />
-                                <div className="h-3 w-28 bg-slate-800 rounded-lg" />
+                                <div className="h-4 w-40 bg-surfaceHighlight rounded-lg mb-2" />
+                                <div className="h-3 w-28 bg-surfaceHighlight rounded-lg" />
                             </div>
                         </div>
                     </div>
@@ -288,7 +288,7 @@ export const ScheduledAudits: React.FC = () => {
                     </div>
                     <div>
                         <h3 className="text-lg font-semibold text-white">Scheduled Audits</h3>
-                        <p className="text-sm text-slate-400">{schedules.filter(s => s.enabled).length} active schedules</p>
+                        <p className="text-sm text-text-muted">{schedules.filter(s => s.enabled).length} active schedules</p>
                     </div>
                 </div>
                 {isOwnerOrAdmin && !showCreateForm && (
@@ -304,22 +304,22 @@ export const ScheduledAudits: React.FC = () => {
 
             {/* Create Form */}
             {showCreateForm && (
-                <form onSubmit={handleCreateSchedule} className="bg-slate-900/50 border border-slate-800 rounded-xl p-4">
+                <form onSubmit={handleCreateSchedule} className="bg-surfaceHighlight border border-border rounded-xl p-4">
                     <h4 className="font-medium text-white mb-4">Create New Schedule</h4>
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm text-slate-400 mb-2">Domain URL</label>
+                            <label className="block text-sm text-text-muted mb-2">Domain URL</label>
                             <input
                                 type="text"
                                 value={newDomain}
                                 onChange={(e) => setNewDomain(e.target.value)}
                                 placeholder="example.com"
-                                className="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none placeholder:text-slate-500"
+                                className="w-full bg-surfaceHighlight border border-border text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none placeholder:text-slate-500"
                                 required
                             />
                         </div>
                         <div>
-                            <label className="block text-sm text-slate-400 mb-2">Frequency</label>
+                            <label className="block text-sm text-text-muted mb-2">Frequency</label>
                             <div className="flex gap-2">
                                 {(['daily', 'weekly', 'monthly'] as const).map(freq => (
                                     <button
@@ -328,7 +328,7 @@ export const ScheduledAudits: React.FC = () => {
                                         onClick={() => setNewFrequency(freq)}
                                         className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${newFrequency === freq
                                             ? 'bg-primary text-white'
-                                            : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                                            : 'bg-surfaceHighlight text-text-muted hover:bg-slate-700'
                                             }`}
                                     >
                                         {freq}
@@ -338,20 +338,20 @@ export const ScheduledAudits: React.FC = () => {
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="block text-sm text-slate-400 mb-2">Run at</label>
+                                <label className="block text-sm text-text-muted mb-2">Run at</label>
                                 <input
                                     type="time"
                                     value={newTime}
                                     onChange={e => setNewTime(e.target.value)}
-                                    className="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none"
+                                    className="w-full bg-surfaceHighlight border border-border text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm text-slate-400 mb-2">Timezone</label>
+                                <label className="block text-sm text-text-muted mb-2">Timezone</label>
                                 <select
                                     value={newTimezone}
                                     onChange={e => setNewTimezone(e.target.value)}
-                                    className="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none text-sm"
+                                    className="w-full bg-surfaceHighlight border border-border text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none text-sm"
                                 >
                                     {[
                                         'America/New_York', 'America/Chicago', 'America/Denver',
@@ -377,7 +377,7 @@ export const ScheduledAudits: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={() => setShowCreateForm(false)}
-                                className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                                className="bg-surfaceHighlight hover:bg-slate-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                             >
                                 Cancel
                             </button>
@@ -388,10 +388,10 @@ export const ScheduledAudits: React.FC = () => {
 
             {/* Schedules List */}
             {schedules.length === 0 ? (
-                <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-8 text-center">
+                <div className="bg-surfaceHighlight border border-border rounded-xl p-8 text-center">
                     <Clock className="w-12 h-12 text-slate-600 mx-auto mb-4" />
                     <h4 className="font-medium text-white mb-2">No Schedules Yet</h4>
-                    <p className="text-sm text-slate-400 mb-5">
+                    <p className="text-sm text-text-muted mb-5">
                         Set up automated audits to track your AI visibility over time.
                     </p>
                     {isOwnerOrAdmin && (
@@ -409,14 +409,14 @@ export const ScheduledAudits: React.FC = () => {
                     {schedules.map(schedule => (
                         <div
                             key={schedule.id}
-                            className={`bg-slate-900/50 border rounded-xl p-4 transition-colors ${schedule.enabled
-                                ? 'border-slate-800 hover:border-slate-700'
-                                : 'border-slate-800/50 opacity-60'
+                            className={`bg-surfaceHighlight border rounded-xl p-4 transition-colors ${schedule.enabled
+                                ? 'border-border hover:border-border'
+                                : 'border-border/50 opacity-60'
                                 }`}
                         >
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
-                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${schedule.enabled ? 'bg-amber-500/20' : 'bg-slate-800'
+                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${schedule.enabled ? 'bg-amber-500/20' : 'bg-surfaceHighlight'
                                         }`}>
                                         <Globe className={`w-5 h-5 ${schedule.enabled ? 'text-amber-400' : 'text-slate-500'}`} />
                                     </div>
@@ -452,7 +452,7 @@ export const ScheduledAudits: React.FC = () => {
                                             onClick={() => handleToggleSchedule(schedule.id, schedule.enabled)}
                                             className={`p-2 rounded-lg transition-colors ${schedule.enabled
                                                 ? 'text-amber-400 hover:bg-amber-500/10'
-                                                : 'text-slate-500 hover:bg-slate-800'
+                                                : 'text-slate-500 hover:bg-surfaceHighlight'
                                                 }`}
                                             title={schedule.enabled ? 'Pause' : 'Resume'}
                                             aria-label={schedule.enabled ? 'Pause schedule' : 'Resume schedule'}
@@ -461,7 +461,7 @@ export const ScheduledAudits: React.FC = () => {
                                         </button>
                                         <button
                                             onClick={() => handleDeleteSchedule(schedule.id, new URL(schedule.domain_url).hostname)}
-                                            className="text-slate-400 hover:text-rose-400 transition-colors p-2"
+                                            className="text-text-muted hover:text-rose-400 transition-colors p-2"
                                             title="Delete"
                                             aria-label="Delete schedule"
                                         >
@@ -475,7 +475,7 @@ export const ScheduledAudits: React.FC = () => {
                 </div>
             )}
             {/* Notification Settings */}
-            <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-4">
+            <div className="bg-surfaceHighlight border border-border rounded-xl p-4">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                         <Bell className="w-5 h-5 text-blue-400" />
@@ -489,38 +489,38 @@ export const ScheduledAudits: React.FC = () => {
                     <button
                         onClick={handleToggleEmail}
                         disabled={savingNotifs}
-                        className="flex items-center justify-between bg-slate-800/50 rounded-lg p-3 border border-slate-700/50 hover:border-primary/30 transition-colors text-left"
+                        className="flex items-center justify-between bg-surfaceHighlight rounded-lg p-3 border border-border/50 hover:border-primary/30 transition-colors text-left"
                     >
                         <div className="flex items-center gap-2">
                             <span className="text-lg">📧</span>
-                            <span className="text-sm text-slate-300">Email Reports</span>
+                            <span className="text-sm text-text-secondary">Email Reports</span>
                         </div>
                         <span className={`text-xs px-2 py-0.5 rounded-full ${emailNotifications
                             ? 'bg-emerald-500/20 text-emerald-400'
-                            : 'bg-slate-700 text-slate-400'
+                            : 'bg-slate-700 text-text-muted'
                         }`}>
                             {emailNotifications ? 'Active' : 'Off'}
                         </span>
                     </button>
                     <button
                         onClick={() => setShowSlackInput(!showSlackInput)}
-                        className="flex items-center justify-between bg-slate-800/50 rounded-lg p-3 border border-slate-700/50 hover:border-primary/30 transition-colors text-left"
+                        className="flex items-center justify-between bg-surfaceHighlight rounded-lg p-3 border border-border/50 hover:border-primary/30 transition-colors text-left"
                     >
                         <div className="flex items-center gap-2">
                             <span className="text-lg">💬</span>
-                            <span className="text-sm text-slate-300">Slack Alerts</span>
+                            <span className="text-sm text-text-secondary">Slack Alerts</span>
                         </div>
                         <span className={`text-xs px-2 py-0.5 rounded-full ${slackWebhookUrl
                             ? 'bg-emerald-500/20 text-emerald-400'
-                            : 'bg-slate-700 text-slate-400'
+                            : 'bg-slate-700 text-text-muted'
                         }`}>
                             {slackWebhookUrl ? 'Connected' : 'Connect'}
                         </span>
                     </button>
                 </div>
                 {showSlackInput && (
-                    <div className="mt-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700/50 space-y-3">
-                        <label className="block text-xs text-slate-400">
+                    <div className="mt-3 p-3 bg-surfaceHighlight rounded-lg border border-border/50 space-y-3">
+                        <label className="block text-xs text-text-muted">
                             Slack Incoming Webhook URL
                         </label>
                         <input
@@ -528,7 +528,7 @@ export const ScheduledAudits: React.FC = () => {
                             value={slackWebhookUrl}
                             onChange={e => setSlackWebhookUrl(e.target.value)}
                             placeholder="https://hooks.slack.com/services/..."
-                            className="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none placeholder:text-slate-600"
+                            className="w-full bg-surface border border-border text-white rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none placeholder:text-slate-600"
                         />
                         <div className="flex gap-2">
                             <button

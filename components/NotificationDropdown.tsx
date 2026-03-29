@@ -145,7 +145,7 @@ export const NotificationDropdown: React.FC = () => {
                 onClick={() => setIsOpen(!isOpen)}
                 aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ''}`}
                 aria-expanded={isOpen}
-                className="relative p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                className="relative p-2 rounded-lg text-text-muted hover:text-white hover:bg-surfaceHighlight transition-colors"
             >
                 <Bell className="w-5 h-5" aria-hidden="true" />
                 {unreadCount > 0 && (
@@ -160,10 +160,10 @@ export const NotificationDropdown: React.FC = () => {
                 <div
                     role="menu"
                     aria-label="Notifications"
-                    className="absolute right-0 mt-2 w-80 bg-slate-900 border border-slate-800 rounded-xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200"
+                    className="absolute right-0 mt-2 w-80 bg-surface border border-border rounded-xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200"
                 >
                     {/* Header */}
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                         <h3 className="font-semibold text-white">Notifications</h3>
                         {unreadCount > 0 && (
                             <button
@@ -194,7 +194,7 @@ export const NotificationDropdown: React.FC = () => {
                                     key={notification.id}
                                     role="menuitem"
                                     tabIndex={0}
-                                    className={`px-4 py-3 border-b border-slate-800 last:border-0 hover:bg-slate-800/50 transition-colors cursor-pointer ${!notification.read_at ? 'bg-slate-800/30' : ''}`}
+                                    className={`px-4 py-3 border-b border-border last:border-0 hover:bg-surfaceHighlight transition-colors cursor-pointer ${!notification.read_at ? 'bg-blue-50' : ''}`}
                                     onClick={() => handleNotificationClick(notification)}
                                     onKeyDown={(e) => {
                                         if (e.key === 'Enter' || e.key === ' ') {
@@ -209,7 +209,7 @@ export const NotificationDropdown: React.FC = () => {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center justify-between">
-                                                <p className={`text-sm font-medium ${notification.read_at ? 'text-slate-400' : 'text-white'}`}>
+                                                <p className={`text-sm font-medium ${notification.read_at ? 'text-text-muted' : 'text-white'}`}>
                                                     {notification.title}
                                                 </p>
                                                 <button
@@ -218,7 +218,7 @@ export const NotificationDropdown: React.FC = () => {
                                                         clearNotification(notification.id);
                                                     }}
                                                     aria-label={`Dismiss ${notification.title}`}
-                                                    className="text-slate-500 hover:text-slate-300 p-1"
+                                                    className="text-slate-500 hover:text-text-secondary p-1"
                                                 >
                                                     <X className="w-3 h-3" aria-hidden="true" />
                                                 </button>
@@ -241,10 +241,10 @@ export const NotificationDropdown: React.FC = () => {
                     </div>
 
                     {/* Footer */}
-                    <div className="px-4 py-3 border-t border-slate-800 bg-slate-900/50">
+                    <div className="px-4 py-3 border-t border-border bg-surfaceHighlight">
                         <a
                             href="/settings?tab=notifications"
-                            className="text-xs text-slate-400 hover:text-white transition-colors"
+                            className="text-xs text-text-muted hover:text-white transition-colors"
                         >
                             Notification Settings &rarr;
                         </a>

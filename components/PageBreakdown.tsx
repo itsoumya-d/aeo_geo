@@ -19,7 +19,7 @@ export const PageBreakdown: React.FC<PageBreakdownProps> = ({ page, auditId }) =
             layout
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-slate-900/40 backdrop-blur-xl rounded-3xl border border-white/5 overflow-hidden hover:border-white/10 transition-all duration-300 shadow-2xl group"
+            className="bg-blue-50 backdrop-blur-xl rounded-3xl border border-white/5 overflow-hidden hover:border-white/10 transition-all duration-300 shadow-2xl group"
         >
             <div
                 onClick={() => setIsExpanded(!isExpanded)}
@@ -30,14 +30,14 @@ export const PageBreakdown: React.FC<PageBreakdownProps> = ({ page, auditId }) =
                         <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center font-black text-lg sm:text-xl shadow-inner ${page.quoteLikelihood > 60 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.1)]'}`}>
                             {page.quoteLikelihood}%
                         </div>
-                        <div className="absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-slate-900 rounded-full border border-white/10 flex items-center justify-center">
+                        <div className="absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-surface rounded-full border border-white/10 flex items-center justify-center">
                             <Target className={`w-2.5 h-2.5 sm:w-3 h-3 ${page.quoteLikelihood > 60 ? 'text-emerald-400' : 'text-rose-400'}`} />
                         </div>
                     </div>
                     <div className="min-w-0">
                         <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mb-1 sm:mb-2">
                             <h3 className="text-base sm:text-xl font-bold text-white group-hover:text-primary transition-colors tracking-tight truncate">{page.title}</h3>
-                            <span className="w-fit text-[9px] font-black uppercase tracking-[0.2em] bg-white/[0.05] text-slate-400 px-2 py-0.5 rounded-full border border-white/[0.05]">{page.pageType}</span>
+                            <span className="w-fit text-[9px] font-black uppercase tracking-[0.2em] bg-white/[0.05] text-text-muted px-2 py-0.5 rounded-full border border-white/[0.05]">{page.pageType}</span>
                         </div>
                         <p className="text-[10px] sm:text-xs text-slate-500 font-medium font-mono truncate max-w-[200px] sm:max-w-md bg-white/[0.02] px-2 py-0.5 rounded border border-white/[0.03]">{page.url}</p>
                     </div>
@@ -46,13 +46,13 @@ export const PageBreakdown: React.FC<PageBreakdownProps> = ({ page, auditId }) =
                 <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-10">
                     <div className="hidden sm:block text-right">
                         <div className="text-[10px] text-slate-500 uppercase font-black tracking-widest mb-1.5 opacity-60">AI Semantic Signal</div>
-                        <div className="text-xs font-bold text-slate-300 max-w-[150px] truncate">{page.aiUnderstanding}</div>
+                        <div className="text-xs font-bold text-text-secondary max-w-[150px] truncate">{page.aiUnderstanding}</div>
                     </div>
                     <div className="text-left sm:text-right">
                         <div className="text-[10px] text-slate-500 uppercase font-black tracking-widest mb-1.5 opacity-60">Action Items</div>
                         <div className="text-xs font-black text-white flex sm:justify-end gap-1.5 items-center">
                             <span className="bg-primary/20 text-primary w-5 h-5 rounded-md flex items-center justify-center text-[10px]">{page.recommendations.length}</span>
-                            <span className="text-slate-400 uppercase tracking-tighter sm:inline hidden">Detected</span>
+                            <span className="text-text-muted uppercase tracking-tighter sm:inline hidden">Detected</span>
                         </div>
                     </div>
                     <motion.div
@@ -75,25 +75,25 @@ export const PageBreakdown: React.FC<PageBreakdownProps> = ({ page, auditId }) =
                     >
                         {/* AI Perception Analysis */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-white/[0.05]">
-                            <div className="bg-slate-900/60 p-10">
+                            <div className="bg-surfaceHighlight p-10">
                                 <div className="flex items-center gap-3 mb-6 text-primary">
                                     <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                                         <Search className="w-4 h-4" />
                                     </div>
-                                    <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Semantic Recognition</h4>
+                                    <h4 className="text-xs font-black uppercase tracking-[0.2em] text-text-muted">Semantic Recognition</h4>
                                 </div>
-                                <p className="text-slate-300 text-sm leading-relaxed font-medium">
+                                <p className="text-text-secondary text-sm leading-relaxed font-medium">
                                     {page.aiUnderstanding}
                                 </p>
                             </div>
-                            <div className="bg-slate-900/60 p-10">
+                            <div className="bg-surfaceHighlight p-10">
                                 <div className="flex items-center gap-3 mb-6 text-amber-400">
                                     <div className="w-8 h-8 rounded-lg bg-amber-400/10 flex items-center justify-center">
                                         <Zap className="w-4 h-4" />
                                     </div>
-                                    <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Retrieval Gap Analysis</h4>
+                                    <h4 className="text-xs font-black uppercase tracking-[0.2em] text-text-muted">Retrieval Gap Analysis</h4>
                                 </div>
-                                <p className="text-slate-300 text-sm leading-relaxed font-medium">
+                                <p className="text-text-secondary text-sm leading-relaxed font-medium">
                                     {page.aiMissed}
                                 </p>
                             </div>
@@ -200,7 +200,7 @@ const RecommendationCard: React.FC<{ rec: Recommendation, auditId?: string, page
                             <span className={`px-3 sm:px-4 py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest ${rec.impact === 'HIGH' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.1)]' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}`}>
                                 {rec.impact} Impact
                             </span>
-                            <span className={`px-3 sm:px-4 py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest bg-white/[0.05] text-slate-400 border border-white/[0.05]`}>
+                            <span className={`px-3 sm:px-4 py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest bg-white/[0.05] text-text-muted border border-white/[0.05]`}>
                                 {rec.effort} Effort
                             </span>
                             <div className="h-3 sm:h-4 w-px bg-white/10 hidden sm:block"></div>
@@ -226,13 +226,13 @@ const RecommendationCard: React.FC<{ rec: Recommendation, auditId?: string, page
                         </div>
                     </div>
                     <h5 className="font-black text-white text-lg sm:text-xl mb-3 sm:mb-4 tracking-tight group-hover:text-primary transition-colors leading-tight">{rec.issue}</h5>
-                    <p className="text-slate-400 text-xs sm:text-sm leading-relaxed font-medium mb-6 sm:mb-8">{rec.instruction}</p>
+                    <p className="text-text-muted text-xs sm:text-sm leading-relaxed font-medium mb-6 sm:mb-8">{rec.instruction}</p>
 
                     {/* Schema Generator UI */}
                     {rec.generatedSchema && (
                         <div className="mt-8 bg-black/40 rounded-2xl border border-white/5 overflow-hidden shadow-Inner">
                             <div className="flex items-center justify-between px-6 py-4 bg-white/[0.03] border-b border-white/5">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-3">
+                                <span className="text-[10px] font-black text-text-muted uppercase tracking-widest flex items-center gap-3">
                                     <Code className="w-4 h-4 text-primary" /> Vectorized Metadata (JSON-LD)
                                 </span>
                                 <button
@@ -259,7 +259,7 @@ const RecommendationCard: React.FC<{ rec: Recommendation, auditId?: string, page
                         <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-rose-500/40"></div> Baseline Content</span>
                         <span className="text-rose-500/60">Fragmented Signal</span>
                     </div>
-                    <div className="text-sm font-medium text-slate-400 italic bg-white/[0.02] p-4 rounded-xl border-l-2 border-rose-500/40 mb-6 leading-relaxed">
+                    <div className="text-sm font-medium text-text-muted italic bg-white/[0.02] p-4 rounded-xl border-l-2 border-rose-500/40 mb-6 leading-relaxed">
                         "{rec.snippet}"
                     </div>
                     <div className="text-xs text-slate-500 font-medium leading-loose bg-white/[0.01] p-5 rounded-xl border border-white/5">
@@ -269,7 +269,7 @@ const RecommendationCard: React.FC<{ rec: Recommendation, auditId?: string, page
 
                 {/* Simulation Editor */}
                 <div className="bg-gradient-to-br from-primary/5 to-transparent p-px rounded-2xl shadow-2xl">
-                    <div className="bg-slate-900/80 backdrop-blur-3xl p-8 rounded-[15px] relative group-focus-within:bg-slate-900 transition-colors h-full">
+                    <div className="bg-surface backdrop-blur-3xl p-8 rounded-[15px] relative group-focus-within:bg-surface transition-colors h-full">
                         <div className="text-[10px] text-primary mb-6 font-black uppercase tracking-widest flex justify-between items-center">
                             <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></div> Neural Optimization Draft</span>
                             <span className="text-primary/60 flex items-center gap-2">

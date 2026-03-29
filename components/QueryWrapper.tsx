@@ -79,7 +79,7 @@ const errorConfig: Record<ErrorType, { icon: React.FC<{ className?: string }>, t
         icon: AlertCircle,
         title: 'Not Found',
         description: 'The requested resource could not be found.',
-        color: 'text-slate-400'
+        color: 'text-text-muted'
     },
     rate_limit: {
         icon: Clock,
@@ -116,7 +116,7 @@ export const APIErrorState: React.FC<APIErrorStateProps> = ({
                 <Icon className={`w-5 h-5 ${config.color} flex-shrink-0`} />
                 <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-white truncate">{config.title}</p>
-                    <p className="text-xs text-slate-400 truncate">{errorMessage}</p>
+                    <p className="text-xs text-text-muted truncate">{errorMessage}</p>
                 </div>
                 {onRetry && (
                     <button
@@ -124,7 +124,7 @@ export const APIErrorState: React.FC<APIErrorStateProps> = ({
                         className="flex-shrink-0 p-2 hover:bg-white/5 rounded-lg transition-colors"
                         aria-label="Retry"
                     >
-                        <RefreshCw className="w-4 h-4 text-slate-400" />
+                        <RefreshCw className="w-4 h-4 text-text-muted" />
                     </button>
                 )}
             </div>
@@ -133,12 +133,12 @@ export const APIErrorState: React.FC<APIErrorStateProps> = ({
 
     return (
         <div className={`flex flex-col items-center justify-center text-center p-8 ${fullHeight ? 'min-h-[400px]' : 'py-12'}`}>
-            <div className={`bg-slate-800/50 p-4 rounded-2xl mb-4 ${config.color.replace('text-', 'bg-').replace('400', '500/10')}`}>
+            <div className={`bg-surfaceHighlight p-4 rounded-2xl mb-4 ${config.color.replace('text-', 'bg-').replace('400', '500/10')}`}>
                 <Icon className={`w-10 h-10 ${config.color}`} />
             </div>
 
             <h3 className="text-lg font-semibold text-white mb-2">{config.title}</h3>
-            <p className="text-sm text-slate-400 max-w-sm mb-6">{errorMessage}</p>
+            <p className="text-sm text-text-muted max-w-sm mb-6">{errorMessage}</p>
 
             {onRetry && (
                 <button
@@ -153,10 +153,10 @@ export const APIErrorState: React.FC<APIErrorStateProps> = ({
             {/* Technical details in dev mode */}
             {import.meta.env.DEV && error && (
                 <details className="mt-6 text-left w-full max-w-md">
-                    <summary className="text-xs text-slate-500 cursor-pointer hover:text-slate-400">
+                    <summary className="text-xs text-slate-500 cursor-pointer hover:text-text-muted">
                         Technical Details
                     </summary>
-                    <pre className="mt-2 p-3 bg-slate-900 rounded-lg text-xs text-slate-400 overflow-x-auto">
+                    <pre className="mt-2 p-3 bg-surface rounded-lg text-xs text-text-muted overflow-x-auto">
                         {typeof error === 'string' ? error : JSON.stringify({ message: error.message, stack: error.stack }, null, 2)}
                     </pre>
                 </details>
@@ -181,7 +181,7 @@ export const LoadingSpinner: React.FC<{ message?: string; size?: 'sm' | 'md' | '
     return (
         <div className="flex flex-col items-center justify-center py-12">
             <div className={`${sizeClasses[size]} border-2 border-slate-600 border-t-primary rounded-full animate-spin mb-4`} />
-            <p className="text-sm text-slate-400">{message}</p>
+            <p className="text-sm text-text-muted">{message}</p>
         </div>
     );
 };

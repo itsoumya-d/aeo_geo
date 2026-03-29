@@ -149,22 +149,22 @@ const HeroPreview: React.FC = () => {
 
                 <div className="grid gap-4 p-5 lg:grid-cols-[1.08fr_0.92fr]">
                     <div className="space-y-4">
-                        <div className="rounded-[1.5rem] border border-white/10 bg-[#08111f] p-5">
+                        <div className="rounded-[1.5rem] border border-sky-200 bg-sky-50 p-5 shadow-sm">
                             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                                 <div>
-                                    <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-text-muted">Current posture</p>
+                                    <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-sky-600">Current posture</p>
                                     <div className="mt-3 flex items-end gap-3">
-                                        <p className="text-5xl font-display font-bold text-white leading-none">74</p>
-                                        <p className="text-sm font-semibold text-emerald-300 pb-1">+6 this week</p>
+                                        <p className="text-5xl font-display font-bold text-text-primary leading-none">74</p>
+                                        <p className="text-sm font-semibold text-emerald-600 pb-1">+6 this week</p>
                                     </div>
                                     <p className="mt-3 max-w-sm text-sm leading-relaxed text-text-secondary">
                                         Strong commercial pages. Weak supporting evidence on docs and help content.
                                     </p>
                                 </div>
-                                <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 sm:max-w-[180px]">
-                                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-emerald-300">Movement</p>
-                                    <p className="mt-2 text-sm font-semibold text-white">Citation readiness is climbing</p>
-                                    <p className="mt-1 text-xs leading-relaxed text-emerald-200/80">Pricing copy and FAQ clarity improved recall signals.</p>
+                                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 sm:max-w-[180px]">
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-emerald-600">Movement</p>
+                                    <p className="mt-2 text-sm font-semibold text-emerald-900">Citation readiness is climbing</p>
+                                    <p className="mt-1 text-xs leading-relaxed text-emerald-700">Pricing copy and FAQ clarity improved recall signals.</p>
                                 </div>
                             </div>
 
@@ -174,10 +174,10 @@ const HeroPreview: React.FC = () => {
                                     { label: 'Entity Trust', value: '71', note: 'Mostly consistent' },
                                     { label: 'Technical', value: '83', note: 'Healthy baseline' },
                                 ].map((metric) => (
-                                    <div key={metric.label} className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+                                    <div key={metric.label} className="rounded-2xl border border-sky-100 bg-white p-3 shadow-sm">
                                         <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-text-muted">{metric.label}</p>
-                                        <p className="mt-2 text-2xl font-display font-bold text-white">{metric.value}</p>
-                                        <p className="mt-1 text-xs text-text-muted">{metric.note}</p>
+                                        <p className="mt-2 text-2xl font-display font-bold text-text-primary">{metric.value}</p>
+                                        <p className="mt-1 text-xs text-text-secondary">{metric.note}</p>
                                     </div>
                                 ))}
                             </div>

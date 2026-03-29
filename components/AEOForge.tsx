@@ -25,7 +25,7 @@ function describeSemanticShift(vectorShift: number): { label: string; pct: numbe
     if (pct >= 70) return { label: 'Major semantic shift', pct, color: 'text-blue-400' };
     if (pct >= 40) return { label: 'Significant reframing', pct, color: 'text-indigo-400' };
     if (pct >= 20) return { label: 'Moderate refinement', pct, color: 'text-violet-400' };
-    return { label: 'Subtle polish', pct, color: 'text-slate-400' };
+    return { label: 'Subtle polish', pct, color: 'text-text-muted' };
 }
 
 export const AEOForge: React.FC = () => {
@@ -120,12 +120,12 @@ export const AEOForge: React.FC = () => {
                         initial={{ opacity: 0, y: -8 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -8 }}
-                        className="bg-slate-900/60 border border-white/10 rounded-2xl overflow-hidden"
+                        className="bg-surfaceHighlight border border-white/10 rounded-2xl overflow-hidden"
                     >
                         <div className="flex items-center justify-between px-6 py-3 border-b border-white/5">
                             <div className="flex items-center gap-2">
-                                <History className="w-4 h-4 text-slate-400" />
-                                <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Recent Optimizations</span>
+                                <History className="w-4 h-4 text-text-muted" />
+                                <span className="text-xs font-bold uppercase tracking-widest text-text-muted">Recent Optimizations</span>
                             </div>
                             <button onClick={() => setShowHistory(false)} className="text-xs text-slate-500 hover:text-white transition-colors">Close</button>
                         </div>
@@ -157,7 +157,7 @@ export const AEOForge: React.FC = () => {
             </AnimatePresence>
 
             {/* Control Bar */}
-            <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-3xl p-6 sm:p-8 flex flex-col lg:flex-row items-center gap-6 shadow-2xl">
+            <div className="bg-blue-50 backdrop-blur-xl border border-white/5 rounded-3xl p-6 sm:p-8 flex flex-col lg:flex-row items-center gap-6 shadow-2xl">
                 <div className="flex-1 w-full grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Target Keyword</label>
@@ -206,7 +206,7 @@ export const AEOForge: React.FC = () => {
                     {history.length > 0 && (
                         <button
                             onClick={() => setShowHistory(v => !v)}
-                            className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-400 hover:text-white px-5 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all"
+                            className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-text-muted hover:text-white px-5 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all"
                         >
                             <History className="w-4 h-4" />
                             History ({history.length})
@@ -226,11 +226,11 @@ export const AEOForge: React.FC = () => {
             {/* Editor Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
                 {/* Input Panel */}
-                <div className="flex flex-col h-full bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
+                <div className="flex flex-col h-full bg-blue-50 backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
                     <div className="bg-white/[0.02] border-b border-white/[0.05] px-8 py-4 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <Quote className="w-4 h-4 text-slate-500" />
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Original Input</span>
+                            <span className="text-[10px] font-black text-text-muted uppercase tracking-widest">Original Input</span>
                         </div>
                         <span className="text-[9px] font-bold text-slate-600 uppercase tracking-tighter">{original.length} Characters</span>
                     </div>
@@ -238,12 +238,12 @@ export const AEOForge: React.FC = () => {
                         value={original}
                         onChange={(e) => setOriginal(e.target.value)}
                         placeholder="Paste your baseline content here (e.g., pricing description, hero section, or key value props)..."
-                        className="flex-1 min-h-[400px] w-full bg-transparent p-8 text-slate-300 text-sm font-medium leading-relaxed outline-none resize-none placeholder:text-slate-700 placeholder:italic"
+                        className="flex-1 min-h-[400px] w-full bg-transparent p-8 text-text-secondary text-sm font-medium leading-relaxed outline-none resize-none placeholder:text-slate-700 placeholder:italic"
                     />
                 </div>
 
                 {/* Output Panel */}
-                <div className="flex flex-col h-full bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden shadow-2xl relative group">
+                <div className="flex flex-col h-full bg-blue-50 backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden shadow-2xl relative group">
                     <div className="bg-primary/5 border-b border-white/[0.05] px-8 py-4 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <Zap className="w-4 h-4 text-primary fill-primary/20" />
@@ -268,14 +268,14 @@ export const AEOForge: React.FC = () => {
                                     </div>
                                     <button
                                         onClick={exportAsMarkdown}
-                                        className="p-2 rounded-lg bg-white/[0.03] border border-white/5 text-slate-400 hover:text-white hover:bg-white/[0.05] transition-all"
+                                        className="p-2 rounded-lg bg-white/[0.03] border border-white/5 text-text-muted hover:text-white hover:bg-white/[0.05] transition-all"
                                         title="Export as Markdown"
                                     >
                                         <Download className="w-3.5 h-3.5" />
                                     </button>
                                     <button
                                         onClick={copyToClipboard}
-                                        className="p-2 rounded-lg bg-white/[0.03] border border-white/5 text-slate-400 hover:text-white hover:bg-white/[0.05] transition-all"
+                                        className="p-2 rounded-lg bg-white/[0.03] border border-white/5 text-text-muted hover:text-white hover:bg-white/[0.05] transition-all"
                                         title="Copy to Clipboard"
                                     >
                                         {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -301,7 +301,7 @@ export const AEOForge: React.FC = () => {
                         )}
 
                         {loading && (
-                            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md flex flex-col items-center justify-center space-y-6">
+                            <div className="absolute inset-0 bg-blue-50 backdrop-blur-md flex flex-col items-center justify-center space-y-6">
                                 <div className="relative">
                                     <div className="w-16 h-16 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
                                     <Sparkles className="absolute inset-0 m-auto w-6 h-6 text-primary animate-pulse" />
@@ -320,7 +320,7 @@ export const AEOForge: React.FC = () => {
                             <motion.div
                                 initial={{ y: 20, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
-                                className="p-6 bg-slate-900/90 backdrop-blur-2xl border-t border-primary/20 shadow-[0_-4px_20px_rgba(99,102,241,0.15)]"
+                                className="p-6 bg-surface/90 backdrop-blur-2xl border-t border-primary/20 shadow-[0_-4px_20px_rgba(99,102,241,0.15)]"
                             >
                                 {(() => {
                                     const shift = describeSemanticShift(result.vectorShift);
@@ -339,7 +339,7 @@ export const AEOForge: React.FC = () => {
                                                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Semantic Shift</span>
                                                         <span className={`text-[10px] font-bold ${shift.color}`}>{shift.label}</span>
                                                     </div>
-                                                    <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                                                    <div className="w-full bg-surfaceHighlight h-2 rounded-full overflow-hidden">
                                                         <motion.div
                                                             initial={{ width: 0 }}
                                                             animate={{ width: `${shift.pct}%` }}
@@ -357,10 +357,10 @@ export const AEOForge: React.FC = () => {
                                         </div>
                                     );
                                 })()}
-                                <div className="text-xs text-slate-400 font-medium leading-relaxed border-t border-white/5 pt-4 flex gap-3">
+                                <div className="text-xs text-text-muted font-medium leading-relaxed border-t border-white/5 pt-4 flex gap-3">
                                     <AlertCircle className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                                     <span>
-                                        <strong className="text-slate-200">Neural Logic:</strong> {result.reasoning}
+                                        <strong className="text-text-secondary">Neural Logic:</strong> {result.reasoning}
                                     </span>
                                 </div>
                             </motion.div>

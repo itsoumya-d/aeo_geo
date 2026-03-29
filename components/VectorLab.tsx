@@ -90,7 +90,7 @@ export const VectorLab: React.FC<VectorLabProps> = ({ data: initialData }) => {
                     <Brain className="w-8 h-8 text-primary" />
                 </div>
                 <h3 className="text-lg font-bold text-white mb-2">No vector data yet</h3>
-                <p className="text-sm text-slate-400 max-w-sm">
+                <p className="text-sm text-text-muted max-w-sm">
                     Run an audit and use the Optimization tab to generate semantic vector data for your content.
                 </p>
             </motion.div>
@@ -192,11 +192,11 @@ export const VectorLab: React.FC<VectorLabProps> = ({ data: initialData }) => {
                                         if (active && payload && payload.length) {
                                             const data = payload[0].payload;
                                             return (
-                                                <div className="bg-slate-900 border border-slate-700 p-3 rounded-lg shadow-xl">
+                                                <div className="bg-surface border border-border p-3 rounded-lg shadow-xl">
                                                     <p className="font-bold text-white mb-1">{data.label}</p>
-                                                    <div className="text-xs text-slate-400 space-y-1">
-                                                        <p>Relevance: <span className="text-slate-200">{data.x.toFixed(1)}</span></p>
-                                                        <p>Authority: <span className="text-slate-200">{data.y.toFixed(1)}</span></p>
+                                                    <div className="text-xs text-text-muted space-y-1">
+                                                        <p>Relevance: <span className="text-text-secondary">{data.x.toFixed(1)}</span></p>
+                                                        <p>Authority: <span className="text-text-secondary">{data.y.toFixed(1)}</span></p>
                                                     </div>
                                                 </div>
                                             );

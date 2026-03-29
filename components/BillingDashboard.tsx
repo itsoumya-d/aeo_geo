@@ -86,9 +86,9 @@ const UsageBar: React.FC<UsageBarProps> = ({ label, current, max, icon, colorCla
     const isEmpty = remaining <= 0;
 
     return (
-        <div className="bg-slate-900/50 rounded-xl p-4 border border-slate-800">
+        <div className="bg-surfaceHighlight rounded-xl p-4 border border-border">
             <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2 text-sm font-medium text-slate-300">
+                <div className="flex items-center gap-2 text-sm font-medium text-text-secondary">
                     {icon}
                     {label}
                 </div>
@@ -99,7 +99,7 @@ const UsageBar: React.FC<UsageBarProps> = ({ label, current, max, icon, colorCla
                     <span className="text-slate-500 text-sm"> / {max}</span>
                 </div>
             </div>
-            <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+            <div className="w-full bg-surfaceHighlight h-2 rounded-full overflow-hidden">
                 <div
                     className={`h-full rounded-full transition-all duration-500 ${isLow ? 'bg-amber-500' : isEmpty ? 'bg-rose-500' : colorClass
                         }`}
@@ -203,14 +203,14 @@ export const BillingDashboard: React.FC = () => {
     return (
         <div className="space-y-8">
             {/* Current Plan Header */}
-            <div className="bg-gradient-to-br from-primary/20 via-purple-500/10 to-slate-900 border border-primary/30 rounded-2xl p-6 relative overflow-hidden">
+            <div className="bg-gradient-to-br from-primary/20 via-purple-500/10 to-background border border-primary/30 rounded-2xl p-6 relative overflow-hidden">
                 <div className="absolute top-0 right-0 opacity-10">
                     <Sparkles className="w-32 h-32 text-primary" />
                 </div>
                 <div className="relative z-10">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div>
-                            <p className="text-sm text-slate-400 mb-1">Current Plan</p>
+                            <p className="text-sm text-text-muted mb-1">Current Plan</p>
                             <h2 className="text-3xl font-bold text-white">{currentPlan.name}</h2>
                             <p className="text-primary font-semibold">
                                 {currentPlan.priceMonthly === 0 ? 'Free' : `$${currentPlan.priceMonthly}/month`}
@@ -220,7 +220,7 @@ export const BillingDashboard: React.FC = () => {
                             <button
                                 onClick={handleRefreshCredits}
                                 disabled={isLoading}
-                                className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium"
+                                className="flex items-center gap-2 bg-surfaceHighlight hover:bg-slate-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium"
                             >
                                 <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
                                 Refresh
@@ -228,7 +228,7 @@ export const BillingDashboard: React.FC = () => {
                             <button
                                 onClick={handleManageBilling}
                                 disabled={isLoading}
-                                className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium"
+                                className="flex items-center gap-2 bg-surfaceHighlight hover:bg-slate-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium"
                             >
                                 <ExternalLink className="w-4 h-4" />
                                 Manage Billing
@@ -257,7 +257,7 @@ export const BillingDashboard: React.FC = () => {
             </div>
 
             {/* Usage Analytics */}
-            <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+            <div className="bg-surfaceHighlight border border-border rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-6">
                     <h3 className="text-lg font-semibold text-white">This Month's Activity</h3>
                     <span className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
@@ -271,7 +271,7 @@ export const BillingDashboard: React.FC = () => {
                         { label: 'Simulations', value: currentPlan.rewrites - rewriteCredits, icon: <Zap className="w-4 h-4" />, color: 'text-amber-400' },
                         { label: 'Credits Used', value: `${currentPlan.audits - auditCredits}/${currentPlan.audits}`, icon: <RefreshCw className="w-4 h-4" />, color: 'text-blue-400' },
                     ].map((stat) => (
-                        <div key={stat.label} className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
+                        <div key={stat.label} className="bg-surfaceHighlight rounded-xl p-4 border border-border/50">
                             <div className={`flex items-center gap-2 text-xs font-bold uppercase tracking-[0.1em] text-slate-500 mb-2`}>
                                 <span className={stat.color}>{stat.icon}</span>
                                 {stat.label}
@@ -283,24 +283,24 @@ export const BillingDashboard: React.FC = () => {
             </div>
 
             {/* Invoice History */}
-            <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+            <div className="bg-surfaceHighlight border border-border rounded-2xl p-6">
                 <div className="flex items-center gap-3 mb-5">
                     <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
                         <FileText className="w-5 h-5 text-blue-400" />
                     </div>
                     <div>
                         <h3 className="text-lg font-semibold text-white">Invoice History</h3>
-                        <p className="text-sm text-slate-400">Download past invoices or update your billing details.</p>
+                        <p className="text-sm text-text-muted">Download past invoices or update your billing details.</p>
                     </div>
                 </div>
 
                 {organization?.stripe_customer_id ? (
                     <div className="space-y-4">
-                        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 flex items-start gap-3">
-                            <Mail className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
+                        <div className="bg-surfaceHighlight border border-border/50 rounded-xl p-4 flex items-start gap-3">
+                            <Mail className="w-5 h-5 text-text-muted mt-0.5 flex-shrink-0" />
                             <div>
                                 <p className="text-sm text-white font-medium">Invoices are sent by email</p>
-                                <p className="text-xs text-slate-400 mt-0.5">
+                                <p className="text-xs text-text-muted mt-0.5">
                                     Paddle automatically emails a PDF invoice to <span className="text-white">{user?.email}</span> after each payment.
                                 </p>
                             </div>
@@ -324,9 +324,9 @@ export const BillingDashboard: React.FC = () => {
                         </div>
                     </div>
                 ) : (
-                    <div className="text-center py-8 border border-dashed border-slate-700 rounded-xl">
+                    <div className="text-center py-8 border border-dashed border-border rounded-xl">
                         <FileText className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-                        <p className="text-sm text-slate-400 mb-1">No billing history yet</p>
+                        <p className="text-sm text-text-muted mb-1">No billing history yet</p>
                         <p className="text-xs text-slate-500">
                             Invoice history will appear here once you subscribe to a paid plan.
                         </p>
@@ -345,7 +345,7 @@ export const BillingDashboard: React.FC = () => {
                             <h3 className="text-lg font-semibold text-white mb-1">
                                 Unlock More AI Audits
                             </h3>
-                            <p className="text-sm text-slate-400 mb-4">
+                            <p className="text-sm text-text-muted mb-4">
                                 You're on the Free plan with limited audits. Upgrade to run unlimited analyses
                                 and access advanced features like API access and white-label reports.
                                 {annualBilling && (
@@ -404,7 +404,7 @@ export const BillingDashboard: React.FC = () => {
                                 layout
                                 className={`relative rounded-xl p-5 border transition-all ${isCurrent
                                     ? 'bg-primary/10 border-primary'
-                                    : 'bg-slate-900/50 border-slate-800 hover:border-slate-700'
+                                    : 'bg-surfaceHighlight border-border hover:border-border'
                                     }`}
                             >
                                 {isCurrent && (
@@ -426,7 +426,7 @@ export const BillingDashboard: React.FC = () => {
                                 )}
                                 <ul className="space-y-2 mb-5 mt-3">
                                     {plan.features.map((feature, i) => (
-                                        <li key={i} className="text-sm text-slate-400 flex items-center gap-2">
+                                        <li key={i} className="text-sm text-text-muted flex items-center gap-2">
                                             <Check className="w-4 h-4 text-primary flex-shrink-0" />
                                             {feature}
                                         </li>
@@ -436,7 +436,7 @@ export const BillingDashboard: React.FC = () => {
                                     <button
                                         onClick={() => handleUpgrade(plan, key)}
                                         disabled={loadingAction === key}
-                                        className="w-full bg-slate-800 hover:bg-slate-700 text-white py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                                        className="w-full bg-surfaceHighlight hover:bg-slate-700 text-white py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
                                     >
                                         {loadingAction === key ? (
                                             <Loader2 className="w-4 h-4 animate-spin" />

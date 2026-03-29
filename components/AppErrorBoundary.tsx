@@ -37,13 +37,13 @@ export class AppErrorBoundary extends Component<Props, State> {
 
             return (
                 <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
-                    <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-10 max-w-md text-center backdrop-blur-xl shadow-2xl">
+                    <div className="bg-surfaceHighlight border border-border rounded-3xl p-10 max-w-md text-center backdrop-blur-xl shadow-2xl">
                         <div className="w-16 h-16 bg-rose-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
                             <AlertCircle className="w-8 h-8 text-rose-500" />
                         </div>
 
                         <h1 className="text-2xl font-bold text-white mb-2">{user.title}</h1>
-                        <p className="text-slate-400 mb-8 leading-relaxed">
+                        <p className="text-text-muted mb-8 leading-relaxed">
                             {user.message}
                         </p>
 
@@ -65,7 +65,7 @@ export class AppErrorBoundary extends Component<Props, State> {
                             </button>
                             <button
                                 onClick={() => window.location.href = '/'}
-                                className="flex-1 bg-slate-800 hover:bg-slate-700 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
+                                className="flex-1 bg-surfaceHighlight hover:bg-slate-700 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
                             >
                                 <Home className="w-4 h-4" />
                                 Go Home

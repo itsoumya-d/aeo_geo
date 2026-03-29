@@ -227,7 +227,7 @@ export const ReportTab: React.FC<ReportTabProps> = ({ report }) => {
                 margin: 0,
                 filename: `Cognition_Visibility_Report_${new Date().toISOString().split('T')[0]}.pdf`,
                 image: { type: 'jpeg' as const, quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, backgroundColor: '#0f172a', scrollY: 0 },
+                html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
                 jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
                 pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
             };
@@ -315,7 +315,7 @@ export const ReportTab: React.FC<ReportTabProps> = ({ report }) => {
 
                     <button
                         onClick={() => navigate('/reports/builder')}
-                        className="w-full bg-transparent hover:bg-white/5 border border-white/10 text-slate-400 p-5 rounded-2xl font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-4"
+                        className="w-full bg-transparent hover:bg-white/5 border border-white/10 text-text-muted p-5 rounded-2xl font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-4"
                     >
                         <Layout className="w-5 h-5" /> Customize Template
                     </button>
@@ -331,7 +331,7 @@ export const ReportTab: React.FC<ReportTabProps> = ({ report }) => {
                     <div className="scale-[0.6] sm:scale-[0.8] lg:scale-[0.85] origin-top shadow-2xl">
                         <div
                             ref={printableRef}
-                            className="w-[210mm] min-h-[297mm] bg-[#0f172a] text-white p-16 font-sans relative overflow-hidden flex flex-col"
+                            className="w-[210mm] min-h-[297mm] bg-surface text-white p-16 font-sans relative overflow-hidden flex flex-col"
                             style={{ borderTop: `8px solid ${branding.primaryColor}` }}
                         >
                             {/* PDF Header - Fixed */}

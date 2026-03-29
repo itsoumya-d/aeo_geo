@@ -227,7 +227,7 @@ export const SentinelDashboard: React.FC = () => {
                                         domain={[1, 20]}
                                     />
                                     <RechartsTooltip
-                                        contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '12px' }}
+                                        contentStyle={{ backgroundColor: '#ffffff', borderColor: '#d6e4f0', borderRadius: '12px' }}
                                         itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
                                     />
                                     <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '12px' }} />
@@ -283,7 +283,7 @@ export const SentinelDashboard: React.FC = () => {
                                 <Zap className="w-5 h-5 text-primary" />
                                 <h4 className="text-sm font-bold text-white">Sentinel Insight</h4>
                             </div>
-                            <p className="text-xs text-slate-300 leading-relaxed">
+                            <p className="text-xs text-text-secondary leading-relaxed">
                                 {insight ? (
                                     <>For <strong>"{insight.keyword}"</strong>: {insight.text}</>
                                 ) : (
@@ -294,7 +294,7 @@ export const SentinelDashboard: React.FC = () => {
                     </div>
                 </div>
             ) : (
-                <div className="text-center py-20 bg-slate-900/50 rounded-3xl border border-slate-800 border-dashed">
+                <div className="text-center py-20 bg-surfaceHighlight rounded-3xl border border-border border-dashed">
                     <Search className="w-12 h-12 text-slate-700 mx-auto mb-4" />
                     <h3 className="text-white font-bold text-lg mb-2">No Tracking Data Yet</h3>
                     <p className="text-slate-500 max-w-md mx-auto text-sm">

@@ -62,24 +62,24 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, set
     }, [activeTab]);
 
     return (
-        <nav aria-label="Mobile navigation" className="lg:hidden fixed bottom-0 left-0 right-0 z-[60] bg-slate-900/95 backdrop-blur-2xl border-t border-white/5 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+        <nav aria-label="Mobile navigation" className="lg:hidden fixed bottom-0 left-0 right-0 z-[60] bg-surface backdrop-blur-2xl border-t border-white/5 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
             {/* Scroll indicators */}
             {showLeftArrow && (
                 <button
                     onClick={() => scroll('left')}
-                    className="absolute left-0 top-0 bottom-0 w-8 z-10 flex items-center justify-center bg-gradient-to-r from-slate-900 to-transparent"
+                    className="absolute left-0 top-0 bottom-0 w-8 z-10 flex items-center justify-center bg-gradient-to-r from-background to-transparent"
                     aria-label="Scroll left"
                 >
-                    <ChevronLeft className="w-4 h-4 text-slate-400" />
+                    <ChevronLeft className="w-4 h-4 text-text-muted" />
                 </button>
             )}
             {showRightArrow && (
                 <button
                     onClick={() => scroll('right')}
-                    className="absolute right-0 top-0 bottom-0 w-8 z-10 flex items-center justify-center bg-gradient-to-l from-slate-900 to-transparent"
+                    className="absolute right-0 top-0 bottom-0 w-8 z-10 flex items-center justify-center bg-gradient-to-l from-background to-transparent"
                     aria-label="Scroll right"
                 >
-                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                    <ChevronRight className="w-4 h-4 text-text-muted" />
                 </button>
             )}
 

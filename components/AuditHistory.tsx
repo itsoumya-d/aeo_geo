@@ -155,12 +155,12 @@ export const AuditHistory: React.FC = () => {
                     </div>
                     <div>
                         <h3 className="text-lg font-semibold text-white">Audit History</h3>
-                        <p className="text-sm text-slate-400">{audits.length} total audits</p>
+                        <p className="text-sm text-text-muted">{audits.length} total audits</p>
                     </div>
                 </div>
                 <button
                     onClick={loadAudits}
-                    className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors"
+                    className="flex items-center gap-2 bg-surfaceHighlight hover:bg-slate-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors"
                 >
                     <RefreshCw className="w-4 h-4" />
                     Refresh
@@ -169,8 +169,8 @@ export const AuditHistory: React.FC = () => {
 
             {/* Score Trend Chart */}
             {trendData.length > 1 && (
-                <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6">
-                    <h4 className="text-sm font-medium text-slate-400 mb-4 flex items-center gap-2">
+                <div className="bg-surfaceHighlight border border-border rounded-xl p-6">
+                    <h4 className="text-sm font-medium text-text-muted mb-4 flex items-center gap-2">
                         <TrendingUp className="w-4 h-4" />
                         Score Trend (Last 10 Audits)
                     </h4>
@@ -198,7 +198,7 @@ export const AuditHistory: React.FC = () => {
                                 />
                                 <Tooltip
                                     contentStyle={{
-                                        backgroundColor: '#1e293b',
+                                        backgroundColor: '#f6faff',
                                         border: '1px solid #334155',
                                         borderRadius: '8px',
                                         color: '#fff'
@@ -235,7 +235,7 @@ export const AuditHistory: React.FC = () => {
                                 className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
                                     dateRange === value
                                         ? 'bg-primary text-white'
-                                        : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
+                                        : 'bg-surfaceHighlight text-text-muted hover:bg-slate-700 hover:text-white'
                                 }`}
                             >
                                 {label}
@@ -252,7 +252,7 @@ export const AuditHistory: React.FC = () => {
                                 placeholder="Search by domain..."
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
-                                className="w-full bg-slate-800 border border-slate-700 text-white rounded-lg pl-9 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none placeholder:text-slate-600"
+                                className="w-full bg-surfaceHighlight border border-border text-white rounded-lg pl-9 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none placeholder:text-slate-600"
                             />
                         </div>
                         {domains.length > 1 && (
@@ -261,7 +261,7 @@ export const AuditHistory: React.FC = () => {
                                 <select
                                     value={selectedDomain}
                                     onChange={(e) => setSelectedDomain(e.target.value)}
-                                    className="bg-slate-800 border border-slate-700 text-white rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
+                                    className="bg-surfaceHighlight border border-border text-white rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
                                 >
                                     <option value="all">All Domains ({audits.length})</option>
                                     {domains.map(domain => (
@@ -278,12 +278,12 @@ export const AuditHistory: React.FC = () => {
 
             {/* Audits List */}
             {filteredAudits.length === 0 ? (
-                <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-12 text-center">
+                <div className="bg-surfaceHighlight border border-border rounded-xl p-12 text-center">
                     <History className="w-12 h-12 text-slate-600 mx-auto mb-4" />
                     {audits.length === 0 ? (
                         <>
                             <h4 className="font-semibold text-white mb-2 text-lg">No Audits Yet</h4>
-                            <p className="text-sm text-slate-400 mb-6 max-w-sm mx-auto">
+                            <p className="text-sm text-text-muted mb-6 max-w-sm mx-auto">
                                 Run your first AI visibility audit to discover how AI search engines see your brand.
                             </p>
                             <button
@@ -296,7 +296,7 @@ export const AuditHistory: React.FC = () => {
                     ) : (
                         <>
                             <h4 className="font-medium text-white mb-2">No Matches</h4>
-                            <p className="text-sm text-slate-400">Try a different search term or domain filter.</p>
+                            <p className="text-sm text-text-muted">Try a different search term or domain filter.</p>
                             <button onClick={() => { setSearchQuery(''); setSelectedDomain('all'); setDateRange('all'); }} className="mt-3 text-xs text-primary hover:text-white transition-colors">
                                 Clear filters
                             </button>
@@ -317,7 +317,7 @@ export const AuditHistory: React.FC = () => {
                             <div
                                 key={audit.id}
                                 onClick={() => audit.status === 'complete' && navigate(`/results/${audit.id}`)}
-                                className={`bg-slate-900/50 border border-slate-800 rounded-xl p-4 transition-colors group ${audit.status === 'complete' ? 'hover:border-primary/40 cursor-pointer' : 'hover:border-slate-700'}`}
+                                className={`bg-surfaceHighlight border border-border rounded-xl p-4 transition-colors group ${audit.status === 'complete' ? 'hover:border-primary/40 cursor-pointer' : 'hover:border-border'}`}
                             >
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-4">

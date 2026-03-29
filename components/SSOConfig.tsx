@@ -76,7 +76,7 @@ export const SSOConfig: React.FC = () => {
                 <div className="relative z-10">
                     <Shield className="w-16 h-16 text-blue-400 mx-auto mb-6" />
                     <h2 className="text-2xl font-bold text-white mb-2">Enterprise Grade Security</h2>
-                    <p className="text-slate-400 max-w-lg mx-auto mb-8 text-lg">
+                    <p className="text-text-muted max-w-lg mx-auto mb-8 text-lg">
                         Enforce Single Sign-On (SAML/OIDC) via Okta, Azure AD, or Google Workspace.
                         Protect your data with bank-grade encryption and compliance logs.
                     </p>
@@ -100,7 +100,7 @@ export const SSOConfig: React.FC = () => {
                         <Shield className="w-6 h-6 text-emerald-400" />
                         Single Sign-On (SSO)
                     </h3>
-                    <p className="text-slate-400 mt-1">Configure SAML 2.0 or OIDC Identity Providers.</p>
+                    <p className="text-text-muted mt-1">Configure SAML 2.0 or OIDC Identity Providers.</p>
                 </div>
                 <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 rounded-full border border-emerald-500/20">
                     <CheckCircle2 className="w-4 h-4 text-emerald-400" />
@@ -111,7 +111,7 @@ export const SSOConfig: React.FC = () => {
             <div className="grid md:grid-cols-2 gap-8">
                 <form onSubmit={handleSave} className="space-y-6">
                     <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">Identity Provider URL (IdP)</label>
+                        <label className="block text-sm font-medium text-text-secondary mb-2">Identity Provider URL (IdP)</label>
                         <div className="relative">
                             <input
                                 type="url"
@@ -119,21 +119,21 @@ export const SSOConfig: React.FC = () => {
                                 value={idpUrl}
                                 onChange={e => setIdpUrl(e.target.value)}
                                 placeholder="https://idp.okta.com/app/..."
-                                className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-10 pr-4 py-3 text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                className="w-full bg-slate-950 border border-border rounded-lg pl-10 pr-4 py-3 text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                             />
                             <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3.5" />
                         </div>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">X.509 Cert Fingerprint</label>
+                        <label className="block text-sm font-medium text-text-secondary mb-2">X.509 Cert Fingerprint</label>
                         <textarea
                             required
                             value={certFingerprint}
                             onChange={e => setCertFingerprint(e.target.value)}
                             rows={3}
                             placeholder="SHA-256 Fingerprint..."
-                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 outline-none font-mono text-xs transition-all"
+                            className="w-full bg-slate-950 border border-border rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 outline-none font-mono text-xs transition-all"
                         />
                     </div>
 
@@ -155,12 +155,12 @@ export const SSOConfig: React.FC = () => {
                     </button>
                 </form>
 
-                <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+                <div className="bg-surfaceHighlight border border-border rounded-2xl p-6">
                     <h4 className="font-bold text-white mb-4">Supported Providers</h4>
                     <div className="space-y-3">
                         {['Okta', 'Azure Active Directory', 'Google Workspace', 'OneLogin', 'PingIdentity'].map(p => (
-                            <div key={p} className="flex items-center justify-between p-3 bg-slate-950 border border-slate-800 rounded-lg group hover:border-slate-600 transition-colors cursor-pointer">
-                                <span className="text-slate-300 font-medium">{p}</span>
+                            <div key={p} className="flex items-center justify-between p-3 bg-slate-950 border border-border rounded-lg group hover:border-slate-600 transition-colors cursor-pointer">
+                                <span className="text-text-secondary font-medium">{p}</span>
                                 <ExternalLink className="w-4 h-4 text-slate-600 group-hover:text-white transition-colors" />
                             </div>
                         ))}

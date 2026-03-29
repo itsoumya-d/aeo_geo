@@ -132,7 +132,7 @@ export const SearchTab: React.FC<SearchTabProps> = ({ report }) => {
     const TrendIcon = ({ value }: { value: number }) => {
         if (value > 2) return <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />;
         if (value < -2) return <TrendingDown className="w-3.5 h-3.5 text-rose-400" />;
-        return <Minus className="w-3.5 h-3.5 text-slate-400" />;
+        return <Minus className="w-3.5 h-3.5 text-text-muted" />;
     };
 
     return (
@@ -143,7 +143,7 @@ export const SearchTab: React.FC<SearchTabProps> = ({ report }) => {
             className="space-y-10"
         >
             {/* GSC Metrics Panel */}
-            <div className="bg-slate-900/40 backdrop-blur-xl rounded-3xl border border-white/5 shadow-2xl overflow-hidden">
+            <div className="bg-blue-50 backdrop-blur-xl rounded-3xl border border-white/5 shadow-2xl overflow-hidden">
                 <div className="px-6 sm:px-8 py-5 border-b border-white/5 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="bg-blue-500/20 p-2 rounded-lg">
@@ -170,13 +170,13 @@ export const SearchTab: React.FC<SearchTabProps> = ({ report }) => {
                 ) : !gscConnected ? (
                     <div className="p-8 text-center">
                         <AlertTriangle className="w-8 h-8 text-amber-500/50 mx-auto mb-3" />
-                        <p className="text-sm text-slate-400 mb-1">Google Search Console not connected</p>
+                        <p className="text-sm text-text-muted mb-1">Google Search Console not connected</p>
                         <p className="text-xs text-slate-600">Connect GSC in Settings &rarr; Integrations to see organic search data alongside AI visibility.</p>
                     </div>
                 ) : gscMetrics.length === 0 ? (
                     <div className="p-8 text-center">
                         <Link2 className="w-8 h-8 text-slate-600 mx-auto mb-3" />
-                        <p className="text-sm text-slate-400">No GSC data available yet</p>
+                        <p className="text-sm text-text-muted">No GSC data available yet</p>
                         <p className="text-xs text-slate-600">Sync will populate data within 24 hours.</p>
                     </div>
                 ) : (
@@ -192,7 +192,7 @@ export const SearchTab: React.FC<SearchTabProps> = ({ report }) => {
                                         <span className="text-2xl font-black text-white">{gscSummary.totalClicks.toLocaleString()}</span>
                                         <div className="flex items-center gap-1 mb-1">
                                             <TrendIcon value={gscSummary.clicksTrend} />
-                                            <span className={`text-[10px] font-bold ${gscSummary.clicksTrend > 0 ? 'text-emerald-400' : gscSummary.clicksTrend < 0 ? 'text-rose-400' : 'text-slate-400'}`}>
+                                            <span className={`text-[10px] font-bold ${gscSummary.clicksTrend > 0 ? 'text-emerald-400' : gscSummary.clicksTrend < 0 ? 'text-rose-400' : 'text-text-muted'}`}>
                                                 {gscSummary.clicksTrend > 0 ? '+' : ''}{gscSummary.clicksTrend.toFixed(1)}%
                                             </span>
                                         </div>
@@ -244,7 +244,7 @@ export const SearchTab: React.FC<SearchTabProps> = ({ report }) => {
                                     <YAxis yAxisId="left" tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} width={40} />
                                     <YAxis yAxisId="right" orientation="right" tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} width={50} />
                                     <Tooltip
-                                        contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '12px', fontSize: '12px' }}
+                                        contentStyle={{ backgroundColor: '#ffffff', borderColor: '#d6e4f0', borderRadius: '12px', fontSize: '12px' }}
                                         itemStyle={{ fontWeight: 'bold' }}
                                     />
                                     <Legend wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
@@ -259,7 +259,7 @@ export const SearchTab: React.FC<SearchTabProps> = ({ report }) => {
 
             {/* Keyword Ranking Trends (AI Platforms) */}
             {platformTrendData.length > 1 && (
-                <div className="bg-slate-900/40 backdrop-blur-xl rounded-3xl border border-white/5 shadow-2xl overflow-hidden">
+                <div className="bg-blue-50 backdrop-blur-xl rounded-3xl border border-white/5 shadow-2xl overflow-hidden">
                     <div className="px-6 sm:px-8 py-5 border-b border-white/5 flex items-center gap-3">
                         <div className="bg-primary/20 p-2 rounded-lg">
                             <TrendingUp className="w-4 h-4 text-primary" />
@@ -277,7 +277,7 @@ export const SearchTab: React.FC<SearchTabProps> = ({ report }) => {
                                     <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} />
                                     <YAxis tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} width={30} reversed domain={[1, 'auto']} />
                                     <Tooltip
-                                        contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '12px', fontSize: '12px' }}
+                                        contentStyle={{ backgroundColor: '#ffffff', borderColor: '#d6e4f0', borderRadius: '12px', fontSize: '12px' }}
                                         itemStyle={{ fontWeight: 'bold' }}
                                     />
                                     <Legend wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }} />

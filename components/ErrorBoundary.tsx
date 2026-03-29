@@ -61,19 +61,19 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
             return (
                 <div className="min-h-[400px] flex items-center justify-center p-8">
-                    <div className="bg-surface border border-slate-700 rounded-2xl p-8 max-w-lg w-full shadow-xl animate-in fade-in zoom-in-95 duration-300">
+                    <div className="bg-surface border border-border rounded-2xl p-8 max-w-lg w-full shadow-xl animate-in fade-in zoom-in-95 duration-300">
                         <div className="flex items-center gap-3 mb-6">
                             <div className="bg-rose-500/10 p-3 rounded-xl">
                                 <AlertTriangle className="w-6 h-6 text-rose-500" />
                             </div>
                             <div>
                                 <h2 className="text-xl font-bold text-white">{user.title}</h2>
-                                <p className="text-sm text-slate-400">{user.message}</p>
+                                <p className="text-sm text-text-muted">{user.message}</p>
                             </div>
                         </div>
 
-                        <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-4 mb-6">
-                            <p className="text-sm text-slate-300 font-mono break-all">
+                        <div className="bg-surfaceHighlight border border-border rounded-xl p-4 mb-6">
+                            <p className="text-sm text-text-secondary font-mono break-all">
                                 {import.meta.env.DEV
                                     ? (this.state.error?.message || 'Unknown error')
                                     : (supportId ? `Error ID: ${supportId}` : 'Error ID: unavailable')}
@@ -90,7 +90,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                             </button>
                             <button
                                 onClick={this.handleCopyError}
-                                className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-3 rounded-xl font-medium transition-colors"
+                                className="flex items-center justify-center gap-2 bg-surfaceHighlight hover:bg-slate-700 text-white px-4 py-3 rounded-xl font-medium transition-colors"
                             >
                                 {this.state.copied ? (
                                     <>

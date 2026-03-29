@@ -36,13 +36,13 @@ const RoleBadge: React.FC<{ role: string }> = ({ role }) => {
         owner: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
         admin: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
         member: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-        viewer: 'bg-slate-700 text-slate-300 border-slate-600',
+        viewer: 'bg-slate-700 text-text-secondary border-slate-600',
     };
     const icons = {
         owner: <Crown className="w-3 h-3" />,
         admin: <Shield className="w-3 h-3" />,
         member: <Users className="w-3 h-3" />,
-        viewer: <FileText className="w-3 h-3 text-slate-400" />,
+        viewer: <FileText className="w-3 h-3 text-text-muted" />,
     };
 
     return (
@@ -281,27 +281,27 @@ export const TeamSettings: React.FC = () => {
                     </div>
                     <div>
                         <h3 className="text-lg font-semibold text-white">Team Members</h3>
-                        <p className="text-sm text-slate-400">{members.length} member{members.length !== 1 ? 's' : ''}</p>
+                        <p className="text-sm text-text-muted">{members.length} member{members.length !== 1 ? 's' : ''}</p>
                     </div>
                 </div>
             </div>
 
-            <div className="flex border-b border-slate-800">
+            <div className="flex border-b border-border">
                 <button
                     onClick={() => setActiveTab('members')}
-                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'members' ? 'border-primary text-primary' : 'border-transparent text-slate-400 hover:text-white'}`}
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'members' ? 'border-primary text-primary' : 'border-transparent text-text-muted hover:text-white'}`}
                 >
                     Members
                 </button>
                 <button
                     onClick={() => setActiveTab('activity')}
-                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'activity' ? 'border-primary text-primary' : 'border-transparent text-slate-400 hover:text-white'}`}
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'activity' ? 'border-primary text-primary' : 'border-transparent text-text-muted hover:text-white'}`}
                 >
                     Activity Log
                 </button>
                 <button
                     onClick={() => setActiveTab('security')}
-                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'security' ? 'border-primary text-primary' : 'border-transparent text-slate-400 hover:text-white'}`}
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'security' ? 'border-primary text-primary' : 'border-transparent text-text-muted hover:text-white'}`}
                 >
                     <Shield className="w-3.5 h-3.5" />
                     Security
@@ -318,7 +318,7 @@ export const TeamSettings: React.FC = () => {
                                 </div>
                                 <div>
                                     <h4 className="font-bold text-white text-lg">Unlock Team Management</h4>
-                                    <p className="text-sm text-slate-400">Upgrade to the Agency plan to invite members and manage roles.</p>
+                                    <p className="text-sm text-text-muted">Upgrade to the Agency plan to invite members and manage roles.</p>
                                 </div>
                             </div>
                             <a
@@ -331,7 +331,7 @@ export const TeamSettings: React.FC = () => {
                     )}
 
                     {isOwnerOrAdmin && isTeamEnabled && (
-                        <form onSubmit={handleSendInvite} className="bg-slate-900/50 rounded-xl p-4 border border-slate-800">
+                        <form onSubmit={handleSendInvite} className="bg-surfaceHighlight rounded-xl p-4 border border-border">
                             <div className="flex flex-col sm:flex-row gap-3">
                                 <div className="flex-1">
                                     <input
@@ -339,7 +339,7 @@ export const TeamSettings: React.FC = () => {
                                         value={inviteEmail}
                                         onChange={(e) => setInviteEmail(e.target.value)}
                                         placeholder="colleague@company.com"
-                                        className="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none placeholder:text-slate-500"
+                                        className="w-full bg-surfaceHighlight border border-border text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none placeholder:text-slate-500"
                                         required
                                     />
                                 </div>
@@ -347,7 +347,7 @@ export const TeamSettings: React.FC = () => {
                                     <select
                                         value={inviteRole}
                                         onChange={(e) => setInviteRole(e.target.value as any)}
-                                        className="bg-slate-800 border border-slate-700 text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none"
+                                        className="bg-surfaceHighlight border border-border text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none"
                                         title={
                                             inviteRole === 'admin'
                                                 ? 'Admin: Can manage members, billing, and all settings'
@@ -375,7 +375,7 @@ export const TeamSettings: React.FC = () => {
 
                     {invitations.length > 0 && (
                         <div>
-                            <h4 className="text-sm font-medium text-slate-400 mb-3 flex items-center gap-2">
+                            <h4 className="text-sm font-medium text-text-muted mb-3 flex items-center gap-2">
                                 <Clock className="w-4 h-4" />
                                 Pending Invitations ({invitations.length})
                             </h4>
@@ -395,7 +395,7 @@ export const TeamSettings: React.FC = () => {
                                         {isOwnerOrAdmin && (
                                             <button
                                                 onClick={() => handleCancelInvite(invite.id)}
-                                                className="text-slate-400 hover:text-rose-400 transition-colors p-2"
+                                                className="text-text-muted hover:text-rose-400 transition-colors p-2"
                                             >
                                                 <X className="w-4 h-4" />
                                             </button>
@@ -412,11 +412,11 @@ export const TeamSettings: React.FC = () => {
                                 key={member.id}
                                 className={`flex items-center justify-between rounded-xl px-4 py-4 border transition-colors ${member.isCurrentUser
                                     ? 'bg-primary/5 border-primary/20'
-                                    : 'bg-slate-900/50 border-slate-800 hover:border-slate-700'
+                                    : 'bg-surfaceHighlight border-border hover:border-border'
                                     }`}
                             >
                                 <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-white font-bold">
+                                    <div className="w-10 h-10 rounded-full bg-surfaceHighlight flex items-center justify-center text-white font-bold">
                                         {(member.full_name || member.email).charAt(0).toUpperCase()}
                                     </div>
                                     <div className="text-left">
@@ -427,7 +427,7 @@ export const TeamSettings: React.FC = () => {
                                             </p>
                                             <RoleBadge role={member.role} />
                                         </div>
-                                        <p className="text-sm text-slate-400">{member.email}</p>
+                                        <p className="text-sm text-text-muted">{member.email}</p>
                                     </div>
                                 </div>
 
@@ -436,7 +436,7 @@ export const TeamSettings: React.FC = () => {
                                         <select
                                             value={member.role}
                                             onChange={(e) => handleChangeRole(member.id, e.target.value as any)}
-                                            className="bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-1.5 text-sm outline-none"
+                                            className="bg-surfaceHighlight border border-border text-white rounded-lg px-3 py-1.5 text-sm outline-none"
                                         >
                                             <option value="member">Member</option>
                                             <option value="admin">Admin</option>
@@ -444,7 +444,7 @@ export const TeamSettings: React.FC = () => {
                                         </select>
                                         <button
                                             onClick={() => handleRemoveMember(member.id, member.email)}
-                                            className="text-slate-400 hover:text-rose-400 transition-colors p-2"
+                                            className="text-text-muted hover:text-rose-400 transition-colors p-2"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>
@@ -455,9 +455,9 @@ export const TeamSettings: React.FC = () => {
                     </div>
 
                     {!isOwnerOrAdmin && (
-                        <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-4 flex items-start gap-3">
+                        <div className="bg-surfaceHighlight border border-border rounded-xl p-4 flex items-start gap-3">
                             <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0" />
-                            <p className="text-sm text-slate-400">
+                            <p className="text-sm text-text-muted">
                                 Only team owners and admins can invite or manage team members.
                             </p>
                         </div>
@@ -470,15 +470,15 @@ export const TeamSettings: React.FC = () => {
                     <div className="flex justify-end">
                         <button
                             onClick={handleExportCSV}
-                            className="text-xs font-bold uppercase text-slate-400 hover:text-white flex items-center gap-2 transition-colors border border-slate-700 hover:border-slate-500 rounded-lg px-3 py-2"
+                            className="text-xs font-bold uppercase text-text-muted hover:text-white flex items-center gap-2 transition-colors border border-border hover:border-slate-500 rounded-lg px-3 py-2"
                         >
                             <FileText className="w-3.5 h-3.5" />
                             Export Audit Log
                         </button>
                     </div>
-                    <div className="bg-slate-900/50 border border-slate-800 rounded-xl overflow-hidden">
+                    <div className="bg-surfaceHighlight border border-border rounded-xl overflow-hidden">
                         <table className="w-full text-left text-sm">
-                            <thead className="bg-slate-800/50 text-slate-400">
+                            <thead className="bg-surfaceHighlight text-text-muted">
                                 <tr>
                                     <th className="px-6 py-3 font-semibold">User</th>
                                     <th className="px-6 py-3 font-semibold">Action</th>
@@ -487,12 +487,12 @@ export const TeamSettings: React.FC = () => {
                             </thead>
                             <tbody className="divide-y divide-slate-800">
                                 {activityLogs.map((log) => (
-                                    <tr key={log.id} className="hover:bg-slate-800/20 transition-colors">
+                                    <tr key={log.id} className="hover:bg-surfaceHighlight/20 transition-colors">
                                         <td className="px-6 py-4">
                                             <span className="text-white font-medium">{log.user_email || 'System'}</span>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2 text-slate-300">
+                                            <div className="flex items-center gap-2 text-text-secondary">
                                                 <Activity className="w-3.5 h-3.5 text-primary" />
                                                 <span>{log.action.replace(/_/g, ' ')}</span>
                                             </div>

@@ -54,7 +54,7 @@ function SortableItem(props: { id: string, section: ReportSection, onRemove: (id
     };
 
     return (
-        <div ref={setNodeRef} style={style} className="bg-slate-900/50 border border-white/10 rounded-xl p-4 mb-3 flex items-center justify-between group hover:border-primary/50 transition-colors">
+        <div ref={setNodeRef} style={style} className="bg-surfaceHighlight border border-white/10 rounded-xl p-4 mb-3 flex items-center justify-between group hover:border-primary/50 transition-colors">
             <div className="flex items-center gap-4">
                 <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-2 hover:bg-white/5 rounded-lg text-slate-500 hover:text-white">
                     <GripVertical className="w-5 h-5" />
@@ -139,7 +139,7 @@ export const ReportBuilder: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#020617] p-4 lg:p-8 font-inter">
+        <div className="min-h-screen bg-surface p-4 lg:p-8 font-inter">
             {/* Mobile Warning */}
             <div className="lg:hidden mb-6 bg-amber-900/20 border border-amber-500/30 rounded-xl p-4 flex items-center gap-3">
                 <Monitor className="w-5 h-5 text-amber-400 shrink-0" />
@@ -148,7 +148,7 @@ export const ReportBuilder: React.FC = () => {
             {/* Header */}
             <div className="max-w-5xl mx-auto mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                    <button onClick={() => navigate(-1)} className="p-2 hover:bg-white/5 rounded-full text-slate-400 hover:text-white transition-colors">
+                    <button onClick={() => navigate(-1)} className="p-2 hover:bg-white/5 rounded-full text-text-muted hover:text-white transition-colors">
                         <ArrowLeft className="w-6 h-6" />
                     </button>
                     <div>
@@ -177,17 +177,17 @@ export const ReportBuilder: React.FC = () => {
             <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Available Modules */}
                 <div className="col-span-1 space-y-4">
-                    <h3 className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4">Available Modules</h3>
+                    <h3 className="text-text-muted text-xs font-bold uppercase tracking-widest mb-4">Available Modules</h3>
                     {AVAILABLE_SECTIONS.map((section) => (
                         <button
                             key={section.id}
                             onClick={() => addSection(section)}
-                            className="w-full flex items-center gap-3 bg-slate-900/30 border border-white/5 hover:border-white/20 p-4 rounded-xl text-left transition-all group"
+                            className="w-full flex items-center gap-3 bg-blue-50 border border-white/5 hover:border-white/20 p-4 rounded-xl text-left transition-all group"
                         >
-                            <div className="p-2 bg-white/5 rounded-lg text-slate-400 group-hover:text-white group-hover:bg-white/10 transition-colors">
+                            <div className="p-2 bg-white/5 rounded-lg text-text-muted group-hover:text-white group-hover:bg-white/10 transition-colors">
                                 <section.icon className="w-4 h-4" />
                             </div>
-                            <span className="text-slate-300 group-hover:text-white text-sm font-medium">{section.title}</span>
+                            <span className="text-text-secondary group-hover:text-white text-sm font-medium">{section.title}</span>
                             <Plus className="w-4 h-4 text-slate-500 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
                         </button>
                     ))}

@@ -134,7 +134,7 @@ export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, audi
             case AIPlatform.GEMINI: return 'text-blue-400 bg-blue-400/10 border-blue-400/20 shadow-[0_0_10px_rgba(96,165,250,0.1)]';
             case AIPlatform.CLAUDE: return 'text-amber-400 bg-amber-400/10 border-amber-400/20 shadow-[0_0_10px_rgba(251,191,36,0.1)]';
             case AIPlatform.PERPLEXITY: return 'text-purple-400 bg-purple-400/10 border-purple-400/20 shadow-[0_0_10px_rgba(192,132,252,0.1)]';
-            default: return 'text-slate-400';
+            default: return 'text-text-muted';
         }
     };
 
@@ -146,7 +146,7 @@ export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, audi
                 {/* SEO Health Score */}
                 <motion.div
                     whileHover={{ y: -5 }}
-                    className="bg-slate-900/40 backdrop-blur-xl rounded-3xl p-6 sm:p-8 border border-white/5 shadow-2xl relative overflow-hidden group"
+                    className="bg-blue-50 backdrop-blur-xl rounded-3xl p-6 sm:p-8 border border-white/5 shadow-2xl relative overflow-hidden group"
                 >
                     <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
                         <Activity className="w-32 h-32 text-primary" />
@@ -175,7 +175,7 @@ export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, audi
                 {/* Platform Comparison Chart */}
                 <motion.div
                     whileHover={{ y: -5 }}
-                    className="lg:col-span-2 bg-slate-900/40 backdrop-blur-xl rounded-3xl p-6 sm:p-8 border border-white/5 shadow-2xl relative overflow-hidden flex flex-col"
+                    className="lg:col-span-2 bg-blue-50 backdrop-blur-xl rounded-3xl p-6 sm:p-8 border border-white/5 shadow-2xl relative overflow-hidden flex flex-col"
                 >
                     <div className="flex items-center gap-3 mb-6">
                         <div className="bg-primary/20 p-2 rounded-lg">
@@ -196,7 +196,7 @@ export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, audi
                                 />
                                 <YAxis hide />
                                 <Tooltip
-                                    contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '12px' }}
+                                    contentStyle={{ backgroundColor: '#ffffff', borderColor: '#d6e4f0', borderRadius: '12px' }}
                                     itemStyle={{ color: '#e2e8f0', fontSize: '12px', fontWeight: 'bold' }}
                                     cursor={{ fill: 'rgba(255,255,255,0.05)' }}
                                 />
@@ -225,7 +225,7 @@ export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, audi
             {/* Technical Audit Columns */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Implemented */}
-                <div className="bg-slate-900/40 backdrop-blur-xl rounded-3xl p-6 sm:p-8 border border-white/5 shadow-2xl">
+                <div className="bg-blue-50 backdrop-blur-xl rounded-3xl p-6 sm:p-8 border border-white/5 shadow-2xl">
                     <div className="flex items-center gap-4 mb-8">
                         <div className="bg-emerald-500/10 p-2.5 rounded-xl">
                             <CheckCircle className="w-5 h-5 text-emerald-400" />
@@ -246,7 +246,7 @@ export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, audi
                                     className="flex items-start gap-4 p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 group hover:border-emerald-500/30 transition-all"
                                 >
                                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                                    <span className="text-sm text-slate-300 font-medium leading-relaxed">{item}</span>
+                                    <span className="text-sm text-text-secondary font-medium leading-relaxed">{item}</span>
                                 </motion.div>
                             ))
                         ) : (
@@ -256,7 +256,7 @@ export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, audi
                 </div>
 
                 {/* Missing */}
-                <div className="bg-slate-900/40 backdrop-blur-xl rounded-3xl p-8 border border-white/5 shadow-2xl">
+                <div className="bg-blue-50 backdrop-blur-xl rounded-3xl p-8 border border-white/5 shadow-2xl">
                     <div className="flex items-center gap-4 mb-8">
                         <div className="bg-rose-500/10 p-2.5 rounded-xl">
                             <XCircle className="w-5 h-5 text-rose-400" />
@@ -277,7 +277,7 @@ export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, audi
                                     className="flex items-start gap-4 p-5 rounded-2xl bg-rose-500/5 border border-rose-500/10 group hover:border-rose-500/30 transition-all"
                                 >
                                     <div className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0 shadow-[0_0_8px_rgba(244,63,94,0.5)]" />
-                                    <span className="text-sm text-slate-300 font-medium leading-relaxed">{item}</span>
+                                    <span className="text-sm text-text-secondary font-medium leading-relaxed">{item}</span>
                                 </motion.div>
                             ))
                         ) : (
@@ -313,7 +313,7 @@ export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, audi
                         <motion.div
                             key={idx}
                             whileHover={{ scale: 1.01 }}
-                            className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-3xl p-6 sm:p-8 hover:border-white/10 transition-all group shadow-2xl"
+                            className="bg-blue-50 backdrop-blur-xl border border-white/5 rounded-3xl p-6 sm:p-8 hover:border-white/10 transition-all group shadow-2xl"
                         >
                             <div className="flex justify-between items-start mb-6">
                                 <div className="flex items-center gap-3">
@@ -328,7 +328,7 @@ export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, audi
                                     <Target className="w-3.5 h-3.5 text-slate-600" />
                                 </div>
                             </div>
-                            <div className="bg-black/40 p-6 rounded-2xl font-mono text-xs text-slate-400 mb-8 border border-white/5 group-hover:border-primary/30 transition-colors leading-relaxed break-words overflow-hidden">
+                            <div className="bg-black/40 p-6 rounded-2xl font-mono text-xs text-text-muted mb-8 border border-white/5 group-hover:border-primary/30 transition-colors leading-relaxed break-words overflow-hidden">
                                 <span className="text-primary mr-3 opacity-50">$ cognition test --q</span>
                                 "{sq.query}"
                             </div>
@@ -367,11 +367,11 @@ export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, audi
                                         animate={{ height: 'auto', opacity: 1 }}
                                         className="mt-6 p-5 rounded-2xl bg-black/60 border border-white/5 text-[11px] text-slate-500 overflow-hidden"
                                     >
-                                        <div className="font-black text-slate-400 mb-3 flex justify-between items-center text-[9px] uppercase tracking-widest">
+                                        <div className="font-black text-text-muted mb-3 flex justify-between items-center text-[9px] uppercase tracking-widest">
                                             <span>Response Verified</span>
                                             {visibilityResults[idx].citationFound && <span className="text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-full border border-emerald-500/10">POSITIVE MATCH</span>}
                                         </div>
-                                        <div className="line-clamp-4 italic font-medium text-slate-300 bg-white/[0.02] p-3 rounded-xl border-l-2 border-primary/30 leading-relaxed mb-4">
+                                        <div className="line-clamp-4 italic font-medium text-text-secondary bg-white/[0.02] p-3 rounded-xl border-l-2 border-primary/30 leading-relaxed mb-4">
                                             "{visibilityResults[idx].answer}"
                                         </div>
                                         {visibilityResults[idx].rank && (

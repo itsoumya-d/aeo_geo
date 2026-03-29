@@ -74,11 +74,11 @@ export const SandboxTab: React.FC = () => {
             {/* Config & Inputs */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
                 <div className="lg:col-span-12">
-                    <div className="bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] border border-white/5 p-8 shadow-2xl space-y-8">
+                    <div className="bg-blue-50 backdrop-blur-xl rounded-[2.5rem] border border-white/5 p-8 shadow-2xl space-y-8">
                         <div className="space-y-4">
                             <div className="flex items-center gap-3">
                                 <Target className="w-5 h-5 text-primary" />
-                                <label className="text-xs font-black text-slate-300 uppercase tracking-widest">Optimization goal</label>
+                                <label className="text-xs font-black text-text-secondary uppercase tracking-widest">Optimization goal</label>
                             </div>
                             <input
                                 value={goal}
@@ -102,7 +102,7 @@ export const SandboxTab: React.FC = () => {
                             onChange={(e) => setVariantA(e.target.value)}
                             readOnly={!!results}
                             placeholder="Paste variant A here..."
-                            className="w-full h-80 bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-8 text-sm text-slate-300 font-medium outline-none focus:border-white/20 transition-all shadow-2xl resize-none leading-relaxed"
+                            className="w-full h-80 bg-blue-50 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-8 text-sm text-text-secondary font-medium outline-none focus:border-white/20 transition-all shadow-2xl resize-none leading-relaxed"
                         />
                     </div>
                     {results && <MetricCard result={results.a} />}
@@ -120,7 +120,7 @@ export const SandboxTab: React.FC = () => {
                             onChange={(e) => setVariantB(e.target.value)}
                             readOnly={!!results}
                             placeholder="Paste variant B here..."
-                            className="w-full h-80 bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-8 text-sm text-slate-300 font-medium outline-none focus:border-white/20 transition-all shadow-2xl resize-none leading-relaxed"
+                            className="w-full h-80 bg-blue-50 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-8 text-sm text-text-secondary font-medium outline-none focus:border-white/20 transition-all shadow-2xl resize-none leading-relaxed"
                         />
                     </div>
                     {results && <MetricCard result={results.b} />}
@@ -148,7 +148,7 @@ const MetricCard = ({ result }: { result: SandboxCandidateResult }) => (
     <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 space-y-8"
+        className="bg-surfaceHighlight backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 space-y-8"
     >
         <div className="flex items-end justify-between">
             <div>
@@ -182,7 +182,7 @@ const MetricCard = ({ result }: { result: SandboxCandidateResult }) => (
                 <Info className="w-3.5 h-3.5 text-slate-500" />
                 <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Why this scores</span>
             </div>
-            <p className="text-xs text-slate-400 font-medium leading-relaxed">{result.reasoning}</p>
+            <p className="text-xs text-text-muted font-medium leading-relaxed">{result.reasoning}</p>
         </div>
     </motion.div>
 );

@@ -59,7 +59,7 @@ export const PagesTab: React.FC<PagesTabProps> = ({ report }) => {
                 </div>
                 <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
                     <Info className="w-4 h-4 text-slate-500" />
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">{report.pages.length} Pages Analyzed</span>
+                    <span className="text-[10px] font-black text-text-muted uppercase tracking-widest leading-none">{report.pages.length} Pages Analyzed</span>
                 </div>
             </div>
 
@@ -95,7 +95,7 @@ export const PagesTab: React.FC<PagesTabProps> = ({ report }) => {
 
             <div className="space-y-8">
                 {filteredPages.length === 0 ? (
-                    <div className="text-center py-20 bg-slate-900/40 rounded-3xl border border-white/5">
+                    <div className="text-center py-20 bg-blue-50 rounded-3xl border border-white/5">
                         <Search className="w-12 h-12 text-slate-700 mx-auto mb-4" />
                         {report.pages.length === 0 ? (
                             <>

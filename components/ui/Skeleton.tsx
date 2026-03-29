@@ -28,7 +28,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
 
     return (
         <div
-            className={`skeleton bg-slate-800 ${roundedClass} ${className}`}
+            className={`skeleton bg-surfaceHighlight ${roundedClass} ${className}`}
             style={{
                 width: width ? (typeof width === 'number' ? `${width}px` : width) : undefined,
                 height: height ? (typeof height === 'number' ? `${height}px` : height) : undefined,
@@ -113,7 +113,7 @@ export const OverviewSkeleton: React.FC = () => {
 
 export const DashboardSkeleton: React.FC = () => {
     return (
-        <div className="min-h-screen pb-20 bg-background text-slate-200">
+        <div className="min-h-screen pb-20 bg-background text-text-secondary">
             {/* Header Skeleton */}
             <header className="sticky top-0 z-50 bg-background/90 backdrop-blur-xl border-b border-white/5">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -134,7 +134,7 @@ export const DashboardSkeleton: React.FC = () => {
  */
 export const PageBreakdownSkeleton: React.FC = () => {
     return (
-        <div className="bg-surface rounded-xl border border-slate-700 overflow-hidden">
+        <div className="bg-surface rounded-xl border border-border overflow-hidden">
             <div className="p-6 flex items-center justify-between">
                 <div className="flex items-center gap-5">
                     <Skeleton width={56} height={56} rounded="xl" />
@@ -209,7 +209,7 @@ export const HistorySkeleton: React.FC = () => (
             <Skeleton width={96} height={36} rounded="lg" />
         </div>
         {/* Trend chart placeholder */}
-        <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6">
+        <div className="bg-surfaceHighlight border border-border rounded-xl p-6">
             <Skeleton width={200} height={16} className="mb-4" />
             <Skeleton height={192} className="w-full rounded-xl" />
         </div>
@@ -217,7 +217,7 @@ export const HistorySkeleton: React.FC = () => (
         <Skeleton height={40} width={280} rounded="lg" />
         {/* Audit rows */}
         {[1, 2, 3, 4, 5].map(i => (
-            <div key={i} className="bg-slate-900/50 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
+            <div key={i} className="bg-surfaceHighlight border border-border rounded-xl p-4 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <Skeleton width={44} height={32} rounded="md" />
                     <div className="space-y-1.5">

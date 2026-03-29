@@ -211,7 +211,7 @@ export const BenchmarkTab: React.FC<BenchmarkTabProps> = ({ report }) => {
                     </button>
                     <button
                         onClick={loadCompetitors}
-                        className="px-6 py-4 rounded-2xl bg-white/[0.03] hover:bg-white/[0.06] text-slate-400 text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-3 border border-white/5"
+                        className="px-6 py-4 rounded-2xl bg-white/[0.03] hover:bg-white/[0.06] text-text-muted text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-3 border border-white/5"
                     >
                         <RefreshCw className="w-4 h-4" />
                         Refresh
@@ -291,7 +291,7 @@ export const BenchmarkTab: React.FC<BenchmarkTabProps> = ({ report }) => {
                             <button
                                 key={m}
                                 onClick={() => setMetric(m)}
-                                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${metric === m ? 'bg-slate-900 text-white border-slate-900' : 'border-transparent text-slate-600 hover:text-slate-900'}`}
+                                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${metric === m ? 'bg-surface text-white border-border' : 'border-transparent text-slate-600 hover:text-slate-900'}`}
                             >
                                 {m === 'Overall' ? 'Overall' : m}
                             </button>
@@ -371,7 +371,7 @@ export const BenchmarkTab: React.FC<BenchmarkTabProps> = ({ report }) => {
                             </button>
                             <button
                                 onClick={loadCompetitors}
-                                className="px-5 py-3 bg-white/[0.03] hover:bg-white/[0.06] text-slate-300 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors border border-white/5"
+                                className="px-5 py-3 bg-white/[0.03] hover:bg-white/[0.06] text-text-secondary rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors border border-white/5"
                             >
                                 Refresh
                             </button>
@@ -382,7 +382,7 @@ export const BenchmarkTab: React.FC<BenchmarkTabProps> = ({ report }) => {
                     <div className="bg-primary/5 border border-primary/10 p-8 rounded-3xl text-center">
                         <Users className="text-primary w-8 h-8 mb-4 mx-auto" />
                         <h4 className="text-slate-900 font-bold text-xl mb-2">No competitors tracked</h4>
-                            <p className="text-slate-400 text-sm leading-relaxed mb-4">
+                            <p className="text-text-muted text-sm leading-relaxed mb-4">
                                 Add a competitor domain to begin benchmarking.
                             </p>
                             <button
@@ -432,10 +432,10 @@ export const BenchmarkTab: React.FC<BenchmarkTabProps> = ({ report }) => {
                                     <td className="py-6 px-4">
                                         <div className="flex items-center gap-3">
                                             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: colorByDomain[comp.domain] || '#64748b' }} />
-                                            <span className="text-sm font-bold text-slate-400 truncate max-w-[240px]">{comp.name || comp.domain}</span>
+                                            <span className="text-sm font-bold text-text-muted truncate max-w-[240px]">{comp.name || comp.domain}</span>
                                         </div>
                                     </td>
-                                    <td className="py-6 px-4 text-center font-bold text-slate-300">{comp.latestScore}</td>
+                                    <td className="py-6 px-4 text-center font-bold text-text-secondary">{comp.latestScore}</td>
                                     <td className={`py-6 px-4 text-center font-bold text-xs ${comp.scoreChange > 0 ? 'text-emerald-400' : comp.scoreChange < 0 ? 'text-rose-400' : 'text-slate-500'}`}>
                                         {comp.scoreChange > 0 ? '+' : ''}{comp.scoreChange}
                                     </td>
@@ -473,11 +473,11 @@ export const BenchmarkTab: React.FC<BenchmarkTabProps> = ({ report }) => {
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-slate-900 border border-white/10 rounded-3xl p-8 shadow-2xl"
+                            className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-surface border border-white/10 rounded-3xl p-8 shadow-2xl"
                         >
                             <div className="flex items-center justify-between mb-5">
                                 <h3 className="text-xl font-bold text-white">Track Competitors</h3>
-                                <button onClick={() => { setShowAddModal(false); setDuplicateError(''); }} aria-label="Close" className="p-2 text-slate-400 hover:text-white">
+                                <button onClick={() => { setShowAddModal(false); setDuplicateError(''); }} aria-label="Close" className="p-2 text-text-muted hover:text-white">
                                     <X className="w-5 h-5" />
                                 </button>
                             </div>
@@ -488,7 +488,7 @@ export const BenchmarkTab: React.FC<BenchmarkTabProps> = ({ report }) => {
                                     <button
                                         key={mode}
                                         onClick={() => { setAddMode(mode); setDuplicateError(''); }}
-                                        className={`flex-1 text-xs font-bold py-2 rounded-lg transition-colors capitalize ${addMode === mode ? 'bg-primary text-white' : 'text-slate-400 hover:text-white'}`}
+                                        className={`flex-1 text-xs font-bold py-2 rounded-lg transition-colors capitalize ${addMode === mode ? 'bg-primary text-white' : 'text-text-muted hover:text-white'}`}
                                     >
                                         {mode === 'single' ? 'Single Domain' : 'Bulk Import'}
                                     </button>
@@ -498,7 +498,7 @@ export const BenchmarkTab: React.FC<BenchmarkTabProps> = ({ report }) => {
                             {addMode === 'single' ? (
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Domain *</label>
+                                        <label className="text-xs font-bold text-text-muted uppercase tracking-wider block mb-2">Domain *</label>
                                         <input
                                             type="text"
                                             value={newDomain}
@@ -514,7 +514,7 @@ export const BenchmarkTab: React.FC<BenchmarkTabProps> = ({ report }) => {
                                         )}
                                     </div>
                                     <div>
-                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Display Name (Optional)</label>
+                                        <label className="text-xs font-bold text-text-muted uppercase tracking-wider block mb-2">Display Name (Optional)</label>
                                         <input
                                             type="text"
                                             value={newName}
@@ -524,7 +524,7 @@ export const BenchmarkTab: React.FC<BenchmarkTabProps> = ({ report }) => {
                                         />
                                     </div>
                                     <div className="flex gap-3 mt-2">
-                                        <button onClick={() => { setShowAddModal(false); setDuplicateError(''); }} className="flex-1 py-3 px-6 bg-white/5 hover:bg-white/10 text-slate-300 rounded-xl font-bold text-sm transition-all">Cancel</button>
+                                        <button onClick={() => { setShowAddModal(false); setDuplicateError(''); }} className="flex-1 py-3 px-6 bg-white/5 hover:bg-white/10 text-text-secondary rounded-xl font-bold text-sm transition-all">Cancel</button>
                                         <button
                                             onClick={handleAddCompetitor}
                                             disabled={!newDomain.trim() || isAdding}
@@ -538,7 +538,7 @@ export const BenchmarkTab: React.FC<BenchmarkTabProps> = ({ report }) => {
                             ) : (
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Domains (one per line)</label>
+                                        <label className="text-xs font-bold text-text-muted uppercase tracking-wider block mb-2">Domains (one per line)</label>
                                         <textarea
                                             value={bulkDomains}
                                             onChange={(e) => setBulkDomains(e.target.value)}
@@ -549,7 +549,7 @@ export const BenchmarkTab: React.FC<BenchmarkTabProps> = ({ report }) => {
                                         <p className="text-xs text-slate-500 mt-1">{bulkDomains.split('\n').filter(l => l.trim()).length} domains</p>
                                     </div>
                                     <div className="flex gap-3">
-                                        <button onClick={() => setShowAddModal(false)} className="flex-1 py-3 px-6 bg-white/5 hover:bg-white/10 text-slate-300 rounded-xl font-bold text-sm transition-all">Cancel</button>
+                                        <button onClick={() => setShowAddModal(false)} className="flex-1 py-3 px-6 bg-white/5 hover:bg-white/10 text-text-secondary rounded-xl font-bold text-sm transition-all">Cancel</button>
                                         <button
                                             onClick={handleBulkImport}
                                             disabled={!bulkDomains.trim() || isAdding}

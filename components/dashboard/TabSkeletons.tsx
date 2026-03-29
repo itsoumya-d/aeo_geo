@@ -5,7 +5,7 @@ import { Skeleton } from '../ui/Skeleton';
  * Generic Card Skeleton for consistent loading states in dashboard cards
  */
 export const CardSkeleton: React.FC<{ className?: string }> = ({ className = '' }) => (
-    <div className={`bg-slate-900/40 backdrop-blur-xl rounded-3xl border border-white/5 p-8 ${className}`}>
+    <div className={`bg-blue-50 backdrop-blur-xl rounded-3xl border border-white/5 p-8 ${className}`}>
         <div className="flex items-center gap-3 mb-6">
             <Skeleton width={48} height={48} rounded="xl" />
             <div>
@@ -53,7 +53,7 @@ export const HistoryTabSkeleton: React.FC = () => (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
             <div className="lg:col-span-8 space-y-10">
                 {/* Chart */}
-                <div className="bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] border border-white/5 p-10">
+                <div className="bg-blue-50 backdrop-blur-xl rounded-[2.5rem] border border-white/5 p-10">
                     <div className="flex items-center justify-between mb-10">
                         <div className="flex items-center gap-3">
                             <Skeleton width={20} height={20} rounded="md" />
@@ -66,7 +66,7 @@ export const HistoryTabSkeleton: React.FC = () => (
                 {/* Snapshot Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {[1, 2, 3, 4].map(i => (
-                        <div key={i} className="bg-slate-900/40 p-8 rounded-[2rem] border border-white/5">
+                        <div key={i} className="bg-blue-50 p-8 rounded-[2rem] border border-white/5">
                             <div className="flex items-center gap-4 mb-6">
                                 <Skeleton width={44} height={44} rounded="2xl" />
                                 <div>
@@ -88,7 +88,7 @@ export const HistoryTabSkeleton: React.FC = () => (
 
             {/* Sidebar */}
             <div className="lg:col-span-4">
-                <div className="bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] border border-white/5 p-10 h-[500px] flex flex-col items-center justify-center">
+                <div className="bg-blue-50 backdrop-blur-xl rounded-[2.5rem] border border-white/5 p-10 h-[500px] flex flex-col items-center justify-center">
                     <Skeleton width={80} height={80} rounded="2xl" className="mb-8" />
                     <Skeleton width={150} height={20} className="mb-2" />
                     <Skeleton width={180} height={14} />
@@ -126,7 +126,7 @@ export const BenchmarkTabSkeleton: React.FC = () => (
         </div>
 
         {/* Chart */}
-        <div className="bg-slate-900/40 backdrop-blur-xl rounded-3xl border border-white/5 p-10">
+        <div className="bg-blue-50 backdrop-blur-xl rounded-3xl border border-white/5 p-10">
             <Skeleton width={150} height={16} className="mb-8" />
             <Skeleton height={300} className="w-full" rounded="2xl" />
         </div>
@@ -148,7 +148,7 @@ export const IntegrationsTabSkeleton: React.FC = () => (
         </div>
 
         {/* API Key Card */}
-        <div className="bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] border border-white/5 p-10">
+        <div className="bg-blue-50 backdrop-blur-xl rounded-[2.5rem] border border-white/5 p-10">
             <Skeleton width={200} height={14} className="mb-6" />
             <div className="flex gap-4">
                 <Skeleton height={56} className="flex-1" rounded="2xl" />
@@ -160,7 +160,7 @@ export const IntegrationsTabSkeleton: React.FC = () => (
         {/* Integration Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5].map(i => (
-                <div key={i} className="bg-slate-900/40 p-8 rounded-[2rem] border border-white/5">
+                <div key={i} className="bg-blue-50 p-8 rounded-[2rem] border border-white/5">
                     <div className="flex items-center justify-between mb-8">
                         <Skeleton width={48} height={48} rounded="2xl" />
                         <Skeleton width={80} height={20} rounded="full" />
@@ -190,7 +190,7 @@ export const SettingsTabSkeleton: React.FC = () => (
 
         {/* Settings Sections */}
         {[1, 2, 3].map(section => (
-            <div key={section} className="bg-slate-900/40 backdrop-blur-xl rounded-3xl border border-white/5 p-10">
+            <div key={section} className="bg-blue-50 backdrop-blur-xl rounded-3xl border border-white/5 p-10">
                 <Skeleton width={180} height={20} className="mb-6" />
                 <div className="space-y-6">
                     {[1, 2, 3].map(i => (
@@ -268,7 +268,7 @@ export const SandboxTabSkeleton: React.FC = () => (
         {/* Input Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {[1, 2].map(i => (
-                <div key={i} className="bg-slate-900/40 backdrop-blur-xl rounded-3xl border border-white/5 p-8">
+                <div key={i} className="bg-blue-50 backdrop-blur-xl rounded-3xl border border-white/5 p-8">
                     <div className="flex items-center gap-3 mb-6">
                         <Skeleton width={32} height={32} rounded="lg" />
                         <Skeleton width={100} height={16} />
@@ -279,7 +279,7 @@ export const SandboxTabSkeleton: React.FC = () => (
         </div>
 
         {/* Goal Input */}
-        <div className="bg-slate-900/40 backdrop-blur-xl rounded-3xl border border-white/5 p-8">
+        <div className="bg-blue-50 backdrop-blur-xl rounded-3xl border border-white/5 p-8">
             <Skeleton width={120} height={14} className="mb-4" />
             <Skeleton height={50} className="w-full" rounded="xl" />
         </div>

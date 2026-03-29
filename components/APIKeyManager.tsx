@@ -158,10 +158,10 @@ export const APIKeyManager: React.FC = () => {
 
     if (!isPaidPlan) {
         return (
-            <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 text-center">
+            <div className="bg-surfaceHighlight border border-border rounded-xl p-6 text-center">
                 <Key className="w-12 h-12 text-slate-600 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-white mb-2">API Access</h3>
-                <p className="text-sm text-slate-400 mb-4">
+                <p className="text-sm text-text-muted mb-4">
                     API access is available on Pro and Agency plans.
                 </p>
                 <a
@@ -184,7 +184,7 @@ export const APIKeyManager: React.FC = () => {
                     </div>
                     <div>
                         <h3 className="text-lg font-semibold text-white">API Keys</h3>
-                        <p className="text-sm text-slate-400">{keys.length} key{keys.length !== 1 ? 's' : ''} active</p>
+                        <p className="text-sm text-text-muted">{keys.length} key{keys.length !== 1 ? 's' : ''} active</p>
                     </div>
                 </div>
                 {isOwnerOrAdmin && !showCreateForm && (
@@ -205,16 +205,16 @@ export const APIKeyManager: React.FC = () => {
                         <Check className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
                         <div className="flex-1">
                             <h4 className="font-medium text-emerald-400 mb-2">API Key Created!</h4>
-                            <p className="text-xs text-slate-400 mb-3">
+                            <p className="text-xs text-text-muted mb-3">
                                 Copy this key now. You won't be able to see it again.
                             </p>
                             <div className="flex items-center gap-2">
-                                <code className="flex-1 bg-slate-900 text-white px-3 py-2 rounded-lg font-mono text-sm break-all">
+                                <code className="flex-1 bg-surface text-white px-3 py-2 rounded-lg font-mono text-sm break-all">
                                     {newlyCreatedKey}
                                 </code>
                                 <button
                                     onClick={handleCopyKey}
-                                    className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-3 py-2 rounded-lg transition-colors"
+                                    className="flex items-center gap-2 bg-surfaceHighlight hover:bg-slate-700 text-white px-3 py-2 rounded-lg transition-colors"
                                 >
                                     {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                                 </button>
@@ -232,7 +232,7 @@ export const APIKeyManager: React.FC = () => {
 
             {/* Create Form */}
             {showCreateForm && (
-                <form onSubmit={handleCreateKey} className="bg-slate-900/50 border border-slate-800 rounded-xl p-4">
+                <form onSubmit={handleCreateKey} className="bg-surfaceHighlight border border-border rounded-xl p-4">
                     <h4 className="font-medium text-white mb-3">Create New API Key</h4>
                     <div className="flex gap-3">
                         <input
@@ -240,7 +240,7 @@ export const APIKeyManager: React.FC = () => {
                             value={newKeyName}
                             onChange={(e) => setNewKeyName(e.target.value)}
                             placeholder="Key name (e.g., Production)"
-                            className="flex-1 bg-slate-800 border border-slate-700 text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none placeholder:text-slate-500"
+                            className="flex-1 bg-surfaceHighlight border border-border text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none placeholder:text-slate-500"
                             required
                         />
                         <button
@@ -254,7 +254,7 @@ export const APIKeyManager: React.FC = () => {
                         <button
                             type="button"
                             onClick={() => setShowCreateForm(false)}
-                            className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2.5 rounded-lg font-medium transition-colors"
+                            className="bg-surfaceHighlight hover:bg-slate-700 text-white px-4 py-2.5 rounded-lg font-medium transition-colors"
                         >
                             Cancel
                         </button>
@@ -268,10 +268,10 @@ export const APIKeyManager: React.FC = () => {
                     <Loader2 className="w-8 h-8 text-primary animate-spin" />
                 </div>
             ) : keys.length === 0 ? (
-                <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-8 text-center">
+                <div className="bg-surfaceHighlight border border-border rounded-xl p-8 text-center">
                     <Key className="w-12 h-12 text-slate-600 mx-auto mb-4" />
                     <h4 className="font-medium text-white mb-2">No API Keys Yet</h4>
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-text-muted">
                         Create an API key to integrate Cognition with your tools.
                     </p>
                 </div>
@@ -280,12 +280,12 @@ export const APIKeyManager: React.FC = () => {
                     {keys.map(key => (
                         <div
                             key={key.id}
-                            className="bg-slate-900/50 border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition-colors"
+                            className="bg-surfaceHighlight border border-border rounded-xl p-5 hover:border-border transition-colors"
                         >
                             <div className="flex items-start justify-between mb-4">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
-                                        <Key className="w-5 h-5 text-slate-400" />
+                                    <div className="w-10 h-10 rounded-lg bg-surfaceHighlight flex items-center justify-center">
+                                        <Key className="w-5 h-5 text-text-muted" />
                                     </div>
                                     <div className="min-w-0 flex-1 text-left">
                                         <p className="font-medium text-white truncate">{key.name}</p>
@@ -302,14 +302,14 @@ export const APIKeyManager: React.FC = () => {
                                     <div className="flex items-center gap-1">
                                         <button
                                             onClick={() => handleRotateKey(key.id, key.name)}
-                                            className="text-slate-400 hover:text-primary transition-colors p-2"
+                                            className="text-text-muted hover:text-primary transition-colors p-2"
                                             title="Rotate key"
                                         >
                                             <RefreshCw className="w-4 h-4" />
                                         </button>
                                         <button
                                             onClick={() => handleRevokeKey(key.id, key.name)}
-                                            className="text-slate-400 hover:text-rose-400 transition-colors p-2"
+                                            className="text-text-muted hover:text-rose-400 transition-colors p-2"
                                             title="Revoke key"
                                         >
                                             <Trash2 className="w-4 h-4" />
@@ -320,15 +320,15 @@ export const APIKeyManager: React.FC = () => {
 
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between text-xs">
-                                    <div className="flex items-center gap-2 text-slate-400">
+                                    <div className="flex items-center gap-2 text-text-muted">
                                         <BarChart2 className="w-3.5 h-3.5" />
                                         <span>Daily Usage</span>
                                     </div>
-                                    <span className="text-slate-300 font-medium">
+                                    <span className="text-text-secondary font-medium">
                                         {key.usage_count.toLocaleString()} / {key.rate_limit.toLocaleString()} calls
                                     </span>
                                 </div>
-                                <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                                <div className="w-full bg-surfaceHighlight h-1.5 rounded-full overflow-hidden">
                                     <div
                                         className={`h-full rounded-full transition-all duration-500 ${(key.usage_count / key.rate_limit) > 0.9 ? 'bg-rose-500' :
                                             (key.usage_count / key.rate_limit) > 0.7 ? 'bg-amber-500' : 'bg-primary'
@@ -348,10 +348,10 @@ export const APIKeyManager: React.FC = () => {
             )}
 
             {/* Info Notice */}
-            <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-4 flex items-start gap-3">
+            <div className="bg-surfaceHighlight border border-border rounded-xl p-4 flex items-start gap-3">
                 <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0" />
-                <div className="text-sm text-slate-400">
-                    <p className="font-medium text-slate-300 mb-1">Keep your API keys secure</p>
+                <div className="text-sm text-text-muted">
+                    <p className="font-medium text-text-secondary mb-1">Keep your API keys secure</p>
                     <p>Never share or commit API keys to public repositories. Rotate keys periodically.</p>
                 </div>
             </div>
