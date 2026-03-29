@@ -29,6 +29,7 @@ const OptimizationTab = React.lazy(() => import('./dashboard/OptimizationTab').t
 const BenchmarkTab = React.lazy(() => import('./dashboard/BenchmarkTab').then(m => ({ default: m.BenchmarkTab })));
 const ReportTab = React.lazy(() => import('./dashboard/ReportTab').then(m => ({ default: m.ReportTab })));
 const SandboxTab = React.lazy(() => import('./dashboard/SandboxTab').then(m => ({ default: m.SandboxTab })));
+const RecommendationsTab = React.lazy(() => import('./dashboard/RecommendationsTab').then(m => ({ default: m.RecommendationsTab })));
 
 interface DashboardProps {
     report: Report | null;
@@ -305,13 +306,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                                             <OverviewSkeleton />
                                                 }>
                                                     {activeTab === 'overview' && report && <OverviewTab report={report} setActiveTab={handleSetActiveTab} />}
-                                                    {activeTab === 'pages' && report && <PagesTab report={report} />}
+                                                    {activeTab === 'pages' && report && <PagesTab report={report} onForceRefresh={onReset} />}
                                                     {activeTab === 'search' && report && <SearchTab report={report} />}
                                                     {activeTab === 'benchmark' && report && <BenchmarkTab report={report} />}
                                                     {activeTab === 'reports' && report && <ReportTab report={report} />}
                                                     {activeTab === 'sandbox' && <SandboxTab />}
                                                     {activeTab === 'consistency' && report && <ConsistencyTab report={report} />}
                                                     {activeTab === 'optimization' && <OptimizationTab />}
+                                                    {activeTab === 'recommendations' && report && <RecommendationsTab report={report} />}
 
                                                     {/* Handle Empty State for Tabs requiring report */}
                                                     {(!report && activeTab !== 'sandbox' && activeTab !== 'optimization') && (

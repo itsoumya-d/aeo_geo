@@ -247,7 +247,7 @@ export const SettingsPage: React.FC = () => {
         { id: 'domains', label: 'Domains', icon: <Globe className="w-4 h-4" /> },
         { id: 'security', label: 'Security', icon: <Shield className="w-4 h-4" /> },
         { id: 'billing', label: 'Billing', icon: <CreditCard className="w-4 h-4" /> },
-        { id: 'api', label: 'API Keys', icon: <Key className="w-4 h-4" /> },
+        { id: 'api', label: 'Developer', icon: <Key className="w-4 h-4" /> },
         { id: 'branding', label: 'Branding', icon: <Palette className="w-4 h-4" /> },
         { id: 'integrations', label: 'Integrations', icon: <Zap className="w-4 h-4" /> },
         { id: 'notifications', label: 'Notifications', icon: <Bell className="w-4 h-4" /> },
@@ -543,10 +543,10 @@ export const SettingsPage: React.FC = () => {
                                     </div>
                                 )}
 
-                                {/* API Tab */}
+                                {/* Developer / API Tab */}
                                 {activeTab === 'api' && (
                                     <div className="animate-in fade-in duration-300">
-                                        <h2 className="text-xl font-bold text-slate-900 mb-6 font-display">API Access</h2>
+                                        <h2 className="text-xl font-bold text-slate-900 mb-6 font-display">Developer API</h2>
                                         <APIKeyManager />
                                     </div>
                                 )}

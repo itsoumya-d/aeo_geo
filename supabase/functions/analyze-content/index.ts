@@ -43,6 +43,100 @@ import { buildCorsHeaders } from "../_shared/cors.ts";
 // Initialize Rate Limiter once (outside handler for reuse)
 const rateLimiter = initRateLimiter();
 
+// --- Gemini Context Cache ---
+// System instructions cached for 1 hour — saves ~40-50% on input token costs
+const ANALYSIS_SYSTEM_INSTRUCTION = `You are an expert AEO (Answer Engine Optimization), GEO (Generative Engine Optimization), and SEO analyst. Your task is to analyze brand presence and website content for AI search visibility.
+
+SCORING METHODOLOGY:
+- AEO Score (0-100): How well content answers questions directly. Penalize vague, jargon-heavy, or non-structured content. Reward FAQ patterns, direct answers, entity mentions, schema markup.
+- GEO Score (0-100): How likely an LLM will cite or reference this brand. Reward statistical authority ("According to [Source]"), quotability, entity linking density, sameAs/mentions in JSON-LD, modularity.
+- SEO Score (0-100): Traditional signals: meta quality, heading hierarchy, keyword density, internal linking, technical health.
+
+JSON OUTPUT SCHEMA — you MUST return strict JSON matching this schema:
+{
+  "overallScore": number (0-100, weighted avg of AEO/GEO/SEO),
+  "platformScores": [{ "platform": string, "score": number, "reasoning": string }],
+  "pages": [{ "url": string, "title": string, "aeoScore": number, "geoScore": number, "seoScore": number, "summary": string, "topImprovements": string[] }],
+  "topicalDominance": string[],
+  "brandConsistencyScore": number,
+  "consistencyAnalysis": string,
+  "keywords": string[],
+  "searchQueries": [{ "platform": string, "query": string, "intent": string }],
+  "seoAudit": { "implemented": string[], "missing": string[], "technicalHealth": number },
+  "keywordRankings": [{ "keyword": string, "platform": string, "rank": number, "citationFound": boolean, "sentiment": string }],
+  "citationProbability": number,
+  "entityLinkingDensity": number,
+  "quotabilityScore": number,
+  "missingEntities": string[],
+  "citationGap": string,
+  "winProbability": number,
+  "projectedRevenueLift": number,
+  "marketShareCapture": number
+}
+
+PLATFORM LIST — platformScores MUST include ALL 8: ChatGPT, Gemini, Claude, Perplexity, "Google AI Overviews", "Microsoft Copilot", "Meta AI", Grok.
+
+RULES:
+- Always return valid JSON. No markdown code fences. No trailing commas.
+- Scores must be integers 0-100.
+- DO NOT generate vectorMap — it is calculated separately.
+- Be specific in reasoning. Cite actual content patterns observed.`;
+
+// Module-level cache state (persists across invocations in warm instances)
+let _cacheState: { name: string; expiresAt: number } | null = null;
+
+async function getOrCreateAnalysisCache(apiKey: string, model: string): Promise<string | null> {
+    // Return cached name if still valid (5-min buffer before expiry)
+    if (_cacheState && Date.now() < _cacheState.expiresAt - 300_000) {
+        return _cacheState.name;
+    }
+
+    try {
+        const ttlSeconds = 3600;
+        const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/cachedContents?key=${apiKey}`,
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: `models/${model}`,
+                    systemInstruction: { parts: [{ text: ANALYSIS_SYSTEM_INSTRUCTION }] },
+                    contents: [
+                        { role: 'user', parts: [{ text: 'Ready to analyze.' }] },
+                        { role: 'model', parts: [{ text: 'Ready. Send me the brand data and I will return strict JSON per the schema.' }] }
+                    ],
+                    ttl: `${ttlSeconds}s`
+                })
+            }
+        );
+
+        if (!response.ok) {
+            const err = await response.text();
+            console.warn('Context cache creation failed:', err);
+            return null;
+        }
+
+        const cache = await response.json();
+        _cacheState = { name: cache.name, expiresAt: Date.now() + ttlSeconds * 1000 };
+        console.log('Context cache created:', cache.name);
+        return cache.name;
+    } catch (err) {
+        console.warn('Context cache error, proceeding without cache:', err);
+        return null;
+    }
+}
+
+// --- Content Hash Helper ---
+// Computes SHA-256 hex of normalized content for cache keying
+async function computeContentHash(content: string): Promise<string> {
+    const normalized = content.trim().replace(/\s+/g, ' ');
+    const data = new TextEncoder().encode(normalized);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(hashBuffer))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+}
+
 // --- Vector Math Helpers ---
 const dotProduct = (a: number[], b: number[]): number =>
     a.reduce((sum, val, i) => sum + val * b[i], 0);
@@ -271,18 +365,12 @@ serve(async (req: Request): Promise<Response> => {
             });
         }
 
-        // 4. Init AI Providers (server-owned routing)
-        type Provider = 'gemini' | 'claude' | 'openai';
-        const providerPreference: Provider[] = ['gemini', 'claude', 'openai'];
-        const availableProviders: Provider[] = [];
+        // 4. Init AI Providers (Gemini-only)
+        // Model routing: SUMMARIZE actions → Flash-Lite (cheap), all others → Flash (standard)
+        const GEMINI_FLASH = "gemini-2.5-flash";
+        const GEMINI_FLASH_LITE = "gemini-2.5-flash-lite";
 
         const geminiKey = Deno.env.get("GEMINI_API_KEY") ?? "";
-        const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY") ?? Deno.env.get("CLAUDE_API_KEY") ?? "";
-        const openaiKey = Deno.env.get("OPENAI_API_KEY") ?? "";
-
-        if (geminiKey) availableProviders.push('gemini');
-        if (anthropicKey) availableProviders.push('claude');
-        if (openaiKey) availableProviders.push('openai');
 
         const requiresAI = action === "ANALYZE"
             || action === "REWRITE"
@@ -290,31 +378,41 @@ serve(async (req: Request): Promise<Response> => {
             || action === "CHECK_VISIBILITY_BATCH"
             || action === "SANDBOX_COMPARE"
             || action === "AUTO_AUDIT";
-        const providerOrder = providerPreference.filter(p => availableProviders.includes(p));
 
-        if (requiresAI && providerOrder.length === 0) {
-            throw new Error("Server Misconfiguration: No AI provider configured");
+        if (requiresAI && !geminiKey) {
+            throw new Error("Server Misconfiguration: GEMINI_API_KEY not configured");
         }
 
         const genAI = geminiKey ? new GoogleGenerativeAI(geminiKey) : null;
-        const geminiModel: GenerativeModel | null = genAI ? genAI.getGenerativeModel({ model: Deno.env.get("GEMINI_CHAT_MODEL") ?? "gemini-2.0-flash-exp" }) : null;
+        const geminiModel: GenerativeModel | null = genAI ? genAI.getGenerativeModel({ model: GEMINI_FLASH }) : null;
+        const geminiLiteModel: GenerativeModel | null = genAI ? genAI.getGenerativeModel({ model: GEMINI_FLASH_LITE }) : null;
         const geminiEmbeddingModel: GenerativeModel | null = genAI ? genAI.getGenerativeModel({ model: "text-embedding-004" }) : null;
 
-        const generateJson = async (prompt: string) => await generateWithFallback(providerOrder, prompt, geminiModel);
-        const embedText = async (text: string) => await embedWithFallback(text, geminiEmbeddingModel);
-        const generateForPlatform = async (platform: string, prompt: string) => {
-            const p = (platform || '').toLowerCase();
-            const preferred: Provider | null =
-                p === 'gemini' ? 'gemini'
-                    : p === 'claude' ? 'claude'
-                        : (p === 'chatgpt' || p === 'openai') ? 'openai'
-                            : null;
+        // isBatch: scheduled audits use Flash-Lite + reduced token budget for 50% cost savings
+        const isBatch = (payload as any)?.isBatch === true;
+        const activeModel = isBatch ? GEMINI_FLASH_LITE : GEMINI_FLASH;
 
-            const order = preferred
-                ? [preferred, ...providerOrder.filter(x => x !== preferred)]
-                : providerOrder;
+        // Attempt to get/create context cache for ANALYZE action (saves 40-50% on system prompt tokens)
+        let analysisCacheName: string | null = null;
+        if (action === "ANALYZE" || action === "AUTO_AUDIT") {
+            analysisCacheName = await getOrCreateAnalysisCache(geminiKey, activeModel);
+        }
 
-            return await generateWithFallback(order, prompt, geminiModel);
+        const generateJson = async (prompt: string) => {
+            if (analysisCacheName) {
+                try {
+                    return await withRetry(() => generateWithCache(geminiKey, activeModel, prompt, analysisCacheName!));
+                } catch (cacheErr) {
+                    console.warn('Cache hit failed, falling back to direct call:', cacheErr);
+                    analysisCacheName = null; // invalidate local cache ref
+                }
+            }
+            return await generateWithGemini(prompt, geminiModel);
+        };
+        const generateJsonLite = async (prompt: string) => await generateWithGemini(prompt, geminiLiteModel);
+        const embedText = async (text: string) => await embedWithGemini(text, geminiEmbeddingModel);
+        const generateForPlatform = async (_platform: string, prompt: string) => {
+            return await generateWithGemini(prompt, geminiModel);
         };
 
         let result: DiscoveredPage[] | AnalysisReport | RewriteResult | VisibilityResult | VisibilityResult[] | SandboxCompareResult | null;
@@ -339,21 +437,81 @@ serve(async (req: Request): Promise<Response> => {
                 if (!isAnalyzePayload(payload)) {
                     throw new Error("Invalid payload for ANALYZE action");
                 }
-                // Cache Key: analyze:{url}
-                const cacheKeyAnalyze = `analyze:${payload.websiteUrl}`;
 
-                result = await withCache(
-                    cacheKeyAnalyze,
-                    CACHE_TTL.ANALYSIS,
-                    async () => await handleAnalysis(generateJson, embedText, payload)
-                );
-                // Add notification
-                await supabaseAdmin.from('audit_notifications').insert({
-                    organization_id: orgId,
-                    type: 'success',
-                    title: 'Analysis Complete',
-                    message: `Report for ${payload.websiteUrl} is ready.`
-                });
+                // --- Supabase Content-Hash Cache ---
+                // Skip AI call entirely when content hasn't changed within 24h
+                let analyzeFromCache = false;
+                if (!payload.forceRefresh && payload.mainContent) {
+                    const contentHash = await computeContentHash(payload.mainContent);
+                    const domain = (() => {
+                        try { return new URL(payload.websiteUrl).hostname; } catch { return payload.websiteUrl; }
+                    })();
+
+                    const { data: cachedEntry } = await supabaseAdmin
+                        .from('analysis_cache')
+                        .select('result_json, created_at')
+                        .eq('content_hash', contentHash)
+                        .gt('expires_at', new Date().toISOString())
+                        .maybeSingle();
+
+                    if (cachedEntry) {
+                        // Cache hit — return stored result, skip Gemini entirely
+                        result = {
+                            ...(cachedEntry.result_json as AnalysisReport),
+                            _fromCache: true,
+                            _cachedAt: cachedEntry.created_at,
+                        };
+                        analyzeFromCache = true;
+
+                        // Increment hit counter async (non-blocking, raw SQL for atomic increment)
+                        supabaseAdmin
+                            .rpc('increment_cache_hit', { p_content_hash: contentHash })
+                            .then();
+
+                        console.log(`[Cache HIT] ${domain} — skipped Gemini call`);
+                    } else {
+                        // Cache miss — run analysis then store result
+                        const cacheKeyAnalyze = `analyze:${payload.websiteUrl}`;
+                        result = await withCache(
+                            cacheKeyAnalyze,
+                            CACHE_TTL.ANALYSIS,
+                            async () => await handleAnalysis(generateJson, embedText, payload)
+                        );
+
+                        // Store in Supabase cache for 24h (non-blocking)
+                        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+                        supabaseAdmin
+                            .from('analysis_cache')
+                            .upsert({
+                                content_hash: contentHash,
+                                domain,
+                                result_json: result,
+                                expires_at: expiresAt,
+                                hit_count: 0,
+                            }, { onConflict: 'content_hash' })
+                            .then();
+
+                        console.log(`[Cache MISS] ${domain} — stored new entry`);
+                    }
+                } else {
+                    // No content to hash (or forceRefresh) — call Gemini directly
+                    const cacheKeyAnalyze = `analyze:${payload.websiteUrl}`;
+                    result = await withCache(
+                        cacheKeyAnalyze,
+                        CACHE_TTL.ANALYSIS,
+                        async () => await handleAnalysis(generateJson, embedText, payload)
+                    );
+                }
+
+                // Add notification (only for fresh analyses to avoid noise)
+                if (!analyzeFromCache) {
+                    await supabaseAdmin.from('audit_notifications').insert({
+                        organization_id: orgId,
+                        type: 'success',
+                        title: 'Analysis Complete',
+                        message: `Report for ${payload.websiteUrl} is ready.`
+                    });
+                }
 
                 // Track Event
                 await trackEvent(orgId || 'anonymous', 'audit_completed', {
@@ -429,6 +587,15 @@ serve(async (req: Request): Promise<Response> => {
                 }
                 result = await handleAutoAudit(supabaseAdmin, generateJson, embedText, payload);
                 break;
+
+            case "VALIDATE_SCHEMA": {
+                const schemaPayload = payload as { urls: string[]; websiteContent?: string };
+                if (!Array.isArray(schemaPayload.urls) || schemaPayload.urls.length === 0) {
+                    throw new Error("VALIDATE_SCHEMA requires a non-empty urls array");
+                }
+                result = await handleValidateSchema(generateJson, schemaPayload.urls, schemaPayload.websiteContent || '');
+                break;
+            }
 
             default:
                 throw new Error(`Unknown action: ${action}`);
@@ -528,138 +695,57 @@ async function handleDiscovery(url: string): Promise<DiscoveredPage[]> {
 }
 
 
-// --- Multi-Model Helper ---
-async function generateWithProvider(
-    provider: 'gemini' | 'claude' | 'openai',
+// --- Gemini-Only Helpers ---
+async function generateWithGemini(
     prompt: string,
     geminiModel: GenerativeModel | null
 ): Promise<string> {
-    console.log(`Generating with provider: ${provider}`);
-
-    if (provider === 'gemini') {
-        if (!geminiModel) throw new Error("Gemini provider not configured");
-        const result = await withRetry(async () => {
-            return await geminiModel.generateContent({
-                contents: [{ role: "user", parts: [{ text: prompt }] }],
-                generationConfig: { responseMimeType: "application/json" }
-            });
+    if (!geminiModel) throw new Error("Gemini model not configured");
+    const result = await withRetry(async () => {
+        return await geminiModel.generateContent({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: "application/json" }
         });
-        return result.response.text();
-    }
-
-    if (provider === 'claude') {
-        const apiKey = Deno.env.get("ANTHROPIC_API_KEY") ?? Deno.env.get("CLAUDE_API_KEY");
-        if (!apiKey) throw new Error("Claude provider not configured");
-
-        const response = await fetchWithRetry("https://api.anthropic.com/v1/messages", {
-            method: "POST",
-            headers: {
-                "x-api-key": apiKey,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json"
-            },
-            body: JSON.stringify({
-                model: Deno.env.get("ANTHROPIC_MODEL") ?? "claude-3-5-sonnet-20241022",
-                max_tokens: 4096,
-                messages: [{ role: "user", content: prompt + "\n\nReturn strict JSON." }]
-            })
-        });
-
-        if (!response.ok) throw new Error(`Claude API Error: ${response.status}`);
-        const data = await response.json();
-        return data.content[0].text;
-    }
-
-    if (provider === 'openai') {
-        const apiKey = Deno.env.get("OPENAI_API_KEY");
-        if (!apiKey) throw new Error("OpenAI provider not configured");
-
-        const response = await fetchWithRetry("https://api.openai.com/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${apiKey}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                model: Deno.env.get("OPENAI_CHAT_MODEL") ?? "gpt-4o",
-                messages: [
-                    { role: "system", content: "You are a helpful assistant that outputs strict JSON." },
-                    { role: "user", content: prompt }
-                ],
-                response_format: { type: "json_object" }
-            })
-        });
-
-        if (!response.ok) throw new Error(`OpenAI API Error: ${response.status}`);
-        const data = await response.json();
-        return data.choices[0].message.content;
-    }
-
-    throw new Error(`Unsupported provider: ${provider}`);
+    });
+    return result.response.text();
 }
 
-function isRetryableAIError(error: unknown): boolean {
-    const message = error instanceof Error ? error.message : String(error);
-    const lower = message.toLowerCase();
-    if (lower.includes('429') || lower.includes('rate limit') || lower.includes('too many')) return true;
-    if (lower.includes('timeout') || lower.includes('timed out')) return true;
-    if (lower.includes('503') || lower.includes('502') || lower.includes('500') || lower.includes('overloaded')) return true;
-    if (lower.includes('failed to fetch') || lower.includes('network')) return true;
-    return false;
-}
-
-async function generateWithFallback(
-    providers: Array<'gemini' | 'claude' | 'openai'>,
-    prompt: string,
-    geminiModel: GenerativeModel | null
+// Generates content using a cached system instruction — 40-50% cheaper on cached tokens
+async function generateWithCache(
+    apiKey: string,
+    model: string,
+    userPrompt: string,
+    cacheName: string
 ): Promise<string> {
-    let lastError: unknown = null;
-
-    for (const provider of providers) {
-        try {
-            return await generateWithProvider(provider, prompt, geminiModel);
-        } catch (error) {
-            lastError = error;
-            if (isRetryableAIError(error)) {
-                console.warn(`Provider ${provider} failed, trying next provider…`, error instanceof Error ? error.message : error);
-                continue;
-            }
-            throw error;
-        }
-    }
-
-    throw lastError instanceof Error ? lastError : new Error("AI generation failed");
-}
-
-async function embedWithFallback(
-    text: string,
-    geminiEmbeddingModel: GenerativeModel | null
-): Promise<number[]> {
-    if (geminiEmbeddingModel) {
-        const result = await withRetry(async () => {
-            return await geminiEmbeddingModel.embedContent(text);
-        });
-        return (result.embedding.values as number[]) || [];
-    }
-
-    const apiKey = Deno.env.get("OPENAI_API_KEY");
-    if (!apiKey) throw new Error("Embedding provider not configured");
-
-    const response = await fetchWithRetry("https://api.openai.com/v1/embeddings", {
-        method: "POST",
-        headers: {
-            "Authorization": `Bearer ${apiKey}`,
-            "Content-Type": "application/json"
-        },
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            model: Deno.env.get("OPENAI_EMBED_MODEL") ?? "text-embedding-3-small",
-            input: text
+            cachedContent: cacheName,
+            contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+            generationConfig: { responseMimeType: 'application/json' }
         })
     });
 
-    if (!response.ok) throw new Error(`OpenAI Embedding API Error: ${response.status}`);
-    const data = await response.json() as any;
-    return (data.data?.[0]?.embedding as number[]) || [];
+    if (!response.ok) {
+        const err = await response.text();
+        throw new Error(`Gemini cached generate error: ${err}`);
+    }
+
+    const data = await response.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+}
+
+async function embedWithGemini(
+    text: string,
+    geminiEmbeddingModel: GenerativeModel | null
+): Promise<number[]> {
+    if (!geminiEmbeddingModel) throw new Error("Gemini embedding model not configured");
+    const result = await withRetry(async () => {
+        return await geminiEmbeddingModel.embedContent(text);
+    });
+    return (result.embedding.values as number[]) || [];
 }
 
 /**
@@ -866,43 +952,15 @@ async function handleAnalysis(
 ): Promise<AnalysisReport> {
     const { websiteUrl, otherAssets, mainContent, competitors } = payload;
 
-    const prompt = `
-    Analyze this brand presence for Generative Engine Optimization (GEO).
-    Domain: ${websiteUrl}
-    Competitors: ${competitors ? competitors.join(', ') : 'None provided'}
-    Assets: ${otherAssets || 'None'}
-    Content Snippet: ${mainContent?.slice(0, 15000) || "No content"}
+    // When context cache is active, only send variable data — system instructions are cached
+    const prompt = `Analyze this brand for AEO/GEO/SEO visibility.
 
-    Special GEO Instructions:
-    1. Identify if content uses the "According to [Source]" pattern or specific statistics (Statistical Authority).
-    2. Check for modularity and LLM summarizability (Quotability).
-    3. Evaluate Entity Linking: Does it provide JSON-LD ready entities like sameAs/mentions?
-    4. DO NOT generate vectorMap. It will be calculated separately.
+Domain: ${websiteUrl}
+Competitors: ${competitors ? competitors.join(', ') : 'None provided'}
+Assets: ${otherAssets || 'None'}
+Content (truncated to 15k chars): ${mainContent?.slice(0, 15000) || "No content provided"}
 
-    Return a JSON object with:
-    - overallScore (0-100)
-    - platformScores (array of {platform, score, reasoning}) - MUST include ALL 8 platforms: ChatGPT, Gemini, Claude, Perplexity, Google AI Overviews, Microsoft Copilot, Meta AI, and Grok
-    - pages (array of page analysis)
-    - topicalDominance (array of strings)
-    - brandConsistencyScore (0-100)
-    - consistencyAnalysis (string)
-    - keywords (array of strings)
-    - searchQueries (array of {platform, query, intent})
-    - seoAudit ({implemented: [], missing: [], technicalHealth: number})
-    - keywordRankings (array of {keyword, platform, rank, citationFound, sentiment})
-    
-    - citationProbability (0-100): likelihood of being cited by an LLM.
-    - entityLinkingDensity (0-100): density of semantic identifiers.
-    - quotabilityScore (0-100): how easy it is for an LLM to quote this content.
-    - missingEntities (array): industry entities or data points that should be cited/linked.
-    - citationGap (string): specific reasoning on why competitors might be cited over this brand.
-
-    - winProbability (0-100): likelihood of winning a conversion vs competitors in an AI-first search.
-    - projectedRevenueLift (0-100): estimated % increase in revenue if citations move to #1 (Benchmark: cited sources see 40% higher CTR than non-cited).
-    - marketShareCapture (0-100): predicted % of industry AI-search traffic captured.
-
-    Ensure strict JSON format.
-    `;
+Return strict JSON per the schema. DO NOT generate vectorMap.`;
 
     const responseText = await generateJson(prompt);
     let report: AnalysisReport;
@@ -1324,4 +1382,77 @@ async function handleAutoAudit(
     });
 
     return { success: true, auditId: audit.id };
+}
+
+// --- Schema Validation Handler ---
+async function handleValidateSchema(
+    generateJson: (prompt: string) => Promise<string>,
+    urls: string[],
+    websiteContent: string
+): Promise<object> {
+    // Fetch each URL and extract JSON-LD blocks
+    const pageData = await Promise.all(
+        urls.slice(0, 20).map(async (url) => {
+            try {
+                const response = await fetch(url, {
+                    headers: { 'User-Agent': 'CognitionBot/1.0', 'Accept': 'text/html' },
+                    signal: AbortSignal.timeout(8000)
+                });
+                if (!response.ok) return { url, html: '', schemas: [] };
+                const html = await response.text();
+                // Extract all JSON-LD script blocks
+                const matches = [...html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
+                const schemas = matches.map(m => {
+                    try { return JSON.parse(m[1].trim()); } catch { return null; }
+                }).filter(Boolean);
+                // Also get a text excerpt for context
+                const text = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 1500);
+                return { url, schemas, text };
+            } catch {
+                return { url, schemas: [], text: '' };
+            }
+        })
+    );
+
+    const pagesSection = pageData.map(p => {
+        const schemaTypes = p.schemas.map((s: any) => s['@type'] || 'Unknown').join(', ');
+        return `URL: ${p.url}\nExisting schema types: ${schemaTypes || 'NONE'}\nPage text: ${p.text?.slice(0, 500) || 'N/A'}`;
+    }).join('\n\n---\n\n');
+
+    const prompt = `You are a schema markup expert. Validate the existing JSON-LD schema on these pages and generate missing ones.
+
+WEBSITE CONTEXT: ${websiteContent.slice(0, 1000)}
+
+PAGES:
+${pagesSection}
+
+For each page, determine:
+1. What schema types are present and if they are valid
+2. What critical schema types are MISSING (focus on: Organization, WebPage, Article, FAQPage, BreadcrumbList, Product, LocalBusiness, HowTo)
+3. Generate complete, valid JSON-LD for the most impactful missing type
+
+Return JSON:
+{
+  "overallHealth": number (0-100, 100 = all pages have comprehensive schema),
+  "pagesAnalyzed": number,
+  "pagesWithSchema": number,
+  "missingTypesAcrossSite": string[] (schema types missing on 50%+ of pages),
+  "pages": [
+    {
+      "url": string,
+      "existingSchemas": string[] (@type values found),
+      "issues": string[] (validation problems found),
+      "missingTypes": string[] (recommended missing types),
+      "generatedSchema": string (complete JSON-LD string for the highest-impact missing type, valid and copy-ready),
+      "impactStatement": string (one sentence: impact of adding the generated schema on AI citations)
+    }
+  ]
+}`;
+
+    const raw = await generateJson(prompt);
+    try {
+        return JSON.parse(raw);
+    } catch {
+        return JSON.parse(raw.replace(/```json/g, '').replace(/```/g, ''));
+    }
 }

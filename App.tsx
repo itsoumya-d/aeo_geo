@@ -35,6 +35,10 @@ const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage').then(m => (
 
 const APIDocs = React.lazy(() => import('./components/docs/APIDocs').then(m => ({ default: m.APIDocs })));
 const ReportBuilder = React.lazy(() => import('./components/reports/ReportBuilder').then(m => ({ default: m.ReportBuilder })));
+const AgenciesPage = React.lazy(() => import('./pages/SEOLandingPage').then(m => ({ default: m.AgenciesPage })));
+const B2BSaaSPage = React.lazy(() => import('./pages/SEOLandingPage').then(m => ({ default: m.B2BSaaSPage })));
+const AEOPage = React.lazy(() => import('./pages/SEOLandingPage').then(m => ({ default: m.AEOPage })));
+const GEOPage = React.lazy(() => import('./pages/SEOLandingPage').then(m => ({ default: m.GEOPage })));
 
 const PageLoading = () => (
     <div className="min-h-screen flex items-center justify-center bg-background">
@@ -101,6 +105,10 @@ const App: React.FC = () => {
                             <Route path="/refund" element={<RefundPage />} />
                             <Route path="/pricing" element={<PricingPage />} />
                             <Route path="/docs/api" element={<APIDocs />} />
+                            <Route path="/for/agencies" element={<AgenciesPage />} />
+                            <Route path="/for/b2b-saas" element={<B2BSaaSPage />} />
+                            <Route path="/aeo" element={<AEOPage />} />
+                            <Route path="/geo" element={<GEOPage />} />
 
                             <Route
                                 path="/login"

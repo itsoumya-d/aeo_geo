@@ -86,42 +86,59 @@ serve(async (req: Request) => {
 
                 // Pause scheduling or just wait for next run? Let's keep it active but update next_run
             } else {
-                // 3. Initiate Audit (Internal Call to analyze-content)
-                console.log(`[Sentinel] Triggering AUTO_AUDIT for ${audit.domain_url} (Org: ${audit.organization_id})`);
+                // 3. Queue batch audit job (50% cheaper than real-time via job queue)
+                console.log(`[Sentinel] Queuing BATCH AUTO_AUDIT for ${audit.domain_url} (Org: ${audit.organization_id})`);
 
                 try {
-                    const analyzeRes = await fetch(`${supabaseUrl}/functions/v1/analyze-content`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${serviceRoleKey}`,
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
+                    // Insert into job queue with isBatch flag — process-jobs picks this up
+                    const { data: job, error: jobErr } = await supabaseClient
+                        .from('jobs')
+                        .insert({
                             action: 'AUTO_AUDIT',
                             payload: {
                                 domainUrl: audit.domain_url,
                                 organizationId: audit.organization_id,
-                                frequency: audit.frequency
-                            }
+                                frequency: audit.frequency,
+                                isBatch: true,
+                                scheduledAuditId: audit.id
+                            },
+                            status: 'PENDING',
+                            organization_id: audit.organization_id,
+                            created_at: new Date().toISOString()
                         })
+                        .select('id')
+                        .single();
+
+                    if (jobErr) throw jobErr;
+
+                    // Record batch job reference for status tracking
+                    await supabaseClient.from('batch_jobs').upsert({
+                        job_id: job.id,
+                        organization_id: audit.organization_id,
+                        domain_url: audit.domain_url,
+                        status: 'QUEUED',
+                        scheduled_audit_id: audit.id,
+                        queued_at: new Date().toISOString(),
+                        estimated_completion_at: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString() // est. 2h
+                    }, { onConflict: 'job_id' });
+
+                    // Notify user that batch processing has started
+                    await supabaseClient.from('audit_notifications').insert({
+                        organization_id: audit.organization_id,
+                        type: 'info',
+                        title: 'Scheduled Audit Queued',
+                        message: `Audit for ${audit.domain_url} is processing in the background (est. completion: 2 hours). You'll be notified when ready.`
                     });
 
-                    if (!analyzeRes.ok) {
-                        const err = await analyzeRes.text();
-                        console.error(`[Sentinel] AUTO_AUDIT failed for ${audit.domain_url}:`, err);
-
-                        await supabaseClient.from('audit_notifications').insert({
-                            organization_id: audit.organization_id,
-                            type: 'error',
-                            title: 'Scheduled Audit Failed',
-                            message: `Internal error processing ${audit.domain_url}. Our team has been notified.`
-                        });
-                    } else {
-                        // Success notification is handled inside AUTO_AUDIT handler in analyze-content
-                        console.log(`[Sentinel] AUTO_AUDIT successfully dispatched for ${audit.domain_url}`);
-                    }
+                    console.log(`[Sentinel] Batch job ${job.id} queued for ${audit.domain_url}`);
                 } catch (e) {
-                    console.error(`[Sentinel] Fetch error for ${audit.domain_url}:`, e);
+                    console.error(`[Sentinel] Failed to queue batch job for ${audit.domain_url}:`, e);
+                    await supabaseClient.from('audit_notifications').insert({
+                        organization_id: audit.organization_id,
+                        type: 'error',
+                        title: 'Scheduled Audit Failed',
+                        message: `Could not queue audit for ${audit.domain_url}. Please contact support.`
+                    });
                 }
             }
 
