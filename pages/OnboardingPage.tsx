@@ -241,7 +241,7 @@ export const OnboardingPage: React.FC = () => {
                     <div className="w-14 h-14 mx-auto rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center">
                         <Rocket className="w-7 h-7 text-rose-400" />
                     </div>
-                    <h1 className="text-xl font-bold text-white">Account setup failed</h1>
+                    <h1 className="text-xl font-bold text-text-primary">Account setup failed</h1>
                     <p className="text-text-secondary text-sm leading-relaxed">
                         We couldn't set up your workspace. This sometimes happens due to a slow connection.
                         {bootstrapRetries >= 3 && (
@@ -262,7 +262,7 @@ export const OnboardingPage: React.FC = () => {
                         </button>
                         <button
                             onClick={() => window.location.reload()}
-                            className="inline-flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-text-secondary hover:text-white px-6 py-3 rounded-xl font-semibold text-sm transition-colors"
+                            className="inline-flex items-center justify-center gap-2 bg-surface hover:bg-surfaceHighlight border border-border text-text-secondary hover:text-text-primary px-6 py-3 rounded-xl font-semibold text-sm transition-colors"
                         >
                             Refresh page
                         </button>
@@ -273,7 +273,7 @@ export const OnboardingPage: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-background text-text-primary flex items-center justify-center px-6 py-14 relative overflow-hidden">
+        <div className="min-h-screen bg-background text-text-primary flex items-center justify-center px-4 sm:px-6 py-10 sm:py-14 relative overflow-hidden">
             <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
                 <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-primary/20 rounded-full blur-[150px]" />
                 <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-purple-600/10 rounded-full blur-[150px]" />
@@ -289,7 +289,7 @@ export const OnboardingPage: React.FC = () => {
                         <Sparkles className="w-3 h-3" />
                         Onboarding
                     </motion.div>
-                    <h1 className="text-4xl font-display font-bold text-white tracking-tight">
+                    <h1 className="text-3xl sm:text-4xl font-display font-bold text-text-primary tracking-tight">
                             Welcome to GOATAEO
                     </h1>
                     <p className="text-text-secondary mt-4 max-w-xl mx-auto leading-relaxed">
@@ -297,16 +297,16 @@ export const OnboardingPage: React.FC = () => {
                     </p>
                 </div>
 
-                <Card variant="glass" className="border-white/10 shadow-2xl">
-                    <div className="flex items-center justify-between gap-3 mb-8">
-                        <div className="flex items-center gap-2">
+                <Card variant="glass" className="border-border shadow-2xl">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
+                        <div className="flex flex-wrap items-center gap-2">
                             {steps.map((s, idx) => (
                                 <React.Fragment key={s.id}>
-                                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold border transition-colors ${step === s.id ? 'bg-primary/20 border-primary/30 text-primary' : step > s.id ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-white/5 border-white/10 text-text-muted'}`}>
+                                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold border transition-colors ${step === s.id ? 'bg-primary/20 border-primary/30 text-primary' : step > s.id ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600' : 'bg-background border-border text-text-muted'}`}>
                                         {step > s.id ? <CheckCircle2 className="w-4 h-4" /> : s.id}
                                     </div>
                                     {idx < steps.length - 1 ? (
-                                        <div className={`w-10 h-0.5 ${step > s.id ? 'bg-emerald-500/40' : 'bg-white/10'}`} />
+                                        <div className={`w-8 sm:w-10 h-0.5 ${step > s.id ? 'bg-emerald-500/40' : 'bg-border'}`} />
                                     ) : null}
                                 </React.Fragment>
                             ))}
@@ -314,7 +314,7 @@ export const OnboardingPage: React.FC = () => {
                         <button
                             onClick={handleSkipForNow}
                             disabled={saving}
-                            className="text-xs text-text-muted hover:text-white transition-colors font-bold uppercase tracking-wider disabled:opacity-50"
+                            className="self-start sm:self-auto text-xs text-text-muted hover:text-text-primary transition-colors font-bold uppercase tracking-wider disabled:opacity-50"
                         >
                             Skip
                         </button>
@@ -335,7 +335,7 @@ export const OnboardingPage: React.FC = () => {
                                         <Rocket className="w-6 h-6 text-primary" />
                                     </div>
                                     <div className="min-w-0">
-                                        <h2 className="text-xl font-display font-bold text-white">Let's get you set up</h2>
+                                        <h2 className="text-xl font-display font-bold text-text-primary">Let's get you set up</h2>
                                         <p className="text-sm text-text-secondary">
                                             In under a minute, you'll be ready to run your first audit.
                                         </p>
@@ -345,7 +345,7 @@ export const OnboardingPage: React.FC = () => {
                                 {/* Persona Selector */}
                                 <div>
                                     <p className="text-xs font-bold uppercase tracking-[0.2em] text-text-muted mb-3">I'm a...</p>
-                                    <div className="grid grid-cols-3 gap-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                         {[
                                             { id: 'agency' as const, label: 'Agency', desc: 'Managing multiple clients', icon: '🏢' },
                                             { id: 'brand' as const, label: 'Brand', desc: 'Growing my company', icon: '🚀' },
@@ -354,10 +354,10 @@ export const OnboardingPage: React.FC = () => {
                                             <button
                                                 key={persona.id}
                                                 onClick={() => setSelectedPersona(persona.id)}
-                                                className={`bg-white/5 border rounded-xl p-4 text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/50 ${selectedPersona === persona.id ? 'border-primary/50 bg-primary/10 ring-1 ring-primary/30' : 'border-white/10 hover:bg-primary/10 hover:border-primary/20'}`}
+                                                className={`bg-background border rounded-xl p-4 text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/50 ${selectedPersona === persona.id ? 'border-primary/50 bg-primary/10 ring-1 ring-primary/30' : 'border-border hover:bg-primary/5 hover:border-primary/20'}`}
                                             >
                                                 <span className="text-2xl mb-2 block">{persona.icon}</span>
-                                                <p className="text-white font-bold text-sm">{persona.label}</p>
+                                                <p className="text-text-primary font-bold text-sm">{persona.label}</p>
                                                 <p className="text-text-muted text-xs mt-0.5">{persona.desc}</p>
                                             </button>
                                         ))}
@@ -371,8 +371,8 @@ export const OnboardingPage: React.FC = () => {
                                         { title: 'Schema & SEO checks', desc: 'Surface issues that reduce citation likelihood.' },
                                         { title: 'Historical tracking', desc: 'Track progress over time with audit history.' }
                                     ].map((item) => (
-                                        <div key={item.title} className="bg-white/5 border border-white/10 rounded-xl p-4">
-                                            <p className="text-white font-bold text-sm">{item.title}</p>
+                                        <div key={item.title} className="bg-background border border-border rounded-xl p-4">
+                                            <p className="text-text-primary font-bold text-sm">{item.title}</p>
                                             <p className="text-text-secondary text-sm mt-1 leading-relaxed">{item.desc}</p>
                                         </div>
                                     ))}
@@ -396,26 +396,26 @@ export const OnboardingPage: React.FC = () => {
                                 className="space-y-6"
                             >
                                 <div>
-                                    <h2 className="text-xl font-display font-bold text-white">A quick tour</h2>
+                                    <h2 className="text-xl font-display font-bold text-text-primary">A quick tour</h2>
                                     <p className="text-sm text-text-secondary mt-2">
                                         Here’s what you’ll see after your first audit.
                                     </p>
                                 </div>
 
-                                <div className="bg-background/60 border border-white/5 rounded-2xl p-5">
+                                <div className="bg-background/60 border border-border rounded-2xl p-5">
                                     <div className="flex items-center justify-between mb-4">
                                         <p className="text-xs font-bold uppercase tracking-[0.25em] text-text-muted">Preview</p>
                                         <span className="text-xs text-text-secondary font-semibold">Dashboard</span>
                                     </div>
-                                    <div className="grid grid-cols-3 gap-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                         {[
                                             { label: 'Overall', value: '78' },
                                             { label: 'Citations', value: '64' },
                                             { label: 'Technical', value: '82' }
                                         ].map((m) => (
-                                            <div key={m.label} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                                            <div key={m.label} className="bg-surface border border-border rounded-xl p-4">
                                                 <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted">{m.label}</p>
-                                                <p className="text-2xl font-display font-bold text-white mt-2">{m.value}</p>
+                                                <p className="text-2xl font-display font-bold text-text-primary mt-2">{m.value}</p>
                                             </div>
                                         ))}
                                     </div>
@@ -447,7 +447,7 @@ export const OnboardingPage: React.FC = () => {
                                 className="space-y-6"
                             >
                                 <div>
-                                    <h2 className="text-xl font-display font-bold text-white">Run your first audit</h2>
+                                    <h2 className="text-xl font-display font-bold text-text-primary">Run your first audit</h2>
                                     <p className="text-sm text-text-secondary mt-2">
                                         Enter the website you want to analyze.
                                     </p>
@@ -475,7 +475,7 @@ export const OnboardingPage: React.FC = () => {
                                                     setLocalError('');
                                                 }}
                                                 disabled={saving}
-                                                className="text-xs px-3 py-1.5 rounded-full border border-white/10 bg-white/5 hover:bg-primary/10 hover:border-primary/30 text-text-secondary hover:text-white transition-colors disabled:opacity-50"
+                                                className="text-xs px-3 py-1.5 rounded-full border border-border bg-surface hover:bg-primary/10 hover:border-primary/30 text-text-secondary hover:text-text-primary transition-colors disabled:opacity-50"
                                                 aria-label={`Use ${preset} as quick audit URL`}
                                             >
                                                 {preset.replace('https://www.', '').replace('https://', '')}

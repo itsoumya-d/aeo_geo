@@ -154,13 +154,13 @@ export const AuditHistory: React.FC = () => {
                         <History className="w-6 h-6 text-blue-400" />
                     </div>
                     <div>
-                        <h3 className="text-lg font-semibold text-white">Audit History</h3>
+                        <h3 className="text-lg font-semibold text-text-primary">Audit History</h3>
                         <p className="text-sm text-text-muted">{audits.length} total audits</p>
                     </div>
                 </div>
                 <button
                     onClick={loadAudits}
-                    className="flex items-center gap-2 bg-surfaceHighlight hover:bg-slate-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors"
+                    className="flex items-center gap-2 bg-surface hover:bg-surfaceHighlight text-text-primary border border-border px-4 py-2 rounded-lg font-medium text-sm transition-colors"
                 >
                     <RefreshCw className="w-4 h-4" />
                     Refresh
@@ -235,7 +235,7 @@ export const AuditHistory: React.FC = () => {
                                 className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
                                     dateRange === value
                                         ? 'bg-primary text-white'
-                                        : 'bg-surfaceHighlight text-text-muted hover:bg-slate-700 hover:text-white'
+                                        : 'bg-surface text-text-muted hover:bg-surfaceHighlight hover:text-text-primary'
                                 }`}
                             >
                                 {label}
@@ -252,7 +252,7 @@ export const AuditHistory: React.FC = () => {
                                 placeholder="Search by domain..."
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
-                                className="w-full bg-surfaceHighlight border border-border text-white rounded-lg pl-9 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none placeholder:text-slate-600"
+                                className="w-full bg-surface border border-border text-text-primary rounded-lg pl-9 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none placeholder:text-text-muted"
                             />
                         </div>
                         {domains.length > 1 && (
@@ -261,7 +261,7 @@ export const AuditHistory: React.FC = () => {
                                 <select
                                     value={selectedDomain}
                                     onChange={(e) => setSelectedDomain(e.target.value)}
-                                    className="bg-surfaceHighlight border border-border text-white rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
+                                    className="bg-surface border border-border text-text-primary rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
                                 >
                                     <option value="all">All Domains ({audits.length})</option>
                                     {domains.map(domain => (
@@ -282,7 +282,7 @@ export const AuditHistory: React.FC = () => {
                     <History className="w-12 h-12 text-slate-600 mx-auto mb-4" />
                     {audits.length === 0 ? (
                         <>
-                            <h4 className="font-semibold text-white mb-2 text-lg">No Audits Yet</h4>
+                            <h4 className="font-semibold text-text-primary mb-2 text-lg">No Audits Yet</h4>
                             <p className="text-sm text-text-muted mb-6 max-w-sm mx-auto">
                                 Run your first AI visibility audit to discover how AI search engines see your brand.
                             </p>
@@ -295,9 +295,9 @@ export const AuditHistory: React.FC = () => {
                         </>
                     ) : (
                         <>
-                            <h4 className="font-medium text-white mb-2">No Matches</h4>
+                            <h4 className="font-medium text-text-primary mb-2">No Matches</h4>
                             <p className="text-sm text-text-muted">Try a different search term or domain filter.</p>
-                            <button onClick={() => { setSearchQuery(''); setSelectedDomain('all'); setDateRange('all'); }} className="mt-3 text-xs text-primary hover:text-white transition-colors">
+                            <button onClick={() => { setSearchQuery(''); setSelectedDomain('all'); setDateRange('all'); }} className="mt-3 text-xs text-primary hover:text-text-primary transition-colors">
                                 Clear filters
                             </button>
                         </>
@@ -327,7 +327,7 @@ export const AuditHistory: React.FC = () => {
                                         />
                                         <div className="min-w-0 flex-1">
                                             <div className="flex items-center gap-2 flex-wrap">
-                                                <p className="font-medium text-white truncate max-w-[200px] sm:max-w-xs">
+                                                <p className="font-medium text-text-primary truncate max-w-[200px] sm:max-w-xs">
                                                     {hostname}
                                                 </p>
                                                 <span className={`text-xs px-2 py-0.5 rounded-full border ${getStatusBadge(audit.status)}`}>

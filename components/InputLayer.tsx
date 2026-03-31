@@ -177,11 +177,11 @@ export const InputLayer: React.FC<InputLayerProps> = ({ onStartAnalysis, isAnaly
 
   return (
     <div className={`w-full max-w-5xl mx-auto ${embedded ? 'p-0' : 'p-4 sm:p-6'}`}>
-      <Card variant="glass" className="relative overflow-hidden p-8 shadow-2xl">
+      <Card variant="glass" className="relative overflow-hidden p-5 sm:p-8 shadow-2xl">
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none" />
 
-        <div className="flex justify-between items-center mb-6 relative z-10">
-          <div className="flex gap-2">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6 relative z-10">
+          <div className="flex flex-wrap gap-2">
             <Button
               variant={mode === 'SINGLE' ? 'secondary' : 'ghost'}
               size="sm"
@@ -201,25 +201,25 @@ export const InputLayer: React.FC<InputLayerProps> = ({ onStartAnalysis, isAnaly
 
         <div className="flex flex-col gap-4 mb-8 relative z-10">
           <div className="grid gap-3 md:grid-cols-3">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div className="rounded-2xl border border-border bg-background/70 p-4">
               <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-text-muted">Primary Domain</p>
-              <p className="mt-2 text-lg font-display font-bold text-white">
+              <p className="mt-2 text-lg font-display font-bold text-text-primary">
                 {primaryWebsite ? 'Connected' : 'Required'}
               </p>
               <p className="mt-1 text-sm text-text-secondary">
                 {primaryWebsite ? primaryWebsite.url : 'Add your main website first so the crawler has a canonical brand source.'}
               </p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div className="rounded-2xl border border-border bg-background/70 p-4">
               <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-text-muted">Brand Surfaces</p>
-              <p className="mt-2 text-lg font-display font-bold text-white">{supportAssetCount}</p>
+              <p className="mt-2 text-lg font-display font-bold text-text-primary">{supportAssetCount}</p>
               <p className="mt-1 text-sm text-text-secondary">
                 Add docs, blog, help center, and social surfaces to improve entity coverage.
               </p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div className="rounded-2xl border border-border bg-background/70 p-4">
               <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-text-muted">Audit Readiness</p>
-              <p className="mt-2 text-lg font-display font-bold text-white">
+              <p className="mt-2 text-lg font-display font-bold text-text-primary">
                 {canStartAnalysis ? 'Ready to run' : 'Needs setup'}
               </p>
               <p className="mt-1 text-sm text-text-secondary">

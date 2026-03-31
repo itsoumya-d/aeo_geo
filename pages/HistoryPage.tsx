@@ -3,6 +3,7 @@ import { AuditHistory } from '../components/AuditHistory';
 import { ScheduledAudits } from '../components/ScheduledAudits';
 import { History, Clock } from 'lucide-react';
 import { Sidebar } from '../components/dashboard/Sidebar';
+import { MobileBottomNav } from '../components/dashboard/MobileBottomNav';
 import { TabType } from '../components/dashboard/DashboardTypes';
 import { useNavigate } from 'react-router-dom';
 
@@ -40,13 +41,13 @@ export const HistoryPage: React.FC = () => {
 
             <div className="flex-1 flex flex-col min-w-0 lg:ml-64 transition-all duration-300">
                 <header className="bg-surface/50 border-b border-border backdrop-blur-md sticky top-0 z-30">
-                    <div className="max-w-7xl mx-auto px-6 py-4">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                             <div>
-                                <h1 className="text-xl font-display font-bold text-white">Audit Management</h1>
+                                <h1 className="text-xl font-display font-bold text-text-primary">Audit Management</h1>
                                 <p className="text-sm text-text-secondary">View past audits, manage schedules, and bulk operations.</p>
                             </div>
-                            <div className="flex bg-background border border-border rounded-lg p-1">
+                            <div className="flex flex-wrap bg-background border border-border rounded-lg p-1">
                                 {tabs.map(tab => (
                                     <button
                                         key={tab.id}
@@ -55,7 +56,7 @@ export const HistoryPage: React.FC = () => {
                                             flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all
                                             ${activeTab === tab.id
                                                 ? 'bg-primary text-white shadow-sm'
-                                                : 'text-text-secondary hover:text-white hover:bg-white/5'
+                                                : 'text-text-secondary hover:text-text-primary hover:bg-surface'
                                             }
                                         `}
                                     >
@@ -68,7 +69,7 @@ export const HistoryPage: React.FC = () => {
                     </div>
                 </header>
 
-                <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-8">
+                <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 pb-28 lg:pb-8">
                     {activeTab === 'history' && (
                         <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                             <AuditHistory />
@@ -80,6 +81,10 @@ export const HistoryPage: React.FC = () => {
                         </div>
                     )}
                 </main>
+
+                <div className="lg:hidden">
+                    <MobileBottomNav activeTab="history" setActiveTab={handleDashboardTabChange} />
+                </div>
             </div>
         </div>
     );

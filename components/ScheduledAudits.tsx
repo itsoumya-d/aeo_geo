@@ -236,7 +236,7 @@ export const ScheduledAudits: React.FC = () => {
         return (
             <div className="bg-surfaceHighlight border border-border rounded-xl p-6 text-center">
                 <Clock className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-white mb-2">Scheduled Audits</h3>
+                <h3 className="text-lg font-semibold text-text-primary mb-2">Scheduled Audits</h3>
                 <p className="text-sm text-text-muted mb-4">
                     Automate recurring audits on Pro and Agency plans.
                 </p>
@@ -287,7 +287,7 @@ export const ScheduledAudits: React.FC = () => {
                         <Clock className="w-6 h-6 text-amber-400" />
                     </div>
                     <div>
-                        <h3 className="text-lg font-semibold text-white">Scheduled Audits</h3>
+                        <h3 className="text-lg font-semibold text-text-primary">Scheduled Audits</h3>
                         <p className="text-sm text-text-muted">{schedules.filter(s => s.enabled).length} active schedules</p>
                     </div>
                 </div>
@@ -304,8 +304,8 @@ export const ScheduledAudits: React.FC = () => {
 
             {/* Create Form */}
             {showCreateForm && (
-                <form onSubmit={handleCreateSchedule} className="bg-surfaceHighlight border border-border rounded-xl p-4">
-                    <h4 className="font-medium text-white mb-4">Create New Schedule</h4>
+                <form onSubmit={handleCreateSchedule} className="bg-surface border border-border rounded-xl p-4">
+                    <h4 className="font-medium text-text-primary mb-4">Create New Schedule</h4>
                     <div className="space-y-4">
                         <div>
                             <label className="block text-sm text-text-muted mb-2">Domain URL</label>
@@ -314,7 +314,7 @@ export const ScheduledAudits: React.FC = () => {
                                 value={newDomain}
                                 onChange={(e) => setNewDomain(e.target.value)}
                                 placeholder="example.com"
-                                className="w-full bg-surfaceHighlight border border-border text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none placeholder:text-slate-500"
+                                className="w-full bg-background border border-border text-text-primary rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none placeholder:text-text-muted"
                                 required
                             />
                         </div>
@@ -328,7 +328,7 @@ export const ScheduledAudits: React.FC = () => {
                                         onClick={() => setNewFrequency(freq)}
                                         className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${newFrequency === freq
                                             ? 'bg-primary text-white'
-                                            : 'bg-surfaceHighlight text-text-muted hover:bg-slate-700'
+                                            : 'bg-background text-text-muted hover:bg-surfaceHighlight'
                                             }`}
                                     >
                                         {freq}
@@ -343,7 +343,7 @@ export const ScheduledAudits: React.FC = () => {
                                     type="time"
                                     value={newTime}
                                     onChange={e => setNewTime(e.target.value)}
-                                    className="w-full bg-surfaceHighlight border border-border text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none"
+                                    className="w-full bg-background border border-border text-text-primary rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none"
                                 />
                             </div>
                             <div>
@@ -351,7 +351,7 @@ export const ScheduledAudits: React.FC = () => {
                                 <select
                                     value={newTimezone}
                                     onChange={e => setNewTimezone(e.target.value)}
-                                    className="w-full bg-surfaceHighlight border border-border text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none text-sm"
+                                    className="w-full bg-background border border-border text-text-primary rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none text-sm"
                                 >
                                     {[
                                         'America/New_York', 'America/Chicago', 'America/Denver',
@@ -377,7 +377,7 @@ export const ScheduledAudits: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={() => setShowCreateForm(false)}
-                                className="bg-surfaceHighlight hover:bg-slate-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                                className="bg-background hover:bg-surfaceHighlight text-text-primary border border-border px-4 py-2 rounded-lg font-medium transition-colors"
                             >
                                 Cancel
                             </button>
@@ -390,7 +390,7 @@ export const ScheduledAudits: React.FC = () => {
             {schedules.length === 0 ? (
                 <div className="bg-surfaceHighlight border border-border rounded-xl p-8 text-center">
                     <Clock className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                    <h4 className="font-medium text-white mb-2">No Schedules Yet</h4>
+                    <h4 className="font-medium text-text-primary mb-2">No Schedules Yet</h4>
                     <p className="text-sm text-text-muted mb-5">
                         Set up automated audits to track your AI visibility over time.
                     </p>
@@ -422,7 +422,7 @@ export const ScheduledAudits: React.FC = () => {
                                     </div>
                                     <div>
                                         <div className="flex items-center gap-2">
-                                            <p className="font-medium text-white">
+                                            <p className="font-medium text-text-primary">
                                                 {new URL(schedule.domain_url).hostname}
                                             </p>
                                             <FrequencyBadge frequency={schedule.frequency} />
@@ -480,7 +480,7 @@ export const ScheduledAudits: React.FC = () => {
                     <div className="flex items-center gap-3">
                         <Bell className="w-5 h-5 text-blue-400" />
                         <div>
-                            <p className="font-medium text-white text-sm">Notification Preferences</p>
+                            <p className="font-medium text-text-primary text-sm">Notification Preferences</p>
                             <p className="text-xs text-slate-500">Get notified when audits complete</p>
                         </div>
                     </div>
@@ -528,7 +528,7 @@ export const ScheduledAudits: React.FC = () => {
                             value={slackWebhookUrl}
                             onChange={e => setSlackWebhookUrl(e.target.value)}
                             placeholder="https://hooks.slack.com/services/..."
-                            className="w-full bg-surface border border-border text-white rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none placeholder:text-slate-600"
+                            className="w-full bg-background border border-border text-text-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none placeholder:text-text-muted"
                         />
                         <div className="flex gap-2">
                             <button

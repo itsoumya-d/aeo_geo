@@ -125,7 +125,7 @@ export const LoginPage: React.FC = () => {
                     <div className="flex items-center justify-between">
                         <button
                             type="button"
-                            className="text-xs text-text-muted hover:text-white transition-colors flex items-center gap-2"
+                            className="text-xs text-text-muted hover:text-text-primary transition-colors flex items-center gap-2"
                             onClick={() => setShowPassword(v => !v)}
                         >
                             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -163,4 +163,3 @@ export const LoginPage: React.FC = () => {
         </AuthShell>
     );
 };
-

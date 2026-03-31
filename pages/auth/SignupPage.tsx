@@ -199,10 +199,10 @@ export const SignupPage: React.FC = () => {
                         <GoogleAuthButton onClick={handleGoogle} disabled={submitting} />
                         <div className="relative">
                             <div className="absolute inset-0 flex items-center">
-                                <span className="w-full border-t border-white/10" />
+                                <span className="w-full border-t border-border" />
                             </div>
                             <div className="relative flex justify-center text-xs uppercase">
-                                <span className="bg-surface/40 px-2 text-text-muted backdrop-blur-md">Or</span>
+                                <span className="bg-surface px-2 text-text-muted backdrop-blur-md">Or</span>
                             </div>
                         </div>
                     </>
@@ -245,7 +245,7 @@ export const SignupPage: React.FC = () => {
                     <div className="flex items-center justify-between">
                         <button
                             type="button"
-                            className="text-xs text-text-muted hover:text-white transition-colors flex items-center gap-2"
+                            className="text-xs text-text-muted hover:text-text-primary transition-colors flex items-center gap-2"
                             onClick={() => setShowPassword(v => !v)}
                         >
                             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -253,7 +253,7 @@ export const SignupPage: React.FC = () => {
                         </button>
 
                         <div className="flex items-center gap-2">
-                            <div className="h-1.5 w-20 bg-white/10 rounded-full overflow-hidden">
+                            <div className="h-1.5 w-20 bg-border rounded-full overflow-hidden">
                                 <div
                                     className={`h-full rounded-full transition-all ${strength >= 3 ? 'bg-emerald-500' : strength === 2 ? 'bg-amber-500' : 'bg-rose-500'}`}
                                     style={{ width: `${Math.max(1, (strength / 4) * 100)}%` }}
@@ -317,4 +317,3 @@ export const SignupPage: React.FC = () => {
         </AuthShell>
     );
 };
-

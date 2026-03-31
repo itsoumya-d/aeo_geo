@@ -217,7 +217,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onRes
                                 {/* Tooltip for collapsed mode */}
                                 {collapsed && tooltip === tab.label && (
                                     <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50 pointer-events-none">
-                                        <div className="bg-surface border border-border rounded-md px-2.5 py-1.5 text-xs font-medium text-white whitespace-nowrap shadow-lg">
+                                        <div className="bg-surface border border-border rounded-md px-2.5 py-1.5 text-xs font-medium text-text-primary whitespace-nowrap shadow-lg">
                                             {tab.label}
                                             {tab.shortcut && (
                                                 <span className="ml-2 text-text-muted font-mono">⌘{tab.shortcut}</span>

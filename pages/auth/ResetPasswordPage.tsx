@@ -123,7 +123,7 @@ export const ResetPasswordPage: React.FC = () => {
                     <div className="flex items-start gap-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4">
                         <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
                         <div className="min-w-0">
-                            <p className="text-sm text-white font-semibold">Password updated</p>
+                            <p className="text-sm text-text-primary font-semibold">Password updated</p>
                             <p className="text-sm text-text-secondary mt-1">Redirecting to sign in…</p>
                         </div>
                     </div>
@@ -192,9 +192,9 @@ export const ResetPasswordPage: React.FC = () => {
                     <div className="flex items-start gap-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4">
                         <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
                         <div className="min-w-0">
-                            <p className="text-sm text-white font-semibold">Check your email</p>
+                            <p className="text-sm text-text-primary font-semibold">Check your email</p>
                             <p className="text-sm text-text-secondary mt-1">
-                                If an account exists for <span className="font-semibold text-white">{email.trim()}</span>, you’ll receive reset instructions shortly.
+                                If an account exists for <span className="font-semibold text-text-primary">{email.trim()}</span>, you’ll receive reset instructions shortly.
                             </p>
                         </div>
                     </div>
@@ -232,4 +232,3 @@ export const ResetPasswordPage: React.FC = () => {
         </AuthShell>
     );
 };
-

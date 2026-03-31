@@ -50,7 +50,7 @@ export const NotFoundPage: React.FC = () => {
                     <div className="text-8xl font-black text-white/[0.06] tracking-tighter font-display mb-0 leading-none select-none">
                         404
                     </div>
-                    <h1 className="text-2xl font-display font-bold text-white -mt-4 mb-3">
+                    <h1 className="text-2xl font-display font-bold text-text-primary -mt-4 mb-3">
                         Page not found
                     </h1>
                     <p className="text-text-secondary text-sm leading-relaxed mb-10 max-w-sm mx-auto">

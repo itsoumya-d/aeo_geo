@@ -17,7 +17,7 @@ export const AuthShell: React.FC<{
             </div>
 
             <div className="relative z-10 min-h-screen flex flex-col">
-                <header className="h-20 flex items-center justify-between px-6">
+                <header className="h-20 flex items-center justify-between px-4 sm:px-6">
                     <Link to="/" className="group">
                         <BrandLockup showTagline={false} />
                     </Link>
@@ -26,14 +26,14 @@ export const AuthShell: React.FC<{
                     </div>
                 </header>
 
-                <main className="flex-1 flex items-center justify-center px-6 pb-10">
+                <main className="flex-1 flex items-center justify-center px-4 sm:px-6 pb-10">
                     <div className="w-full max-w-md">
                         <div className="text-center mb-8">
                             <h1 className="text-3xl font-display font-bold text-text-primary mb-2">{title}</h1>
                             <p className="text-text-secondary leading-relaxed">{subtitle}</p>
                         </div>
 
-                        <Card variant="glass" className="p-8 border-border shadow-[0_28px_70px_rgba(74,123,173,0.14)]">
+                        <Card variant="glass" className="p-5 sm:p-8 border-border shadow-[0_28px_70px_rgba(74,123,173,0.14)]">
                             {children}
                         </Card>
 
@@ -44,4 +44,3 @@ export const AuthShell: React.FC<{
         </div>
     );
 };
-

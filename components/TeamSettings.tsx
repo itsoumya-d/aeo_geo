@@ -280,7 +280,7 @@ export const TeamSettings: React.FC = () => {
                         <Users className="w-6 h-6 text-primary" />
                     </div>
                     <div>
-                        <h3 className="text-lg font-semibold text-white">Team Members</h3>
+                        <h3 className="text-lg font-semibold text-text-primary">Team Members</h3>
                         <p className="text-sm text-text-muted">{members.length} member{members.length !== 1 ? 's' : ''}</p>
                     </div>
                 </div>
@@ -289,19 +289,19 @@ export const TeamSettings: React.FC = () => {
             <div className="flex border-b border-border">
                 <button
                     onClick={() => setActiveTab('members')}
-                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'members' ? 'border-primary text-primary' : 'border-transparent text-text-muted hover:text-white'}`}
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'members' ? 'border-primary text-primary' : 'border-transparent text-text-muted hover:text-text-primary'}`}
                 >
                     Members
                 </button>
                 <button
                     onClick={() => setActiveTab('activity')}
-                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'activity' ? 'border-primary text-primary' : 'border-transparent text-text-muted hover:text-white'}`}
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'activity' ? 'border-primary text-primary' : 'border-transparent text-text-muted hover:text-text-primary'}`}
                 >
                     Activity Log
                 </button>
                 <button
                     onClick={() => setActiveTab('security')}
-                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'security' ? 'border-primary text-primary' : 'border-transparent text-text-muted hover:text-white'}`}
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'security' ? 'border-primary text-primary' : 'border-transparent text-text-muted hover:text-text-primary'}`}
                 >
                     <Shield className="w-3.5 h-3.5" />
                     Security
@@ -317,7 +317,7 @@ export const TeamSettings: React.FC = () => {
                                     <Users className="w-6 h-6 text-purple-400" />
                                 </div>
                                 <div>
-                                    <h4 className="font-bold text-white text-lg">Unlock Team Management</h4>
+                                    <h4 className="font-bold text-text-primary text-lg">Unlock Team Management</h4>
                                     <p className="text-sm text-text-muted">Upgrade to the Agency plan to invite members and manage roles.</p>
                                 </div>
                             </div>
@@ -331,7 +331,7 @@ export const TeamSettings: React.FC = () => {
                     )}
 
                     {isOwnerOrAdmin && isTeamEnabled && (
-                        <form onSubmit={handleSendInvite} className="bg-surfaceHighlight rounded-xl p-4 border border-border">
+                        <form onSubmit={handleSendInvite} className="bg-surface rounded-xl p-4 border border-border">
                             <div className="flex flex-col sm:flex-row gap-3">
                                 <div className="flex-1">
                                     <input
@@ -339,7 +339,7 @@ export const TeamSettings: React.FC = () => {
                                         value={inviteEmail}
                                         onChange={(e) => setInviteEmail(e.target.value)}
                                         placeholder="colleague@company.com"
-                                        className="w-full bg-surfaceHighlight border border-border text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none placeholder:text-slate-500"
+                                        className="w-full bg-background border border-border text-text-primary rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none placeholder:text-text-muted"
                                         required
                                     />
                                 </div>
@@ -347,7 +347,7 @@ export const TeamSettings: React.FC = () => {
                                     <select
                                         value={inviteRole}
                                         onChange={(e) => setInviteRole(e.target.value as any)}
-                                        className="bg-surfaceHighlight border border-border text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none"
+                                        className="bg-background border border-border text-text-primary rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none"
                                         title={
                                             inviteRole === 'admin'
                                                 ? 'Admin: Can manage members, billing, and all settings'
@@ -385,7 +385,7 @@ export const TeamSettings: React.FC = () => {
                                         <div className="flex items-center gap-3">
                                             <Mail className="w-5 h-5 text-amber-400" />
                                             <div className="text-left">
-                                                <p className="text-sm text-white">{invite.email}</p>
+                                                <p className="text-sm text-text-primary">{invite.email}</p>
                                                 <p className="text-xs text-slate-500">
                                                     Expires {new Date(invite.expires_at).toLocaleDateString()}
                                                 </p>
@@ -416,12 +416,12 @@ export const TeamSettings: React.FC = () => {
                                     }`}
                             >
                                 <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-full bg-surfaceHighlight flex items-center justify-center text-white font-bold">
+                                    <div className="w-10 h-10 rounded-full bg-surfaceHighlight flex items-center justify-center text-text-primary font-bold">
                                         {(member.full_name || member.email).charAt(0).toUpperCase()}
                                     </div>
                                     <div className="text-left">
                                         <div className="flex items-center gap-2">
-                                            <p className="font-medium text-white">
+                                            <p className="font-medium text-text-primary">
                                                 {member.full_name || member.email}
                                                 {member.isCurrentUser && <span className="text-slate-500 text-sm ml-1">(You)</span>}
                                             </p>
@@ -436,7 +436,7 @@ export const TeamSettings: React.FC = () => {
                                         <select
                                             value={member.role}
                                             onChange={(e) => handleChangeRole(member.id, e.target.value as any)}
-                                            className="bg-surfaceHighlight border border-border text-white rounded-lg px-3 py-1.5 text-sm outline-none"
+                                            className="bg-background border border-border text-text-primary rounded-lg px-3 py-1.5 text-sm outline-none"
                                         >
                                             <option value="member">Member</option>
                                             <option value="admin">Admin</option>
@@ -470,7 +470,7 @@ export const TeamSettings: React.FC = () => {
                     <div className="flex justify-end">
                         <button
                             onClick={handleExportCSV}
-                            className="text-xs font-bold uppercase text-text-muted hover:text-white flex items-center gap-2 transition-colors border border-border hover:border-slate-500 rounded-lg px-3 py-2"
+                            className="text-xs font-bold uppercase text-text-muted hover:text-text-primary flex items-center gap-2 transition-colors border border-border hover:border-slate-500 rounded-lg px-3 py-2"
                         >
                             <FileText className="w-3.5 h-3.5" />
                             Export Audit Log
@@ -489,7 +489,7 @@ export const TeamSettings: React.FC = () => {
                                 {activityLogs.map((log) => (
                                     <tr key={log.id} className="hover:bg-surfaceHighlight/20 transition-colors">
                                         <td className="px-6 py-4">
-                                            <span className="text-white font-medium">{log.user_email || 'System'}</span>
+                                            <span className="text-text-primary font-medium">{log.user_email || 'System'}</span>
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-2 text-text-secondary">

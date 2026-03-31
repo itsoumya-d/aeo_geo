@@ -170,32 +170,77 @@ export const APIDocs: React.FC = () => {
         }
     };
 
+    const renderCodeSamples = (endpoint: Endpoint, className = '') => (
+        <div className={className}>
+            <div className="mb-4 flex flex-wrap items-center gap-3">
+                {endpoint.samples.map((sample, idx) => (
+                    <button
+                        key={idx}
+                        onClick={() => setActiveLang(prev => ({ ...prev, [endpoint.id]: sample.lang }))}
+                        className={`border-b-2 pb-1 text-[10px] font-bold uppercase tracking-wider transition-all ${
+                            getActiveLang(endpoint.id) === sample.lang
+                                ? 'border-indigo-500 text-text-primary'
+                                : 'border-transparent text-text-muted hover:border-indigo-500 hover:text-text-primary'
+                        }`}
+                    >
+                        {sample.lang === 'bash' ? 'cURL' : sample.lang === 'javascript' ? 'JavaScript' : sample.lang}
+                    </button>
+                ))}
+            </div>
+
+            <div className="space-y-4">
+                {endpoint.samples
+                    .filter(sample => sample.lang === getActiveLang(endpoint.id))
+                    .map((sample, idx) => (
+                        <div key={idx} className="group relative">
+                            <div className="absolute right-3 top-3 opacity-100 transition-opacity xl:opacity-0 xl:group-hover:opacity-100">
+                                <button
+                                    onClick={() => handleCopy(sample.code, `${endpoint.id}-${idx}`)}
+                                    className="rounded-lg border border-slate-700 bg-slate-900/90 p-2 transition-colors hover:bg-slate-800"
+                                    aria-label={`Copy ${sample.lang} sample`}
+                                >
+                                    {copied === `${endpoint.id}-${idx}` ? (
+                                        <Check className="h-4 w-4 text-emerald-400" />
+                                    ) : (
+                                        <Copy className="h-4 w-4 text-slate-300" />
+                                    )}
+                                </button>
+                            </div>
+                            <div className="custom-scrollbar touch-action-pan-x flex min-h-[120px] items-center overflow-x-auto rounded-xl border border-slate-800 bg-slate-950 p-5 font-mono text-[13px] leading-relaxed text-slate-100">
+                                <code className="block whitespace-pre">{sample.code}</code>
+                            </div>
+                        </div>
+                    ))}
+            </div>
+        </div>
+    );
+
     return (
-        <div className="flex min-h-screen bg-surface text-text-secondary font-inter">
+        <div className="flex min-h-screen flex-col lg:flex-row bg-surface text-text-secondary font-inter">
             {/* Left Sidebar: Navigation */}
-            <div className="w-72 border-r border-white/5 flex flex-col pt-8 bg-slate-950/50">
-                <div className="px-6 mb-8 flex items-center gap-2">
+            <div className="flex w-full flex-col border-b border-border bg-surface pt-6 lg:sticky lg:top-0 lg:h-screen lg:w-72 lg:self-start lg:border-b-0 lg:border-r lg:bg-slate-950/50 lg:pt-8">
+                <div className="mb-6 flex items-center gap-2 px-4 sm:px-6 lg:mb-8">
                     <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center">
                         <Cpu className="w-5 h-5 text-white" />
                     </div>
-                    <span className="text-white font-bold text-lg tracking-tight">Cognition API</span>
+                    <span className="text-text-primary lg:text-white font-bold text-lg tracking-tight">Cognition API</span>
                 </div>
 
-                <nav className="flex-1 overflow-y-auto px-4 space-y-1 custom-scrollbar">
+                <nav className="custom-scrollbar flex-1 overflow-y-auto px-3 pb-6 sm:px-4">
                     <div className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-2 px-2 mt-4">Getting Started</div>
-                    <button onClick={() => scrollToSection('section-introduction')} className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${activeSection === 'section-introduction' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'hover:bg-white/5 text-text-muted'}`}>
+                    <button onClick={() => scrollToSection('section-introduction')} className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-all ${activeSection === 'section-introduction' ? 'border border-indigo-500/20 bg-indigo-500/10 text-indigo-400' : 'text-text-muted hover:bg-slate-900/5 lg:hover:bg-white/5'}`}>
                         <BookOpen className="w-4 h-4" />
                         Introduction
                     </button>
-                    <button onClick={() => scrollToSection('section-authentication')} className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${activeSection === 'section-authentication' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'hover:bg-white/5 text-text-muted'}`}>
+                    <button onClick={() => scrollToSection('section-authentication')} className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-all ${activeSection === 'section-authentication' ? 'border border-indigo-500/20 bg-indigo-500/10 text-indigo-400' : 'text-text-muted hover:bg-slate-900/5 lg:hover:bg-white/5'}`}>
                         <Shield className="w-4 h-4" />
                         Authentication
                     </button>
-                    <button onClick={() => scrollToSection('section-errors')} className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${activeSection === 'section-errors' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'hover:bg-white/5 text-text-muted'}`}>
+                    <button onClick={() => scrollToSection('section-errors')} className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-all ${activeSection === 'section-errors' ? 'border border-indigo-500/20 bg-indigo-500/10 text-indigo-400' : 'text-text-muted hover:bg-slate-900/5 lg:hover:bg-white/5'}`}>
                         <Activity className="w-4 h-4" />
                         Errors
                     </button>
-                    <button onClick={() => scrollToSection('section-webhooks')} className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${activeSection === 'section-webhooks' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'hover:bg-white/5 text-text-muted'}`}>
+                    <button onClick={() => scrollToSection('section-webhooks')} className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-all ${activeSection === 'section-webhooks' ? 'border border-indigo-500/20 bg-indigo-500/10 text-indigo-400' : 'text-text-muted hover:bg-slate-900/5 lg:hover:bg-white/5'}`}>
                         <WebhookIcon className="w-4 h-4" />
                         Webhooks
                     </button>
@@ -205,7 +250,7 @@ export const APIDocs: React.FC = () => {
                         <button
                             key={ep.id}
                             onClick={() => { setActiveEndpointId(ep.id); setActiveSection(null); const el = document.getElementById(ep.id); if (el) el.scrollIntoView({ behavior: 'smooth' }); }}
-                            className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${activeEndpointId === ep.id ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'hover:bg-white/5 text-text-muted'
+                            className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-all ${activeEndpointId === ep.id ? 'border border-indigo-500/20 bg-indigo-500/10 text-indigo-400' : 'text-text-muted hover:bg-slate-900/5 lg:hover:bg-white/5'
                                 }`}
                         >
                             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${ep.method === 'GET' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-blue-500/10 text-blue-500'
@@ -217,8 +262,8 @@ export const APIDocs: React.FC = () => {
                     ))}
                 </nav>
 
-                <div className="p-4 border-t border-white/5">
-                    <a href="/dashboard" className="flex items-center justify-between text-xs text-slate-500 hover:text-white transition-colors group">
+                <div className="border-t border-border p-4">
+                    <a href="/dashboard" className="group flex items-center justify-between text-xs text-text-muted transition-colors hover:text-text-primary lg:hover:text-white">
                         Back to Dashboard
                         <ArrowUpRight className="w-3 h-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                     </a>
@@ -226,32 +271,34 @@ export const APIDocs: React.FC = () => {
             </div>
 
             {/* Main Content Area: Prose + Samples */}
-            <div className="flex-1 flex overflow-hidden">
+            <div className="flex flex-1 flex-col xl:flex-row xl:overflow-hidden">
                 {/* Center: Prose (Documentation) */}
-                <div className="flex-1 overflow-y-auto px-12 py-16 custom-scrollbar">
+                <div className="custom-scrollbar min-w-0 flex-1 overflow-y-auto px-4 py-10 sm:px-8 sm:py-14 xl:px-12 xl:py-16">
                     {/* Getting Started Sections */}
-                    <div id="section-introduction" className="mb-24">
-                        <h2 className="text-3xl font-bold text-white mb-4 tracking-tight">Introduction</h2>
+                    <div id="section-introduction" className="mb-20 scroll-mt-24 sm:mb-24">
+                        <h2 className="text-3xl font-bold text-text-primary mb-4 tracking-tight">Introduction</h2>
                         <p className="text-text-muted leading-relaxed mb-6 max-w-2xl text-lg">
                             The Cognition API lets you programmatically run AI visibility audits, track competitors, and retrieve analysis data. All endpoints return JSON and use standard HTTP response codes.
                         </p>
-                        <div className="bg-surface rounded-xl border border-white/5 p-4 font-mono text-sm">
-                            <code className="text-indigo-300">Base URL: <span className="text-emerald-400">{API_BASE_URL}</span></code>
+                        <div className="rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm text-slate-100">
+                            <code className="break-all">
+                                Base URL: <span className="text-emerald-400">{API_BASE_URL}</span>
+                            </code>
                         </div>
                     </div>
 
-                    <div id="section-authentication" className="mb-24">
-                        <h2 className="text-3xl font-bold text-white mb-4 tracking-tight">Authentication</h2>
+                    <div id="section-authentication" className="mb-20 scroll-mt-24 sm:mb-24">
+                        <h2 className="text-3xl font-bold text-text-primary mb-4 tracking-tight">Authentication</h2>
                         <p className="text-text-muted leading-relaxed mb-6 max-w-2xl text-lg">
                             All API requests require an API key passed via the <code className="text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded text-sm">x-api-key</code> header. You can generate and manage API keys from your dashboard Settings &gt; API Keys.
                         </p>
-                        <div className="bg-surface rounded-xl border border-white/5 p-4 font-mono text-sm">
-                            <code className="text-indigo-300 whitespace-pre">{`curl -X GET ${API_BASE_URL}/usage \\\n  -H "x-api-key: YOUR_API_KEY"`}</code>
+                        <div className="custom-scrollbar touch-action-pan-x overflow-x-auto rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm text-slate-100">
+                            <code className="whitespace-pre">{`curl -X GET ${API_BASE_URL}/usage \\\n  -H "x-api-key: YOUR_API_KEY"`}</code>
                         </div>
                     </div>
 
-                    <div id="section-errors" className="mb-24">
-                        <h2 className="text-3xl font-bold text-white mb-4 tracking-tight">Errors</h2>
+                    <div id="section-errors" className="mb-20 scroll-mt-24 sm:mb-24">
+                        <h2 className="text-3xl font-bold text-text-primary mb-4 tracking-tight">Errors</h2>
                         <p className="text-text-muted leading-relaxed mb-6 max-w-2xl text-lg">
                             The API uses standard HTTP status codes. Errors include a JSON body with an <code className="text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded text-sm">error</code> field describing the issue.
                         </p>
@@ -264,7 +311,7 @@ export const APIDocs: React.FC = () => {
                                 { code: '429', desc: 'Too Many Requests — Rate limit exceeded' },
                                 { code: '500', desc: 'Internal Server Error — Something went wrong on our end' },
                             ].map(e => (
-                                <div key={e.code} className="flex items-center gap-4 bg-surface rounded-xl border border-white/5 p-4">
+                                <div key={e.code} className="flex items-center gap-4 bg-surface rounded-xl border border-border p-4">
                                     <span className={`text-xs font-bold px-2 py-1 rounded ${parseInt(e.code) >= 500 ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20' : parseInt(e.code) >= 400 ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'}`}>
                                         {e.code}
                                     </span>
@@ -274,13 +321,13 @@ export const APIDocs: React.FC = () => {
                         </div>
                     </div>
 
-                    <div id="section-webhooks" className="mb-24">
-                        <h2 className="text-3xl font-bold text-white mb-4 tracking-tight">Webhooks</h2>
+                    <div id="section-webhooks" className="mb-20 scroll-mt-24 sm:mb-24">
+                        <h2 className="text-3xl font-bold text-text-primary mb-4 tracking-tight">Webhooks</h2>
                         <p className="text-text-muted leading-relaxed mb-6 max-w-2xl text-lg">
                             Configure webhooks from your dashboard to receive real-time notifications when audits complete, scores change, or scheduled tasks run. Webhooks send POST requests with a JSON payload signed using your webhook secret.
                         </p>
-                        <div className="bg-surface rounded-xl border border-white/5 p-4 font-mono text-sm overflow-x-auto">
-                            <pre className="text-blue-300">{JSON.stringify({
+                        <div className="custom-scrollbar touch-action-pan-x overflow-x-auto rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm text-slate-100">
+                            <pre>{JSON.stringify({
                                 event: "audit.completed",
                                 data: { audit_id: "aud_123", domain: "example.com", score: 85, completed_at: "2024-03-20T12:00:00Z" }
                             }, null, 2)}</pre>
@@ -290,7 +337,7 @@ export const APIDocs: React.FC = () => {
                     {ENDPOINTS.map(ep => (
                         <div
                             key={ep.id}
-                            className={`mb-24 transition-opacity duration-300 ${activeEndpointId === ep.id ? 'opacity-100' : 'opacity-30'}`}
+                            className="mb-20 scroll-mt-24 sm:mb-24"
                             id={ep.id}
                         >
                             <div className="flex items-center gap-3 mb-2">
@@ -300,7 +347,7 @@ export const APIDocs: React.FC = () => {
                                 </span>
                                 <code className="text-sm font-mono text-text-muted">{ep.path}</code>
                             </div>
-                            <h2 className="text-3xl font-bold text-white mb-4 tracking-tight">{ep.title}</h2>
+                            <h2 className="text-3xl font-bold text-text-primary mb-4 tracking-tight">{ep.title}</h2>
                             <p className="text-text-muted leading-relaxed mb-8 max-w-2xl text-lg">
                                 {ep.description}
                             </p>
@@ -308,10 +355,10 @@ export const APIDocs: React.FC = () => {
                             {ep.parameters && (
                                 <div className="mb-8">
                                     <h4 className="text-sm uppercase tracking-wider font-bold text-slate-500 mb-4">Request Parameters</h4>
-                                    <div className="space-y-4 border-t border-white/5 pt-4">
+                                    <div className="space-y-4 border-t border-border pt-4">
                                         {ep.parameters.map(p => (
-                                            <div key={p.name} className="flex gap-4">
-                                                <div className="w-32">
+                                            <div key={p.name} className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+                                                <div className="sm:w-32 sm:flex-shrink-0">
                                                     <code className="text-indigo-400 text-sm font-bold">{p.name}</code>
                                                     <div className="text-[10px] text-slate-500 font-mono mt-1">{p.type}</div>
                                                 </div>
@@ -322,7 +369,7 @@ export const APIDocs: React.FC = () => {
                                                         <input
                                                             type="text"
                                                             placeholder={`Value for ${p.name}`}
-                                                            className="w-full mt-2 bg-surface border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-indigo-500 outline-none"
+                                                            className="w-full mt-2 bg-background border border-border rounded px-3 py-2 text-sm text-text-primary focus:border-indigo-500 outline-none"
                                                             onChange={e => setParams(prev => ({ ...prev, [p.name]: e.target.value }))}
                                                         />
                                                     )}
@@ -334,8 +381,8 @@ export const APIDocs: React.FC = () => {
                             )}
 
                             {/* Try It Section */}
-                            <div className="mb-8 p-6 bg-surfaceHighlight rounded-xl border border-white/5">
-                                <div className="flex justify-between items-center mb-4">
+                            <div className="mb-8 p-6 bg-surfaceHighlight rounded-xl border border-border">
+                                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                     <h4 className="text-sm uppercase tracking-wider font-bold text-slate-500">Test Request</h4>
                                     <button
                                         onClick={() => {
@@ -362,7 +409,7 @@ export const APIDocs: React.FC = () => {
                                                 value={apiKey}
                                                 onChange={e => setApiKey(e.target.value)}
                                                 placeholder="Enter your x-api-key..."
-                                                className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:border-indigo-500 outline-none transition-colors"
+                                                className="w-full bg-background border border-border rounded-lg px-4 py-3 text-sm text-text-primary focus:border-indigo-500 outline-none transition-colors"
                                             />
                                         </div>
 
@@ -389,8 +436,8 @@ export const APIDocs: React.FC = () => {
                                                         <span className="text-xs font-bold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded">200 OK</span>
                                                     )}
                                                 </div>
-                                                <div className="bg-slate-950 rounded-lg border border-white/10 p-4 overflow-x-auto max-h-[300px] custom-scrollbar">
-                                                    <pre className="text-xs font-mono text-blue-300">
+                                                <div className="custom-scrollbar touch-action-pan-x max-h-[300px] overflow-x-auto rounded-lg border border-slate-800 bg-slate-950 p-4">
+                                                    <pre className="text-xs font-mono text-slate-100">
                                                         {JSON.stringify(testResponse, null, 2)}
                                                     </pre>
                                                 </div>
@@ -400,10 +447,15 @@ export const APIDocs: React.FC = () => {
                                 )}
                             </div>
 
+                            <div className="mb-8 xl:hidden">
+                                <h4 className="mb-4 text-sm font-bold uppercase tracking-wider text-slate-500">Code Samples</h4>
+                                {renderCodeSamples(ep)}
+                            </div>
+
                             <div>
                                 <h4 className="text-sm uppercase tracking-wider font-bold text-slate-500 mb-4">Response Sample</h4>
-                                <div className="bg-surface rounded-xl border border-white/5 p-4 overflow-x-auto font-mono text-sm group relative">
-                                    <pre className="text-blue-300">{JSON.stringify(ep.response, null, 2)}</pre>
+                                <div className="custom-scrollbar touch-action-pan-x overflow-x-auto rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm text-slate-100">
+                                    <pre>{JSON.stringify(ep.response, null, 2)}</pre>
                                 </div>
                             </div>
                         </div>
@@ -411,45 +463,13 @@ export const APIDocs: React.FC = () => {
                 </div>
 
                 {/* Right: Code Samples */}
-                <div className="w-[450px] bg-blue-50 border-l border-white/5 overflow-y-auto px-6 py-16 hidden lg:block custom-scrollbar">
+                <div className="custom-scrollbar hidden w-full overflow-y-auto border-t border-border bg-blue-50 px-4 py-12 sm:px-6 sm:py-16 xl:block xl:w-[26rem] xl:border-l xl:border-t-0 2xl:w-[30rem]">
                     {ENDPOINTS.map(ep => (
                         <div
                             key={`${ep.id}-sample`}
-                            className={`mb-24 transition-opacity duration-300 ${activeEndpointId === ep.id ? 'opacity-100' : 'opacity-10'}`}
+                            className={`mb-24 transition-opacity duration-300 ${activeEndpointId === ep.id ? 'opacity-100' : 'opacity-40'}`}
                         >
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="flex gap-4">
-                                    {ep.samples.map((s, idx) => (
-                                        <button
-                                            key={idx}
-                                            onClick={() => setActiveLang(prev => ({ ...prev, [ep.id]: s.lang }))}
-                                            className={`text-[10px] font-bold uppercase tracking-wider pb-1 border-b-2 transition-all ${getActiveLang(ep.id) === s.lang ? 'text-white border-indigo-500' : 'text-slate-500 hover:text-white border-transparent hover:border-indigo-500'}`}
-                                        >
-                                            {s.lang === 'bash' ? 'cURL' : s.lang === 'javascript' ? 'JavaScript' : s.lang}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="space-y-4">
-                                {ep.samples.filter(s => s.lang === getActiveLang(ep.id)).map((s, idx) => (
-                                    <div key={idx} className="group relative">
-                                        <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button
-                                                onClick={() => handleCopy(s.code, `${ep.id}-${idx}`)}
-                                                className="p-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors border border-white/10"
-                                            >
-                                                {copied === `${ep.id}-${idx}` ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-text-muted" />}
-                                            </button>
-                                        </div>
-                                        <div className="bg-slate-950 rounded-xl border border-white/10 p-5 font-mono text-[13px] leading-relaxed overflow-x-auto min-h-[120px] flex items-center">
-                                            <code className="text-indigo-300 block whitespace-pre">
-                                                {s.code}
-                                            </code>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                            {renderCodeSamples(ep)}
                         </div>
                     ))}
                 </div>

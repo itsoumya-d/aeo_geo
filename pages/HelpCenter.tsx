@@ -155,7 +155,7 @@ const ContactForm: React.FC = () => {
                 {ticketId && (
                     <div className="inline-flex items-center gap-1.5 bg-white border border-emerald-200 rounded-lg px-3 py-1.5 mb-3">
                         <Hash className="w-3.5 h-3.5 text-emerald-400" />
-                        <span className="text-emerald-300 text-sm font-mono font-semibold">{ticketId}</span>
+                        <span className="text-emerald-700 text-sm font-mono font-semibold">{ticketId}</span>
                     </div>
                 )}
                 <p className="text-slate-600 mb-4">
@@ -291,12 +291,12 @@ export const HelpCenter: React.FC = () => {
     return (
         <div className="min-h-screen bg-background">
             <header className="relative z-10 border-b border-white/10 bg-white/80 backdrop-blur-md">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-4">
                     <Link to="/" className="min-w-0">
                         <BrandLockup className="gap-2.5" stacked={false} />
                     </Link>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center justify-end gap-3">
                         <Link to="/login">
                             <Button variant="ghost" className="border border-slate-200 hover:bg-slate-50">
                                 Sign in
@@ -312,7 +312,7 @@ export const HelpCenter: React.FC = () => {
             </header>
 
             <div className="bg-gradient-to-b from-primary/10 to-transparent border-b border-slate-200/80">
-                <div className="max-w-4xl mx-auto px-6 py-16 text-center">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16 text-center">
                     <div className="w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
                         <HelpCircle className="w-8 h-8 text-primary" />
                     </div>
@@ -335,7 +335,7 @@ export const HelpCenter: React.FC = () => {
                 </div>
             </div>
 
-            <div className="max-w-4xl mx-auto px-6 py-12">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
                 {/* Category Pills */}
                 <div className="flex flex-wrap gap-2 mb-8">
                     <button

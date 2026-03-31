@@ -111,9 +111,9 @@ const HeroPreview: React.FC = () => {
     ];
 
     const pageSignals = [
-        { page: '/pricing', state: 'Strong commercial clarity', tone: 'text-emerald-300', bar: 'bg-emerald-400', width: '88%' },
-        { page: '/docs/get-started', state: 'Missing proof + evidence', tone: 'text-amber-300', bar: 'bg-amber-400', width: '58%' },
-        { page: '/compare', state: 'Low entity confidence', tone: 'text-rose-300', bar: 'bg-rose-400', width: '42%' },
+        { page: '/pricing', state: 'Strong commercial clarity', tone: 'text-emerald-700', bar: 'bg-emerald-500', width: '88%' },
+        { page: '/docs/get-started', state: 'Missing proof + evidence', tone: 'text-amber-700', bar: 'bg-amber-500', width: '58%' },
+        { page: '/compare', state: 'Low entity confidence', tone: 'text-rose-700', bar: 'bg-rose-500', width: '42%' },
     ];
 
     const nextMoves = [
@@ -269,7 +269,7 @@ const FAQItem: React.FC<{ question: string; answer: string }> = ({ question, ans
         <div className="border border-white/10 rounded-xl overflow-hidden">
             <button
                 onClick={() => setOpen(!open)}
-                className="w-full flex items-center justify-between p-5 text-left bg-white/5 hover:bg-white/10 transition-colors min-h-[60px] touch-manipulation"
+                className="w-full flex items-center justify-between p-5 text-left bg-background/70 hover:bg-surface transition-colors min-h-[60px] touch-manipulation"
                 aria-expanded={open}
             >
                 <span className="text-text-primary font-semibold text-sm pr-4">{question}</span>
@@ -547,11 +547,11 @@ export const LandingPage: React.FC = () => {
                     </Link>
 
                     <div className="hidden md:flex flex-1 items-center justify-center gap-6 lg:gap-8 px-8 text-sm font-semibold text-text-secondary">
-                        <a href="#how-it-works" className="hover:text-white transition-colors duration-300">How it works</a>
-                        <a href="#features" className="hover:text-white transition-colors duration-300">Features</a>
-                        <a href="#pricing" className="hover:text-white transition-colors duration-300">Pricing</a>
-                        <a href="#faq" className="hover:text-white transition-colors duration-300">FAQ</a>
-                        <Link to="/help" className="hover:text-white transition-colors duration-300">Help</Link>
+                        <a href="#how-it-works" className="hover:text-text-primary transition-colors duration-300">How it works</a>
+                        <a href="#features" className="hover:text-text-primary transition-colors duration-300">Features</a>
+                        <a href="#pricing" className="hover:text-text-primary transition-colors duration-300">Pricing</a>
+                        <a href="#faq" className="hover:text-text-primary transition-colors duration-300">FAQ</a>
+                        <Link to="/help" className="hover:text-text-primary transition-colors duration-300">Help</Link>
                     </div>
 
                     <div className="hidden md:flex items-center gap-3 ml-auto">
@@ -566,7 +566,7 @@ export const LandingPage: React.FC = () => {
                     </div>
 
                     <button
-                        className="ml-auto md:hidden p-2.5 rounded-xl text-text-secondary hover:text-white hover:bg-white/10 transition-colors touch-manipulation"
+                        className="ml-auto md:hidden p-2.5 rounded-xl text-text-secondary hover:text-text-primary hover:bg-surface transition-colors touch-manipulation"
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                         aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
                         aria-expanded={mobileMenuOpen}
@@ -595,7 +595,7 @@ export const LandingPage: React.FC = () => {
                             <a
                                 key={item.href}
                                 href={item.href}
-                                className="flex items-center gap-2 py-3 text-base font-semibold text-text-secondary hover:text-white transition-colors touch-manipulation"
+                                className="flex items-center gap-2 py-3 text-base font-semibold text-text-secondary hover:text-text-primary transition-colors touch-manipulation"
                                 onClick={() => setMobileMenuOpen(false)}
                             >
                                 <ChevronDown className="w-4 h-4 -rotate-90" />
@@ -632,18 +632,18 @@ export const LandingPage: React.FC = () => {
                                     initial={{ scale: 0.985, opacity: 0, y: 10 }}
                                     animate={{ scale: 1, opacity: 1, y: 0 }}
                                     transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                                    className="inline-flex items-center gap-2 rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.24em] text-sky-200"
+                                    className="inline-flex items-center gap-2 rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.24em] text-sky-700"
                                 >
                                     <span className="w-1.5 h-1.5 rounded-full bg-sky-300" />
                                     AI visibility for operator teams
                                 </motion.div>
 
-                                <h1 className="mt-6 max-w-[12.5ch] sm:max-w-4xl text-[3.15rem] sm:text-5xl lg:text-[3.65rem] xl:text-[4.2rem] font-display font-bold leading-[0.96] sm:leading-[1.02] tracking-[-0.05em] sm:tracking-[-0.04em] text-white drop-shadow-[0_12px_36px_rgba(8,18,33,0.26)]">
+                                <h1 className="mt-6 max-w-[12.5ch] sm:max-w-4xl text-[3.15rem] sm:text-5xl lg:text-[3.65rem] xl:text-[4.2rem] font-display font-bold leading-[0.96] sm:leading-[1.02] tracking-[-0.05em] sm:tracking-[-0.04em] text-text-primary">
                                     Know what AI says about your brand
-                                    <span className="block text-white/80">before your market does.</span>
+                                    <span className="block text-text-secondary">before your market does.</span>
                                 </h1>
 
-                                <p className="mt-5 max-w-xl text-[1.02rem] sm:text-lg leading-7 sm:leading-relaxed text-white/80 sm:text-text-secondary">
+                                <p className="mt-5 max-w-xl text-[1.02rem] sm:text-lg leading-7 sm:leading-relaxed text-text-secondary">
                                     Audit the pages, citations, and brand signals shaping how ChatGPT, Gemini, Claude, and Perplexity describe you. Then fix the specific gaps that actually matter.
                                 </p>
                             </SlideUp>
@@ -652,7 +652,7 @@ export const LandingPage: React.FC = () => {
                                 {HERO_SIGNAL_CHIPS.map((chip) => (
                                     <motion.span
                                         key={chip}
-                                        className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-semibold text-text-secondary"
+                                        className="rounded-full border border-border bg-surface/80 px-3 py-1.5 text-xs font-semibold text-text-secondary"
                                         whileHover={shouldReduceMotion ? undefined : { y: -2, borderColor: 'rgba(255,255,255,0.18)', backgroundColor: 'rgba(255,255,255,0.05)' }}
                                         transition={{ duration: 0.2 }}
                                     >
@@ -661,8 +661,8 @@ export const LandingPage: React.FC = () => {
                                 ))}
                             </FadeIn>
 
-                            <FadeIn delay={0.18} className="mt-8 rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-4 sm:p-5 backdrop-blur-[10px]">
-                                <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-white/70 sm:text-text-muted">
+                            <FadeIn delay={0.18} className="mt-8 rounded-[1.75rem] border border-border bg-surface/85 p-4 sm:p-5 backdrop-blur-[10px]">
+                                <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-text-muted">
                                     Start with one URL. Create an account before the audit runs.
                                 </p>
                                 <div className="mt-4">
@@ -677,7 +677,7 @@ export const LandingPage: React.FC = () => {
                                     <Button
                                         variant="ghost"
                                         size="lg"
-                                        className="w-full sm:w-auto group border border-white/10 hover:bg-white/5"
+                                        className="w-full sm:w-auto group border border-border hover:bg-surfaceHighlight"
                                         onClick={() => setShowVideo(true)}
                                     >
                                         <Play className="w-4 h-4 mr-2 fill-current group-hover:text-primary transition-colors" />
@@ -769,7 +769,7 @@ export const LandingPage: React.FC = () => {
                                     'Turn abstract model behavior into page-level work your team can actually ship.',
                                 ].map((point) => (
                                     <div key={point} className="flex items-start gap-3">
-                                        <ShieldCheck className="w-5 h-5 text-emerald-300 mt-0.5 flex-shrink-0" />
+                                        <ShieldCheck className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" />
                                         <p className="text-sm leading-relaxed text-text-secondary">{point}</p>
                                     </div>
                                 ))}
@@ -1105,7 +1105,7 @@ export const LandingPage: React.FC = () => {
                     <FadeIn delay={0.2} className="mt-10 text-center">
                         <p className="text-xs text-text-muted">
                             Need a custom plan?{' '}
-                            <a href="mailto:support@cognition-ai.com" className="text-primary hover:text-white transition-colors font-semibold">
+                            <a href="mailto:support@cognition-ai.com" className="text-primary hover:text-text-primary transition-colors font-semibold">
                                 Contact us
                             </a>
                             {' '}— enterprise pricing available.

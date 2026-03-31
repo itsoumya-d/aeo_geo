@@ -7,6 +7,7 @@ import { APIKeyManager } from '../components/APIKeyManager';
 import { DomainManagement } from '../components/DomainManagement';
 import { ReportBranding } from '../components/ReportBranding';
 import { IntegrationsTab } from '../components/dashboard/IntegrationsTab';
+import { MobileBottomNav } from '../components/dashboard/MobileBottomNav';
 import {
     User, Building2, Shield, CreditCard, Bell, Key, Palette,
     LogOut, Loader2, Check, ChevronRight, Moon, Sun,
@@ -267,7 +268,7 @@ export const SettingsPage: React.FC = () => {
             <Sidebar activeTab={dashboardTab} setActiveTab={handleDashboardTabChange} />
 
             <div className="flex-1 flex flex-col min-w-0 lg:ml-64 transition-all duration-300">
-                <div className="max-w-5xl mx-auto w-full px-6 py-12">
+                <div className="max-w-5xl mx-auto w-full px-4 sm:px-6 py-8 sm:py-12 pb-28 lg:pb-12">
                     <header className="mb-10">
                         <h1 className="text-3xl font-display font-bold text-slate-900 mb-2">Settings</h1>
                         <p className="text-text-secondary">Manage your account, organization, and preferences.</p>
@@ -337,7 +338,7 @@ export const SettingsPage: React.FC = () => {
 
                         {/* Content Area */}
                         <div className="flex-1 min-w-0">
-                            <Card className="p-8 border-border bg-surface">
+                            <Card className="p-5 sm:p-8 border-border bg-surface">
                                 {/* Profile Tab */}
                                 {activeTab === 'profile' && (
                                     <div className="animate-in fade-in duration-300">
@@ -642,6 +643,10 @@ export const SettingsPage: React.FC = () => {
                             </Card>
                         </div>
                     </div>
+                </div>
+
+                <div className="lg:hidden">
+                    <MobileBottomNav activeTab="settings" setActiveTab={handleDashboardTabChange} />
                 </div>
             </div>
         </div >

@@ -167,7 +167,7 @@ export const AuthCallbackPage: React.FC = () => {
                     <div className="w-14 h-14 mx-auto rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center">
                         <AlertCircle className="w-7 h-7 text-rose-400" />
                     </div>
-                    <h1 className="text-xl font-bold text-white">Sign-in failed</h1>
+                    <h1 className="text-xl font-bold text-text-primary">Sign-in failed</h1>
                     <p className="text-text-secondary text-sm leading-relaxed">{oauthError}</p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
                         <Link
@@ -178,7 +178,7 @@ export const AuthCallbackPage: React.FC = () => {
                         </Link>
                         <Link
                             to="/"
-                            className="inline-flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 text-text-secondary hover:text-white px-6 py-3 rounded-xl font-semibold text-sm transition-colors"
+                            className="inline-flex items-center justify-center bg-surface hover:bg-surfaceHighlight border border-border text-text-secondary hover:text-text-primary px-6 py-3 rounded-xl font-semibold text-sm transition-colors"
                         >
                             Go home
                         </Link>
@@ -190,4 +190,3 @@ export const AuthCallbackPage: React.FC = () => {
 
     return <FullPageLoader label="Completing sign in…" />;
 };
-

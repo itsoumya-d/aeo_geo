@@ -168,7 +168,7 @@ export const DomainManagement: React.FC = () => {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-8">
             <div className="flex items-center justify-between">
                 <div>
-                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                    <h3 className="text-xl font-bold text-text-primary flex items-center gap-2">
                         <Globe2 className="w-5 h-5 text-primary" />
                         Verified Domains
                     </h3>
@@ -187,7 +187,7 @@ export const DomainManagement: React.FC = () => {
                             value={newDomain}
                             onChange={(e) => setNewDomain(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleAddDomain()}
-                            className="w-full bg-surfaceHighlight border border-border text-white rounded-xl pl-11 pr-4 py-3 focus:ring-2 focus:ring-primary outline-none"
+                            className="w-full bg-background border border-border text-text-primary rounded-xl pl-11 pr-4 py-3 focus:ring-2 focus:ring-primary outline-none"
                         />
                     </div>
                     <button
@@ -218,7 +218,7 @@ export const DomainManagement: React.FC = () => {
                                     )}
                                 </div>
                                 <div>
-                                    <h4 className="font-bold text-white text-lg flex items-center gap-2">
+                                    <h4 className="font-bold text-text-primary text-lg flex items-center gap-2">
                                         {domain.domain}
                                         {domain.verified && (
                                             <span className="bg-emerald-500/10 text-emerald-400 text-[10px] uppercase px-2 py-0.5 rounded-full border border-emerald-500/20">
@@ -253,7 +253,7 @@ export const DomainManagement: React.FC = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     {/* DNS Method */}
                                     <div className="space-y-4">
-                                        <h5 className="text-sm font-bold text-white flex items-center gap-2">
+                                        <h5 className="text-sm font-bold text-text-primary flex items-center gap-2">
                                             <span className="w-5 h-5 rounded-full bg-primary/20 text-primary text-[10px] flex items-center justify-center">1</span>
                                             Via DNS TXT Record (Recommended)
                                         </h5>
@@ -261,7 +261,7 @@ export const DomainManagement: React.FC = () => {
                                             <p className="text-xs text-text-muted mb-3 leading-relaxed">Add the following TXT record to your DNS configuration:</p>
                                             <div className="flex items-center justify-between gap-3 bg-black/40 p-3 rounded-lg border border-border/50">
                                                 <code className="text-xs text-emerald-400 font-mono break-all">cognition-v-token={domain.verification_token}</code>
-                                                <button onClick={() => copyToClipboard(`cognition-v-token=${domain.verification_token}`)} className="text-slate-500 hover:text-white transition-colors">
+                                                <button onClick={() => copyToClipboard(`cognition-v-token=${domain.verification_token}`)} className="text-slate-500 hover:text-text-primary transition-colors">
                                                     <Copy className="w-4 h-4" />
                                                 </button>
                                             </div>
@@ -270,7 +270,7 @@ export const DomainManagement: React.FC = () => {
 
                                     {/* HTML Method */}
                                     <div className="space-y-4">
-                                        <h5 className="text-sm font-bold text-white flex items-center gap-2">
+                                        <h5 className="text-sm font-bold text-text-primary flex items-center gap-2">
                                             <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 text-[10px] flex items-center justify-center">2</span>
                                             Via HTML Meta Tag
                                         </h5>
@@ -280,7 +280,7 @@ export const DomainManagement: React.FC = () => {
                                                 <code className="text-[10px] text-blue-400 font-mono break-all">
                                                     {`<meta name="cognition-verification" content="${domain.verification_token}" />`}
                                                 </code>
-                                                <button onClick={() => copyToClipboard(`<meta name="cognition-verification" content="${domain.verification_token}" />`)} className="text-slate-500 hover:text-white transition-colors">
+                                                <button onClick={() => copyToClipboard(`<meta name="cognition-verification" content="${domain.verification_token}" />`)} className="text-slate-500 hover:text-text-primary transition-colors">
                                                     <Copy className="w-4 h-4" />
                                                 </button>
                                             </div>
@@ -295,7 +295,7 @@ export const DomainManagement: React.FC = () => {
                 {domains.length === 0 && (
                     <div className="bg-surfaceHighlight border border-border rounded-2xl p-12 text-center">
                         <Globe className="w-12 h-12 text-slate-700 mx-auto mb-4" />
-                        <h4 className="text-white font-bold mb-1">No domains added yet</h4>
+                        <h4 className="text-text-primary font-bold mb-1">No domains added yet</h4>
                         <p className="text-sm text-slate-500">Add your first domain to begin the verification process.</p>
                     </div>
                 )}

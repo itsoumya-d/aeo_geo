@@ -23,10 +23,10 @@ export const ProgressSteps: React.FC<ProgressStepsProps> = ({
     className = ''
 }) => {
     return (
-        <div className={`w-full max-w-2xl mx-auto ${className}`}>
+        <div className={`w-full max-w-2xl mx-auto px-1 sm:px-0 ${className}`}>
             <div className="relative">
                 {/* Progress Line */}
-                <div className="absolute top-5 left-0 w-full h-0.5 bg-slate-700">
+                <div className="absolute top-5 left-0 w-full h-0.5 bg-border">
                     <div
                         className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-500 ease-out"
                         style={{ width: `${(currentStep / (steps.length - 1)) * 100}%` }}
@@ -43,7 +43,7 @@ export const ProgressSteps: React.FC<ProgressStepsProps> = ({
                         return (
                             <div
                                 key={step.id}
-                                className="flex flex-col items-center"
+                                className="flex min-w-0 flex-1 flex-col items-center px-1"
                             >
                                 {/* Step Circle */}
                                 <div
@@ -71,8 +71,8 @@ export const ProgressSteps: React.FC<ProgressStepsProps> = ({
                                 <div className="mt-3 text-center">
                                     <p
                                         className={`
-                      text-xs sm:text-sm font-medium transition-colors duration-300 whitespace-nowrap
-                      ${isCompleted || isCurrent ? 'text-white' : 'text-slate-500'}
+                      text-[11px] sm:text-sm font-medium transition-colors duration-300 text-center leading-snug break-words
+                      ${isCompleted || isCurrent ? 'text-text-primary' : 'text-text-muted'}
                     `}
                                     >
                                         {step.label}
@@ -80,8 +80,8 @@ export const ProgressSteps: React.FC<ProgressStepsProps> = ({
                                     {step.description && (
                                         <p
                                             className={`
-                        text-[10px] sm:text-xs mt-0.5 transition-colors duration-300 hidden sm:block
-                        ${isCurrent ? 'text-primary' : 'text-slate-600'}
+                        text-[10px] sm:text-xs mt-0.5 transition-colors duration-300 hidden sm:block text-center
+                        ${isCurrent ? 'text-primary' : 'text-text-muted'}
                       `}
                                         >
                                             {step.description}

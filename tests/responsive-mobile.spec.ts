@@ -93,9 +93,7 @@ test.describe('Responsive — Public Pages', () => {
             await suppressCookieConsent(page);
             await page.goto('/');
             await page.waitForLoadState('domcontentloaded');
-            await expect(
-                page.getByRole('heading', { level: 1, name: /Discover How AI Search Engines See Your Brand/i })
-            ).toBeVisible({ timeout: 10000 });
+            await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible({ timeout: 10000 });
             await expectNoViewportOverflow(page);
         });
 

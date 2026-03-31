@@ -42,7 +42,7 @@ const ColorPicker: React.FC<{
                 type="text"
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
-                className="flex-1 bg-surfaceHighlight border border-border text-white rounded-lg px-4 py-2 font-mono text-sm focus:ring-2 focus:ring-primary outline-none uppercase"
+                className="flex-1 bg-background border border-border text-text-primary rounded-lg px-4 py-2 font-mono text-sm focus:ring-2 focus:ring-primary outline-none uppercase"
                 placeholder="#3b82f6"
             />
         </div>
@@ -178,7 +178,7 @@ export const ReportBranding: React.FC = () => {
         return (
             <div className="bg-surfaceHighlight border border-border rounded-xl p-6 text-center">
                 <Palette className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-white mb-2">White-Label Reports</h3>
+                <h3 className="text-lg font-semibold text-text-primary mb-2">White-Label Reports</h3>
                 <p className="text-sm text-text-muted mb-4">
                     Customize reports with your branding on Agency and Enterprise plans.
                 </p>
@@ -209,7 +209,7 @@ export const ReportBranding: React.FC = () => {
                         <Palette className="w-6 h-6 text-purple-400" />
                     </div>
                     <div>
-                        <h3 className="text-lg font-semibold text-white">Report Branding</h3>
+                        <h3 className="text-lg font-semibold text-text-primary">Report Branding</h3>
                         <p className="text-sm text-text-muted">Customize exported PDF reports</p>
                     </div>
                 </div>
@@ -237,7 +237,7 @@ export const ReportBranding: React.FC = () => {
                             value={branding.company_name}
                             onChange={(e) => updateBranding({ company_name: e.target.value })}
                             placeholder="Your Company Name"
-                            className="w-full bg-surfaceHighlight border border-border text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none placeholder:text-slate-500"
+                            className="w-full bg-background border border-border text-text-primary rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none placeholder:text-text-muted"
                         />
                     </div>
 
@@ -250,7 +250,7 @@ export const ReportBranding: React.FC = () => {
                                 value={branding.logo_url || ''}
                                 onChange={(e) => updateBranding({ logo_url: e.target.value || null })}
                                 placeholder="https://example.com/logo.png"
-                                className="flex-1 bg-surfaceHighlight border border-border text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none placeholder:text-slate-500"
+                                className="flex-1 bg-background border border-border text-text-primary rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none placeholder:text-text-muted"
                             />
                             <label className="flex items-center gap-2 bg-primary/20 hover:bg-primary/30 text-primary px-4 py-2.5 rounded-lg cursor-pointer transition-colors">
                                 <Upload className="w-4 h-4" />
@@ -281,7 +281,7 @@ export const ReportBranding: React.FC = () => {
                     {/* Hide Cognition Branding */}
                     <div className="flex items-center justify-between py-4 border-t border-border">
                         <div>
-                            <p className="font-medium text-white">Hide Cognition Branding</p>
+                            <p className="font-medium text-text-primary">Hide Cognition Branding</p>
                             <p className="text-sm text-text-muted">Remove "Powered by Cognition" from reports</p>
                         </div>
                         <button

@@ -15,20 +15,20 @@ export const PrivacyPage: React.FC = () => {
     return (
         <div className="min-h-screen bg-background text-text-primary" id="top">
             <div className="max-w-3xl mx-auto px-4 sm:px-6 py-14">
-                <div className="flex items-center justify-between gap-4 mb-10">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
                     <div className="min-w-0">
                         <h1 className="text-3xl sm:text-4xl font-display font-bold text-text-primary">Privacy Policy</h1>
                         <p className="text-sm text-text-secondary mt-2">
                             Last updated: February 5, 2026
                         </p>
                     </div>
-                    <Link to="/" className="text-sm text-primary hover:underline font-semibold whitespace-nowrap">
+                    <Link to="/" className="text-sm text-primary hover:underline font-semibold">
                         Back to home
                     </Link>
                 </div>
 
                 {/* Table of contents */}
-                <nav className="mb-8 bg-white/[0.03] border border-white/10 rounded-xl p-5">
+                <nav className="mb-8 bg-surface border border-border rounded-xl p-5">
                     <p className="text-xs font-bold text-text-muted uppercase tracking-widest mb-3">Contents</p>
                     <ol className="space-y-1.5">
                         {TOC_PRIVACY.map(item => (
@@ -44,8 +44,8 @@ export const PrivacyPage: React.FC = () => {
                     </ol>
                 </nav>
 
-                <Card variant="glass" className="border-white/10">
-                    <div className="prose prose-invert max-w-none">
+                <Card variant="glass" className="border-border">
+                    <div className="prose max-w-none">
                         <p className="text-text-secondary leading-relaxed">
                             This Privacy Policy explains how we collect, use, and protect information when you use the Service.
                         </p>
@@ -96,4 +96,3 @@ export const PrivacyPage: React.FC = () => {
         </div>
     );
 };
-

@@ -36,19 +36,19 @@ export class AppErrorBoundary extends Component<Props, State> {
             const supportId = this.state.errorId ? this.state.errorId.slice(0, 8) : null;
 
             return (
-                <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
-                    <div className="bg-surfaceHighlight border border-border rounded-3xl p-10 max-w-md text-center backdrop-blur-xl shadow-2xl">
+                <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+                    <div className="bg-surface border border-border rounded-3xl p-8 sm:p-10 max-w-md text-center backdrop-blur-xl shadow-2xl">
                         <div className="w-16 h-16 bg-rose-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
                             <AlertCircle className="w-8 h-8 text-rose-500" />
                         </div>
 
-                        <h1 className="text-2xl font-bold text-white mb-2">{user.title}</h1>
+                        <h1 className="text-2xl font-bold text-text-primary mb-2">{user.title}</h1>
                         <p className="text-text-muted mb-8 leading-relaxed">
                             {user.message}
                         </p>
 
-                        <div className="bg-black/30 rounded-xl p-4 mb-8 text-left overflow-auto max-h-32 border border-white/5">
-                            <code className="text-xs text-rose-300 font-mono">
+                        <div className="bg-background rounded-xl p-4 mb-8 text-left overflow-auto max-h-32 border border-border">
+                            <code className="text-xs text-rose-500 font-mono">
                                 {import.meta.env.DEV
                                     ? (this.state.error?.message || 'Unknown error')
                                     : (supportId ? `Error ID: ${supportId}` : 'Error ID: unavailable')}
@@ -65,7 +65,7 @@ export class AppErrorBoundary extends Component<Props, State> {
                             </button>
                             <button
                                 onClick={() => window.location.href = '/'}
-                                className="flex-1 bg-surfaceHighlight hover:bg-slate-700 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
+                                className="flex-1 bg-surface hover:bg-surfaceHighlight text-text-primary border border-border px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
                             >
                                 <Home className="w-4 h-4" />
                                 Go Home

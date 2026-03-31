@@ -67,7 +67,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                                 <AlertTriangle className="w-6 h-6 text-rose-500" />
                             </div>
                             <div>
-                                <h2 className="text-xl font-bold text-white">{user.title}</h2>
+                                <h2 className="text-xl font-bold text-text-primary">{user.title}</h2>
                                 <p className="text-sm text-text-muted">{user.message}</p>
                             </div>
                         </div>
@@ -90,7 +90,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                             </button>
                             <button
                                 onClick={this.handleCopyError}
-                                className="flex items-center justify-center gap-2 bg-surfaceHighlight hover:bg-slate-700 text-white px-4 py-3 rounded-xl font-medium transition-colors"
+                                className="flex items-center justify-center gap-2 bg-surface hover:bg-surfaceHighlight text-text-primary px-4 py-3 rounded-xl border border-border font-medium transition-colors"
                             >
                                 {this.state.copied ? (
                                     <>

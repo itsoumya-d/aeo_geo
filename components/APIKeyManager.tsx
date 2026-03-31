@@ -160,7 +160,7 @@ export const APIKeyManager: React.FC = () => {
         return (
             <div className="bg-surfaceHighlight border border-border rounded-xl p-6 text-center">
                 <Key className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-white mb-2">API Access</h3>
+                <h3 className="text-lg font-semibold text-text-primary mb-2">API Access</h3>
                 <p className="text-sm text-text-muted mb-4">
                     API access is available on Pro and Agency plans.
                 </p>
@@ -183,7 +183,7 @@ export const APIKeyManager: React.FC = () => {
                         <Key className="w-6 h-6 text-purple-400" />
                     </div>
                     <div>
-                        <h3 className="text-lg font-semibold text-white">API Keys</h3>
+                        <h3 className="text-lg font-semibold text-text-primary">API Keys</h3>
                         <p className="text-sm text-text-muted">{keys.length} key{keys.length !== 1 ? 's' : ''} active</p>
                     </div>
                 </div>
@@ -209,19 +209,19 @@ export const APIKeyManager: React.FC = () => {
                                 Copy this key now. You won't be able to see it again.
                             </p>
                             <div className="flex items-center gap-2">
-                                <code className="flex-1 bg-surface text-white px-3 py-2 rounded-lg font-mono text-sm break-all">
+                                <code className="flex-1 bg-background text-text-primary px-3 py-2 rounded-lg border border-border font-mono text-sm break-all">
                                     {newlyCreatedKey}
                                 </code>
                                 <button
                                     onClick={handleCopyKey}
-                                    className="flex items-center gap-2 bg-surfaceHighlight hover:bg-slate-700 text-white px-3 py-2 rounded-lg transition-colors"
+                                    className="flex items-center gap-2 bg-surface hover:bg-surfaceHighlight text-text-primary border border-border px-3 py-2 rounded-lg transition-colors"
                                 >
                                     {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                                 </button>
                             </div>
                             <button
                                 onClick={() => setNewlyCreatedKey(null)}
-                                className="text-sm text-slate-500 hover:text-white mt-3 transition-colors"
+                                className="text-sm text-slate-500 hover:text-text-primary mt-3 transition-colors"
                             >
                                 I've saved my key
                             </button>
@@ -232,15 +232,15 @@ export const APIKeyManager: React.FC = () => {
 
             {/* Create Form */}
             {showCreateForm && (
-                <form onSubmit={handleCreateKey} className="bg-surfaceHighlight border border-border rounded-xl p-4">
-                    <h4 className="font-medium text-white mb-3">Create New API Key</h4>
+                <form onSubmit={handleCreateKey} className="bg-surface border border-border rounded-xl p-4">
+                    <h4 className="font-medium text-text-primary mb-3">Create New API Key</h4>
                     <div className="flex gap-3">
                         <input
                             type="text"
                             value={newKeyName}
                             onChange={(e) => setNewKeyName(e.target.value)}
                             placeholder="Key name (e.g., Production)"
-                            className="flex-1 bg-surfaceHighlight border border-border text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none placeholder:text-slate-500"
+                            className="flex-1 bg-background border border-border text-text-primary rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none placeholder:text-text-muted"
                             required
                         />
                         <button
@@ -254,7 +254,7 @@ export const APIKeyManager: React.FC = () => {
                         <button
                             type="button"
                             onClick={() => setShowCreateForm(false)}
-                            className="bg-surfaceHighlight hover:bg-slate-700 text-white px-4 py-2.5 rounded-lg font-medium transition-colors"
+                            className="bg-background hover:bg-surfaceHighlight text-text-primary border border-border px-4 py-2.5 rounded-lg font-medium transition-colors"
                         >
                             Cancel
                         </button>
@@ -270,7 +270,7 @@ export const APIKeyManager: React.FC = () => {
             ) : keys.length === 0 ? (
                 <div className="bg-surfaceHighlight border border-border rounded-xl p-8 text-center">
                     <Key className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                    <h4 className="font-medium text-white mb-2">No API Keys Yet</h4>
+                    <h4 className="font-medium text-text-primary mb-2">No API Keys Yet</h4>
                     <p className="text-sm text-text-muted">
                         Create an API key to integrate Cognition with your tools.
                     </p>
@@ -288,7 +288,7 @@ export const APIKeyManager: React.FC = () => {
                                         <Key className="w-5 h-5 text-text-muted" />
                                     </div>
                                     <div className="min-w-0 flex-1 text-left">
-                                        <p className="font-medium text-white truncate">{key.name}</p>
+                                        <p className="font-medium text-text-primary truncate">{key.name}</p>
                                         <div className="flex items-center gap-3 text-xs text-slate-500">
                                             <span className="font-mono">cog_•••{key.key_preview}</span>
                                             <span className="flex items-center gap-1">

@@ -32,10 +32,10 @@ const toastIcons = {
 };
 
 const toastStyles = {
-    success: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
-    error: 'bg-rose-500/10 border-rose-500/20 text-rose-400',
-    warning: 'bg-amber-500/10 border-amber-500/20 text-amber-400',
-    info: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
+    success: 'bg-surface/95 border-emerald-500/25 text-emerald-600 shadow-[0_24px_60px_rgba(15,23,42,0.18)]',
+    error: 'bg-surface/95 border-rose-500/25 text-rose-600 shadow-[0_24px_60px_rgba(15,23,42,0.18)]',
+    warning: 'bg-surface/95 border-amber-500/25 text-amber-600 shadow-[0_24px_60px_rgba(15,23,42,0.18)]',
+    info: 'bg-surface/95 border-blue-500/25 text-sky-600 shadow-[0_24px_60px_rgba(15,23,42,0.18)]',
 };
 
 /**
@@ -51,19 +51,19 @@ const ToastItem: React.FC<{ toast: Toast; onRemove: () => void }> = ({ toast, on
 
     return (
         <div
-            className={`flex items-start gap-3 p-4 rounded-xl border ${toastStyles[toast.type]} animate-in slide-in-from-right-4 fade-in duration-300 shadow-glow backdrop-blur-md`}
+            className={`flex items-start gap-3 rounded-xl border p-4 ${toastStyles[toast.type]} animate-in slide-in-from-right-4 fade-in duration-300 backdrop-blur-md`}
         >
             <Icon className="w-5 h-5 flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
-                <p className="font-bold text-white text-sm">{toast.title}</p>
+                <p className="text-sm font-bold text-text-primary">{toast.title}</p>
                 {toast.description && (
-                    <p className="text-xs text-slate-300 mt-1 font-medium">{toast.description}</p>
+                    <p className="mt-1 text-xs font-medium text-text-secondary">{toast.description}</p>
                 )}
             </div>
             <button
                 onClick={onRemove}
                 aria-label={`Dismiss ${toast.title} notification`}
-                className="text-slate-400 hover:text-white transition-colors p-1 -m-1 rounded-md hover:bg-white/10"
+                className="rounded-md p-1 text-text-muted transition-colors hover:bg-surfaceHighlight hover:text-text-primary -m-1"
             >
                 <X className="w-4 h-4" aria-hidden="true" />
             </button>
@@ -81,7 +81,11 @@ const ToastContainer: React.FC<{ toasts: Toast[]; onRemove: (id: string) => void
     if (toasts.length === 0) return null;
 
     return (
-        <div role="region" aria-label="Notifications" className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2 max-w-sm w-full pointer-events-none">
+        <div
+            role="region"
+            aria-label="Notifications"
+            className="fixed inset-x-4 bottom-4 z-[100] flex pointer-events-none flex-col gap-2 sm:left-auto sm:right-4 sm:w-full sm:max-w-sm"
+        >
             {toasts.map((toast) => (
                 <div key={toast.id} className="pointer-events-auto" role={toast.type === 'error' ? 'alert' : 'status'}>
                     <ToastItem toast={toast} onRemove={() => onRemove(toast.id)} />

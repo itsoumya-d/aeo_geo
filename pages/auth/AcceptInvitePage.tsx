@@ -145,7 +145,7 @@ export const AcceptInvitePage: React.FC = () => {
                         <div className="flex items-center gap-3 p-4 bg-primary/10 rounded-xl border border-primary/20">
                             <Users className="w-5 h-5 text-primary flex-shrink-0" />
                             <div>
-                                <p className="text-sm font-medium text-white">
+                                <p className="text-sm font-medium text-text-primary">
                                     Role: <span className="text-primary">{roleLabels[state.role] || state.role}</span>
                                 </p>
                                 <p className="text-xs text-text-muted mt-0.5">
@@ -155,7 +155,7 @@ export const AcceptInvitePage: React.FC = () => {
                         </div>
 
                         <p className="text-sm text-text-secondary">
-                            Sign in with <strong className="text-white">{state.email}</strong> to accept this invitation.
+                            Sign in with <strong className="text-text-primary">{state.email}</strong> to accept this invitation.
                         </p>
 
                         <form onSubmit={handleSignIn} className="space-y-4">
@@ -167,7 +167,7 @@ export const AcceptInvitePage: React.FC = () => {
                                     type="email"
                                     value={email}
                                     onChange={e => setEmail(e.target.value)}
-                                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition"
+                                    className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition"
                                     placeholder="you@example.com"
                                     required
                                     autoComplete="email"
@@ -181,7 +181,7 @@ export const AcceptInvitePage: React.FC = () => {
                                     type="password"
                                     value={password}
                                     onChange={e => setPassword(e.target.value)}
-                                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition"
+                                    className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition"
                                     placeholder="••••••••"
                                     required
                                     autoComplete="current-password"
@@ -226,7 +226,7 @@ export const AcceptInvitePage: React.FC = () => {
                     >
                         <CheckCircle className="w-14 h-14 text-emerald-400" />
                         <div>
-                            <p className="text-lg font-semibold text-white">You're in!</p>
+                            <p className="text-lg font-semibold text-text-primary">You're in!</p>
                             <p className="text-sm text-text-secondary mt-1">
                                 Redirecting you to the dashboard…
                             </p>
@@ -243,7 +243,7 @@ export const AcceptInvitePage: React.FC = () => {
                     >
                         <Clock className="w-14 h-14 text-amber-400" />
                         <div>
-                            <p className="text-lg font-semibold text-white">Invitation Expired</p>
+                            <p className="text-lg font-semibold text-text-primary">Invitation Expired</p>
                             <p className="text-sm text-text-secondary mt-1">
                                 This invitation link has expired. Ask your admin to send a new one.
                             </p>
@@ -261,7 +261,7 @@ export const AcceptInvitePage: React.FC = () => {
                     >
                         <CheckCircle className="w-14 h-14 text-emerald-400" />
                         <div>
-                            <p className="text-lg font-semibold text-white">Already Accepted</p>
+                            <p className="text-lg font-semibold text-text-primary">Already Accepted</p>
                             <p className="text-sm text-text-secondary mt-1">
                                 This invitation was already accepted. Sign in to access the dashboard.
                             </p>
@@ -279,9 +279,9 @@ export const AcceptInvitePage: React.FC = () => {
                     >
                         <XCircle className="w-14 h-14 text-rose-400" />
                         <div>
-                            <p className="text-lg font-semibold text-white">Wrong Account</p>
+                            <p className="text-lg font-semibold text-text-primary">Wrong Account</p>
                             <p className="text-sm text-text-secondary mt-1">
-                                This invitation was sent to <strong className="text-white">{state.expectedEmail}</strong>.<br />
+                                This invitation was sent to <strong className="text-text-primary">{state.expectedEmail}</strong>.<br />
                                 Please sign out and sign in with that account.
                             </p>
                         </div>
@@ -298,7 +298,7 @@ export const AcceptInvitePage: React.FC = () => {
                     >
                         <XCircle className="w-14 h-14 text-rose-400" />
                         <div>
-                            <p className="text-lg font-semibold text-white">Invalid Invitation</p>
+                            <p className="text-lg font-semibold text-text-primary">Invalid Invitation</p>
                             <p className="text-sm text-text-secondary mt-1">{state.message}</p>
                         </div>
                         <Button variant="secondary" onClick={() => navigate('/')}>Go Home</Button>

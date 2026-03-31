@@ -256,7 +256,7 @@ export const IntegrationsTab: React.FC = () => {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-10">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/[0.05] pb-8">
                 <div>
-                    <h2 className="text-2xl font-display font-bold text-white flex items-center gap-3">
+                    <h2 className="text-2xl font-display font-bold text-text-primary flex items-center gap-3">
                         <div className="bg-primary/20 p-2 rounded-lg">
                             <WebhookIcon className="w-5 h-5 text-primary" />
                         </div>
@@ -267,17 +267,17 @@ export const IntegrationsTab: React.FC = () => {
                     </p>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                     <Button
                         variant="secondary"
                         onClick={fetchWebhooks}
                         isLoading={refreshing}
-                        className="px-4"
+                        className="w-full px-4 sm:w-auto"
                     >
                         <RefreshCw className="w-4 h-4 mr-2" />
                         Refresh
                     </Button>
-                    <Button onClick={() => setShowCreate(true)} className="px-4">
+                    <Button onClick={() => setShowCreate(true)} className="w-full px-4 sm:w-auto">
                         <Plus className="w-4 h-4 mr-2" />
                         Add webhook
                     </Button>
@@ -289,25 +289,25 @@ export const IntegrationsTab: React.FC = () => {
                     <div className="flex items-start gap-3">
                         <ShieldCheck className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
                         <div className="min-w-0 flex-1">
-                            <p className="text-sm font-semibold text-white">Webhook secret</p>
+                            <p className="text-sm font-semibold text-text-primary">Webhook secret</p>
                             <p className="text-xs text-text-secondary mt-1">
                                 Save this secret now. You’ll use it to verify signatures on incoming requests.
                             </p>
-                            <div className="mt-4 flex items-center gap-2">
-                                <code className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-2 font-mono text-xs text-emerald-300 break-all">
+                            <div className="mt-4 flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+                                <code className="flex-1 rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-xs text-emerald-300 break-all">
                                     {createdSecret}
                                 </code>
                                 <Button
                                     variant="secondary"
                                     onClick={() => copySecret(createdSecret)}
-                                    className="px-3"
+                                    className="w-full px-3 sm:w-auto"
                                 >
                                     {secretCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                                 </Button>
                             </div>
                             <button
                                 onClick={() => setCreatedSecret(null)}
-                                className="mt-3 text-xs text-text-muted hover:text-white transition-colors"
+                                className="mt-3 text-xs text-text-muted hover:text-text-primary transition-colors"
                             >
                                 I’ve saved it
                             </button>
@@ -325,8 +325,8 @@ export const IntegrationsTab: React.FC = () => {
                     <div className="w-12 h-12 rounded-xl bg-[#FF4F00] flex items-center justify-center mb-4 shadow-lg shadow-[#FF4F00]/20">
                         <span className="text-white font-black text-xl">*</span>
                     </div>
-                    <h3 className="text-lg font-bold text-white mb-2">Zapier</h3>
-                    <p className="text-sm text-slate-400 mb-4">
+                    <h3 className="text-lg font-bold text-text-primary mb-2">Zapier</h3>
+                    <p className="text-sm text-text-secondary mb-4">
                         Automate your visibility workflow. Trigger Zaps when audits complete or scores change.
                     </p>
                     <div className="flex items-center gap-2 text-xs font-bold text-[#FF4F00]">
@@ -341,8 +341,8 @@ export const IntegrationsTab: React.FC = () => {
                     <div className="w-12 h-12 rounded-xl bg-[#6C5CE7] flex items-center justify-center mb-4 shadow-lg shadow-[#6C5CE7]/20">
                         <span className="text-white font-black text-xl">M</span>
                     </div>
-                    <h3 className="text-lg font-bold text-white mb-2">Make.com</h3>
-                    <p className="text-sm text-slate-400 mb-4">
+                    <h3 className="text-lg font-bold text-text-primary mb-2">Make.com</h3>
+                    <p className="text-sm text-text-secondary mb-4">
                         Build complex visual scenarios. Connect Cognition AI to Slack, Airtable, and more.
                     </p>
                     <div className="flex items-center gap-2 text-xs font-bold text-[#6C5CE7]">
@@ -350,43 +350,44 @@ export const IntegrationsTab: React.FC = () => {
                     </div>
                 </Card>
 
-                <Card className="p-6 border-border bg-gradient-to-br from-[#21759B]/10 to-transparent border-[#21759B]/20 relative overflow-hidden group hover:border-[#21759B]/40 transition-all cursor-pointer">
-                    <div className="absolute top-0 right-0 p-3 opacity-50 group-hover:opacity-100 transition-opacity">
-                        <Button
-                            variant="secondary"
-                            className="h-8 text-xs bg-[#21759B]/20 hover:bg-[#21759B]/30 text-white border-transparent"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                const link = document.createElement('a');
-                                link.href = '/plugins/cognition-ai-visibility.php';
-                                link.download = 'cognition-ai.php';
-                                document.body.appendChild(link);
-                                link.click();
-                                document.body.removeChild(link);
-                            }}
-                        >
-                            Download Plugin
-                        </Button>
+                <Card className="group relative cursor-pointer overflow-hidden border-[#21759B]/20 bg-gradient-to-br from-[#21759B]/10 to-transparent p-6 transition-all hover:border-[#21759B]/40">
+                    <div className="mb-4 flex items-start justify-between gap-3">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#21759B] shadow-lg shadow-[#21759B]/20">
+                            <span className="text-white font-black text-xl">W</span>
+                        </div>
+                        <ArrowUpRight className="h-5 w-5 flex-shrink-0 text-[#21759B] opacity-50 transition-opacity group-hover:opacity-100" />
                     </div>
-                    <div className="w-12 h-12 rounded-xl bg-[#21759B] flex items-center justify-center mb-4 shadow-lg shadow-[#21759B]/20">
-                        <span className="text-white font-black text-xl">W</span>
-                    </div>
-                    <h3 className="text-lg font-bold text-white mb-2">WordPress</h3>
-                    <p className="text-sm text-slate-400 mb-4">
+                    <h3 className="text-lg font-bold text-text-primary mb-2">WordPress</h3>
+                    <p className="text-sm text-text-secondary mb-4">
                         Add a visibility score widget to your WP Admin dashboard. Track progress without leaving your CMS.
                     </p>
                     <div className="flex items-center gap-2 text-xs font-bold text-[#21759B]">
                         <span className="bg-[#21759B]/20 px-2 py-1 rounded-md">New</span>
                     </div>
+                    <Button
+                        variant="secondary"
+                        className="mt-4 h-10 w-full border-transparent bg-[#21759B]/20 text-[#0b4f72] hover:bg-[#21759B]/30 sm:w-auto"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            const link = document.createElement('a');
+                            link.href = '/plugins/cognition-ai-visibility.php';
+                            link.download = 'cognition-ai.php';
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                        }}
+                    >
+                        Download Plugin
+                    </Button>
                 </Card>
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
                 <div className="xl:col-span-7 space-y-6">
                     <Card className="p-6 border-border bg-surface/40">
-                        <div className="flex items-center justify-between gap-4 mb-6">
+                        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <div className="min-w-0">
-                                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                                <h3 className="text-lg font-semibold text-text-primary flex items-center gap-2">
                                     <LinkIcon className="w-5 h-5 text-primary" />
                                     Webhooks
                                 </h3>
@@ -402,7 +403,7 @@ export const IntegrationsTab: React.FC = () => {
                         ) : webhooks.length === 0 ? (
                             <div className="py-10 text-center">
                                 <WebhookIcon className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-                                <p className="text-white font-semibold">No webhooks yet</p>
+                                <p className="text-text-primary font-semibold">No webhooks yet</p>
                                 <p className="text-sm text-text-secondary mt-1">Add a webhook to start receiving events.</p>
                             </div>
                         ) : (
@@ -415,10 +416,10 @@ export const IntegrationsTab: React.FC = () => {
                                             key={hook.id}
                                             initial={{ opacity: 0, y: 6 }}
                                             animate={{ opacity: 1, y: 0 }}
-                                            className="rounded-2xl border border-white/10 bg-black/20 overflow-hidden"
+                                            className="rounded-2xl border border-border bg-background/70 overflow-hidden"
                                         >
                                             <div className="p-5 flex flex-col gap-4">
-                                                <div className="flex items-start justify-between gap-4">
+                                                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                                                     <div className="min-w-0 flex-1">
                                                         <div className="flex items-center gap-2">
                                                             <Badge variant={hook.is_active ? 'success' : 'default'}>
@@ -430,7 +431,7 @@ export const IntegrationsTab: React.FC = () => {
                                                         </div>
 
                                                         {!isEditing ? (
-                                                            <p className="mt-3 text-sm text-white font-semibold break-words">
+                                                            <p className="mt-3 text-sm text-text-primary font-semibold break-words">
                                                                 {hook.url}
                                                             </p>
                                                         ) : (
@@ -441,7 +442,7 @@ export const IntegrationsTab: React.FC = () => {
                                                                 <input
                                                                     value={editUrl}
                                                                     onChange={(e) => setEditUrl(e.target.value)}
-                                                                    className="mt-2 w-full bg-background border border-border text-white rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary"
+                                                                    className="mt-2 w-full bg-surface border border-border text-text-primary rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary"
                                                                 />
                                                                 <div className="mt-3 flex items-center gap-2">
                                                                     <input
@@ -462,7 +463,7 @@ export const IntegrationsTab: React.FC = () => {
                                                             {(isEditing ? editEvents : (hook.events || [])).map((e) => (
                                                                 <span
                                                                     key={e}
-                                                                    className="text-[10px] font-semibold px-2 py-1 rounded-full bg-white/5 border border-white/10 text-text-secondary"
+                                                                    className="text-[10px] font-semibold px-2 py-1 rounded-full bg-surface border border-border text-text-secondary"
                                                                 >
                                                                     {e}
                                                                 </span>
@@ -470,13 +471,13 @@ export const IntegrationsTab: React.FC = () => {
                                                         </div>
                                                     </div>
 
-                                                    <div className="flex items-center gap-2 flex-shrink-0">
+                                                    <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto lg:flex-shrink-0 lg:justify-end">
                                                         {isEditing ? (
                                                             <>
                                                                 <Button
                                                                     variant="secondary"
                                                                     onClick={cancelEdit}
-                                                                    className="px-3"
+                                                                    className="min-h-11 flex-1 px-3 sm:flex-none"
                                                                 >
                                                                     <X className="w-4 h-4" />
                                                                 </Button>
@@ -484,7 +485,7 @@ export const IntegrationsTab: React.FC = () => {
                                                                     onClick={handleSave}
                                                                     disabled={!canSave}
                                                                     isLoading={saving}
-                                                                    className="px-3"
+                                                                    className="min-h-11 flex-1 px-3 sm:flex-none"
                                                                 >
                                                                     <Save className="w-4 h-4" />
                                                                 </Button>
@@ -496,21 +497,21 @@ export const IntegrationsTab: React.FC = () => {
                                                                     onClick={() => handleTestWebhook(hook)}
                                                                     disabled={!hook.is_active}
                                                                     title="Send Test Event"
-                                                                    className="px-3"
+                                                                    className="min-h-11 flex-1 px-3 sm:flex-none"
                                                                 >
                                                                     <ArrowUpRight className="w-4 h-4" />
                                                                 </Button>
                                                                 <Button
                                                                     variant="secondary"
                                                                     onClick={() => startEdit(hook)}
-                                                                    className="px-3"
+                                                                    className="min-h-11 flex-1 px-3 sm:flex-none"
                                                                 >
                                                                     <Pencil className="w-4 h-4" />
                                                                 </Button>
                                                                 <Button
                                                                     variant="secondary"
                                                                     onClick={() => handleDelete(hook)}
-                                                                    className="px-3"
+                                                                    className="min-h-11 flex-1 px-3 sm:flex-none"
                                                                 >
                                                                     <Trash2 className="w-4 h-4" />
                                                                 </Button>
@@ -520,7 +521,7 @@ export const IntegrationsTab: React.FC = () => {
                                                 </div>
 
                                                 {isEditing ? (
-                                                    <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                                                    <div className="rounded-xl border border-border bg-surface p-4">
                                                         <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-text-muted mb-3">
                                                             Events
                                                         </p>
@@ -528,7 +529,7 @@ export const IntegrationsTab: React.FC = () => {
                                                             {WEBHOOK_EVENTS.map((evt) => (
                                                                 <label
                                                                     key={evt.id}
-                                                                    className="flex items-start gap-2 rounded-lg border border-white/10 bg-black/20 px-3 py-2 cursor-pointer hover:border-primary/30 transition-colors"
+                                                                    className="flex items-start gap-2 rounded-lg border border-border bg-background px-3 py-2 cursor-pointer hover:border-primary/30 transition-colors"
                                                                 >
                                                                     <input
                                                                         type="checkbox"
@@ -537,7 +538,7 @@ export const IntegrationsTab: React.FC = () => {
                                                                         className="mt-1 h-4 w-4 rounded border-border bg-background"
                                                                     />
                                                                     <span className="min-w-0">
-                                                                        <span className="block text-xs font-semibold text-white truncate">{evt.label}</span>
+                                                                        <span className="block text-xs font-semibold text-text-primary break-words">{evt.label}</span>
                                                                         <span className="block text-[11px] text-text-muted leading-relaxed">
                                                                             {evt.description}
                                                                         </span>
@@ -549,19 +550,19 @@ export const IntegrationsTab: React.FC = () => {
                                                 ) : null}
 
                                                 {hook.secret ? (
-                                                    <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                                                        <div className="flex items-center justify-between gap-3">
+                                                    <div className="rounded-xl border border-border bg-surface p-4">
+                                                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                                             <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-text-muted">
                                                                 Signing secret
                                                             </p>
                                                             <button
                                                                 onClick={() => setRevealSecret(prev => ({ ...prev, [hook.id]: !prev[hook.id] }))}
-                                                                className="text-[10px] font-bold uppercase tracking-[0.25em] text-text-secondary hover:text-white transition-colors"
+                                                                className="text-[10px] font-bold uppercase tracking-[0.25em] text-text-secondary hover:text-text-primary transition-colors"
                                                             >
                                                                 {secretVisible ? 'Hide' : 'Show'}
                                                             </button>
                                                         </div>
-                                                        <code className="mt-3 block bg-black/40 border border-white/10 rounded-lg px-3 py-2 font-mono text-xs text-text-secondary break-all">
+                                                        <code className="mt-3 block break-all rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-xs text-slate-100">
                                                             {secretVisible ? hook.secret : `${hook.secret.slice(0, 8)}…${hook.secret.slice(-6)}`}
                                                         </code>
                                                     </div>
@@ -577,7 +578,7 @@ export const IntegrationsTab: React.FC = () => {
                     {showCreate && (
                         <Card className="p-6 border-border bg-surface/40">
                             <div className="flex items-center justify-between gap-4">
-                                <h4 className="text-white font-semibold">Add webhook</h4>
+                                <h4 className="text-text-primary font-semibold">Add webhook</h4>
                                 <Button variant="secondary" onClick={() => setShowCreate(false)} className="px-3">
                                     <X className="w-4 h-4" />
                                 </Button>
@@ -592,7 +593,7 @@ export const IntegrationsTab: React.FC = () => {
                                         value={createUrl}
                                         onChange={(e) => setCreateUrl(e.target.value)}
                                         placeholder="https://example.com/webhooks/cognition"
-                                        className="mt-2 w-full bg-background border border-border text-white rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary"
+                                        className="mt-2 w-full bg-surface border border-border text-text-primary rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary"
                                     />
                                     {!validateWebhookUrl(createUrl).ok && createUrl.trim().length > 0 ? (
                                         <p className="mt-2 text-xs text-rose-400">{validateWebhookUrl(createUrl).error}</p>
@@ -607,7 +608,7 @@ export const IntegrationsTab: React.FC = () => {
                                         {WEBHOOK_EVENTS.map((evt) => (
                                             <label
                                                 key={evt.id}
-                                                className="flex items-start gap-2 rounded-lg border border-white/10 bg-black/20 px-3 py-2 cursor-pointer hover:border-primary/30 transition-colors"
+                                                className="flex items-start gap-2 rounded-lg border border-border bg-background px-3 py-2 cursor-pointer hover:border-primary/30 transition-colors"
                                             >
                                                 <input
                                                     type="checkbox"
@@ -616,7 +617,7 @@ export const IntegrationsTab: React.FC = () => {
                                                     className="mt-1 h-4 w-4 rounded border-border bg-background"
                                                 />
                                                 <span className="min-w-0">
-                                                    <span className="block text-xs font-semibold text-white truncate">{evt.label}</span>
+                                                    <span className="block text-xs font-semibold text-text-primary break-words">{evt.label}</span>
                                                     <span className="block text-[11px] text-text-muted leading-relaxed">
                                                         {evt.description}
                                                     </span>
@@ -626,7 +627,7 @@ export const IntegrationsTab: React.FC = () => {
                                     </div>
                                 </div>
 
-                                <div className="flex gap-3">
+                                <div className="flex flex-col gap-3 sm:flex-row">
                                     <Button
                                         onClick={handleCreate}
                                         disabled={!canCreate}
@@ -656,7 +657,7 @@ export const IntegrationsTab: React.FC = () => {
                                 <Key className="w-5 h-5 text-purple-300" />
                             </div>
                             <div>
-                                <h3 className="text-lg font-semibold text-white">API access</h3>
+                                <h3 className="text-lg font-semibold text-text-primary">API access</h3>
                                 <p className="text-sm text-text-secondary">Create and rotate API keys for your tools.</p>
                             </div>
                         </div>
@@ -666,15 +667,15 @@ export const IntegrationsTab: React.FC = () => {
                     <Card className="p-6 border-border bg-surface/40">
                         <div className="flex items-center justify-between gap-3">
                             <div>
-                                <h3 className="text-lg font-semibold text-white">Webhook payloads</h3>
+                                <h3 className="text-lg font-semibold text-text-primary">Webhook payloads</h3>
                                 <p className="text-sm text-text-secondary mt-1">
                                     Requests include an HMAC signature in <code className="font-mono text-xs">X-Cognition-Signature</code>.
                                 </p>
                             </div>
                         </div>
 
-                        <div className="mt-4 bg-black/30 border border-white/10 rounded-xl p-4 overflow-x-auto">
-                            <pre className="text-xs text-slate-300 font-mono">
+                        <div className="custom-scrollbar touch-action-pan-x mt-4 overflow-x-auto rounded-xl border border-slate-800 bg-slate-950 p-4">
+                            <pre className="text-xs font-mono text-slate-100">
                                 {`{
   "id": "evt_…",
   "event": "audit.completed",

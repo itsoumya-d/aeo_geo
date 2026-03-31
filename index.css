@@ -3,17 +3,27 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    color-scheme: light;
+  }
+
   html {
     scrollbar-width: thin;
     scrollbar-color: #6b86a6 #edf3f8;
+    scroll-padding-top: 5rem;
   }
 
   body {
     @apply bg-background text-text-primary font-sans antialiased overflow-x-hidden;
+    margin: 0;
     background-image:
       radial-gradient(circle at 50% 0%, rgba(47, 143, 255, 0.12) 0%, transparent 42%),
       radial-gradient(circle at 100% 0%, rgba(95, 225, 240, 0.12) 0%, transparent 38%),
       linear-gradient(180deg, #f5f9fd 0%, #edf3f8 100%);
+  }
+
+  #root {
+    min-height: 100vh;
   }
 
   h1,
@@ -23,6 +33,20 @@
   h5,
   h6 {
     @apply font-display text-text-primary tracking-tight;
+  }
+
+  img,
+  svg,
+  video,
+  canvas {
+    max-width: 100%;
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+    min-width: 0;
   }
 }
 
@@ -169,4 +193,37 @@
 /* Focus trap for modals */
 .focus-trap:focus {
   @apply outline-none;
+}
+
+.no-scrollbar,
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+.touch-action-pan-x {
+  touch-action: pan-x;
+}
+
+.pb-safe {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.5rem);
+}
+
+.safe-area-inset-bottom {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
+}
+
+@media (max-width: 640px) {
+  .glass-card {
+    @apply p-4 rounded-xl;
+  }
+
+  .glass-panel {
+    @apply rounded-xl;
+  }
 }
