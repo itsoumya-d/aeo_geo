@@ -142,12 +142,12 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" role="presentation">
             <div className="absolute inset-0" onClick={handleClose} aria-hidden="true" />
             <div ref={modalRef} role="dialog" aria-modal="true" aria-labelledby="bulk-import-title" className="relative bg-surface border border-border rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-                <div className="p-6 border-b border-white/5 flex justify-between items-center bg-slate-950/50">
-                    <h3 id="bulk-import-title" className="text-lg font-bold text-white flex items-center gap-2">
+                <div className="p-6 border-b border-border flex justify-between items-center bg-background">
+                    <h3 id="bulk-import-title" className="text-lg font-bold text-text-primary flex items-center gap-2">
                         <Upload className="w-5 h-5 text-primary" />
                         Bulk Domain Import
                     </h3>
-                    <button onClick={handleClose} aria-label="Close bulk import dialog" className="text-text-muted hover:text-white transition-colors">
+                    <button onClick={handleClose} aria-label="Close bulk import dialog" className="text-text-muted hover:text-text-primary transition-colors">
                         <X className="w-5 h-5" aria-hidden="true" />
                     </button>
                 </div>
@@ -165,7 +165,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
                             <div className="w-16 h-16 bg-surfaceHighlight rounded-full flex items-center justify-center mx-auto mb-4">
                                 <FileText className="w-8 h-8 text-text-muted" />
                             </div>
-                            <p className="text-white font-medium mb-1">
+                            <p className="text-text-primary font-medium mb-1">
                                 Drag & drop your CSV here
                             </p>
                             <p className="text-sm text-slate-500 mb-6">
@@ -180,7 +180,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
                             />
                             <button
                                 onClick={() => fileInputRef.current?.click()}
-                                className="bg-surfaceHighlight hover:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                                className="bg-background hover:bg-slate-50 text-text-primary border border-border px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                             >
                                 Select File
                             </button>
@@ -190,23 +190,23 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
                         </div>
                     ) : (
                         <div className="space-y-6">
-                            <div className="flex items-center gap-4 bg-surfaceHighlight p-4 rounded-xl border border-white/5">
+                            <div className="flex items-center gap-4 bg-background p-4 rounded-xl border border-border">
                                 <div className="p-3 bg-emerald-500/10 rounded-lg">
-                                    <Check className="w-6 h-6 text-emerald-400" />
+                                    <Check className="w-6 h-6 text-emerald-600" />
                                 </div>
                                 <div className="flex-1 overflow-hidden">
-                                    <p className="text-sm font-medium text-white truncate">{file.name}</p>
+                                    <p className="text-sm font-medium text-text-primary truncate">{file.name}</p>
                                     <p className="text-xs text-text-muted">{previewUrls.length} domains detected</p>
                                 </div>
                                 <button
                                     onClick={() => { setFile(null); setPreviewUrls([]); }}
-                                    className="text-text-muted hover:text-white"
+                                    className="text-text-muted hover:text-text-primary"
                                 >
                                     <X className="w-4 h-4" />
                                 </button>
                             </div>
 
-                            <div className="bg-slate-950 rounded-xl p-4 border border-white/5 max-h-40 overflow-y-auto">
+                            <div className="bg-background rounded-xl p-4 border border-border max-h-40 overflow-y-auto">
                                 <p className="text-xs font-bold text-slate-500 uppercase mb-3">Preview</p>
                                 <ul className="space-y-2">
                                     {previewUrls.map((url, i) => (
@@ -223,7 +223,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
                             <div className="flex gap-3">
                                 <button
                                     onClick={onClose}
-                                    className="flex-1 bg-surfaceHighlight hover:bg-slate-700 text-white py-2.5 rounded-lg font-medium transition-colors"
+                                    className="flex-1 bg-background hover:bg-slate-50 text-text-primary border border-border py-2.5 rounded-lg font-medium transition-colors"
                                 >
                                     Cancel
                                 </button>

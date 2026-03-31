@@ -6,7 +6,7 @@ import {
     BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
     Cell, RadialBarChart, RadialBar, PolarAngleAxis, LabelList
 } from 'recharts';
-import { AlertTriangle, CheckCircle, TrendingUp, Cpu, Target, Layers, ArrowRight } from 'lucide-react';
+import { AlertTriangle, CheckCircle, TrendingUp, Cpu, Target, Layers, ArrowRight, Mic } from 'lucide-react';
 import { VisibilityTrendChart } from '../VisibilityTrendChart';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/Card';
 import { Badge } from '../ui/Badge';
@@ -49,6 +49,11 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ report, setActiveTab }
         fill: report.overallScore > 75 ? '#10b981' : '#2563eb'
     }];
 
+    // Share of Voice: % of queries where brand was cited
+    const queriesWithCitation = report.keywordRankings?.filter((k: any) => k.citation_found || k.citationFound).length ?? 0;
+    const totalQueries = report.keywordRankings?.length ?? 0;
+    const sovPercent = totalQueries > 0 ? Math.round((queriesWithCitation / totalQueries) * 100) : null;
+
     // Dynamic Impact Potential: calculated from high-priority recommendations and low platform scores
     const allRecs = report.pages.flatMap(p => p.recommendations);
     const highCount = allRecs.filter(r => r.impact === 'HIGH').length;
@@ -90,14 +95,20 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ report, setActiveTab }
                             </div>
                         </div>
                         {/* Micro-stats */}
-                        <div className="mt-8 grid grid-cols-2 gap-8 w-full border-t border-border pt-8">
+                        <div className="mt-8 grid grid-cols-3 gap-4 w-full border-t border-border pt-8">
                             <div className="text-center">
                                 <div className="text-text-muted text-[10px] uppercase tracking-wider mb-1 font-bold">Consistency</div>
                                 <div className="text-text-primary text-lg font-bold font-mono">{report.brandConsistencyScore}%</div>
                             </div>
                             <div className="text-center">
-                                <div className="text-slate-400 text-[10px] uppercase tracking-wider mb-1 font-bold">Impact Potential</div>
+                                <div className="text-slate-400 text-[10px] uppercase tracking-wider mb-1 font-bold">Impact</div>
                                 <div className={`font-bold font-display ${impactPotential.color}`}>{impactPotential.label}</div>
+                            </div>
+                            <div className="text-center">
+                                <div className="text-text-muted text-[10px] uppercase tracking-wider mb-1 font-bold flex items-center justify-center gap-1"><Mic className="w-2.5 h-2.5" /> AI Voice</div>
+                                <div className="text-text-primary text-lg font-bold font-mono">
+                                    {sovPercent !== null ? `${sovPercent}%` : '—'}
+                                </div>
                             </div>
                         </div>
                     </Card>

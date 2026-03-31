@@ -143,14 +143,14 @@ export const SearchTab: React.FC<SearchTabProps> = ({ report }) => {
             className="space-y-10"
         >
             {/* GSC Metrics Panel */}
-            <div className="bg-blue-50 backdrop-blur-xl rounded-3xl border border-white/5 shadow-2xl overflow-hidden">
-                <div className="px-6 sm:px-8 py-5 border-b border-white/5 flex items-center justify-between">
+            <div className="bg-blue-50 backdrop-blur-xl rounded-3xl border border-border shadow-2xl overflow-hidden">
+                <div className="px-6 sm:px-8 py-5 border-b border-border flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="bg-blue-500/20 p-2 rounded-lg">
-                            <Globe className="w-4 h-4 text-blue-400" />
+                            <Globe className="w-4 h-4 text-blue-600" />
                         </div>
                         <div>
-                            <h3 className="text-white font-bold text-sm">Google Search Console</h3>
+                            <h3 className="text-text-primary font-bold text-sm">Google Search Console</h3>
                             <p className="text-[10px] text-slate-500">Traditional search performance (last 30 days)</p>
                         </div>
                     </div>
@@ -183,13 +183,13 @@ export const SearchTab: React.FC<SearchTabProps> = ({ report }) => {
                     <div className="p-6 sm:p-8">
                         {gscSummary && (
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-                                <div className="bg-white/[0.03] rounded-2xl p-4 border border-white/5">
+                                <div className="bg-background rounded-2xl p-4 border border-border">
                                     <div className="flex items-center gap-2 mb-2">
                                         <MousePointerClick className="w-3.5 h-3.5 text-blue-400" />
                                         <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Clicks</span>
                                     </div>
                                     <div className="flex items-end gap-2">
-                                        <span className="text-2xl font-black text-white">{gscSummary.totalClicks.toLocaleString()}</span>
+                                        <span className="text-2xl font-black text-text-primary">{gscSummary.totalClicks.toLocaleString()}</span>
                                         <div className="flex items-center gap-1 mb-1">
                                             <TrendIcon value={gscSummary.clicksTrend} />
                                             <span className={`text-[10px] font-bold ${gscSummary.clicksTrend > 0 ? 'text-emerald-400' : gscSummary.clicksTrend < 0 ? 'text-rose-400' : 'text-text-muted'}`}>
@@ -198,21 +198,21 @@ export const SearchTab: React.FC<SearchTabProps> = ({ report }) => {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="bg-white/[0.03] rounded-2xl p-4 border border-white/5">
+                                <div className="bg-background rounded-2xl p-4 border border-border">
                                     <div className="flex items-center gap-2 mb-2">
                                         <Eye className="w-3.5 h-3.5 text-purple-400" />
                                         <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Impressions</span>
                                     </div>
                                     <span className="text-2xl font-black text-white">{gscSummary.totalImpressions.toLocaleString()}</span>
                                 </div>
-                                <div className="bg-white/[0.03] rounded-2xl p-4 border border-white/5">
+                                <div className="bg-background rounded-2xl p-4 border border-border">
                                     <div className="flex items-center gap-2 mb-2">
                                         <BarChart3 className="w-3.5 h-3.5 text-amber-400" />
                                         <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Avg CTR</span>
                                     </div>
                                     <span className="text-2xl font-black text-white">{gscSummary.avgCtr.toFixed(1)}%</span>
                                 </div>
-                                <div className="bg-white/[0.03] rounded-2xl p-4 border border-white/5">
+                                <div className="bg-background rounded-2xl p-4 border border-border">
                                     <div className="flex items-center gap-2 mb-2">
                                         <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
                                         <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Avg Position</span>
@@ -259,13 +259,13 @@ export const SearchTab: React.FC<SearchTabProps> = ({ report }) => {
 
             {/* Keyword Ranking Trends (AI Platforms) */}
             {platformTrendData.length > 1 && (
-                <div className="bg-blue-50 backdrop-blur-xl rounded-3xl border border-white/5 shadow-2xl overflow-hidden">
-                    <div className="px-6 sm:px-8 py-5 border-b border-white/5 flex items-center gap-3">
+                <div className="bg-blue-50 backdrop-blur-xl rounded-3xl border border-border shadow-2xl overflow-hidden">
+                    <div className="px-6 sm:px-8 py-5 border-b border-border flex items-center gap-3">
                         <div className="bg-primary/20 p-2 rounded-lg">
                             <TrendingUp className="w-4 h-4 text-primary" />
                         </div>
                         <div>
-                            <h3 className="text-white font-bold text-sm">AI Platform Ranking Trends</h3>
+                            <h3 className="text-text-primary font-bold text-sm">AI Platform Ranking Trends</h3>
                             <p className="text-[10px] text-slate-500">Average ranking position by platform over time</p>
                         </div>
                     </div>

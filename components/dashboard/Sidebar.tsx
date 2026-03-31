@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
     LayoutDashboard, FileText, Search, Users, ShieldCheck,
     Zap, History, Sparkles, Settings, Brain, Upload,
-    ChevronLeft, ChevronRight, Plus,
+    ChevronLeft, ChevronRight, Plus, Share2, MapPin,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TabType } from './DashboardTypes';
@@ -43,6 +43,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onRes
         { id: 'pages' as const,        label: t('sidebar.pages', 'Pages'),              icon: FileText,        shortcut: '2' },
         { id: 'search' as const,       label: t('sidebar.search', 'Search'),            icon: Search,          shortcut: '3' },
         { id: 'benchmark' as const,    label: t('sidebar.benchmark', 'Benchmark'),      icon: Users,           shortcut: '4' },
+        { id: 'social' as const,       label: t('sidebar.social', 'Social'),            icon: Share2,          shortcut: '' },
+        { id: 'local' as const,        label: t('sidebar.local', 'Local'),              icon: MapPin,          shortcut: '' },
         { id: 'consistency' as const,  label: t('sidebar.consistency', 'Consistency'),  icon: ShieldCheck,     shortcut: '5' },
         { id: 'optimization' as const, label: t('sidebar.optimization', 'Optimize'),    icon: Zap,             shortcut: '6' },
         { id: 'sandbox' as const,      label: t('sidebar.sandbox', 'Sandbox'),          icon: Sparkles,        shortcut: '7' },

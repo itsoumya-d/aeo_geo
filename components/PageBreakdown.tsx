@@ -127,6 +127,7 @@ const RecommendationCard: React.FC<{ rec: Recommendation, auditId?: string, page
     const [draft, setDraft] = useState(rec.suggested || rec.snippet || "");
     const [result, setResult] = useState<{ scoreDelta: number, reasoning: string, vectorShift?: number } | null>(null);
     const [copiedSchema, setCopiedSchema] = useState(false);
+    const [schemaOpen, setSchemaOpen] = useState(false);
     const [status, setStatus] = useState<'OPEN' | 'DONE' | 'IGNORED'>(rec.status || 'OPEN');
     const [updatingStatus, setUpdatingStatus] = useState(false);
     const { organization } = useAuth();
@@ -157,6 +158,17 @@ const RecommendationCard: React.FC<{ rec: Recommendation, auditId?: string, page
             setCopiedSchema(true);
             setTimeout(() => setCopiedSchema(false), 2000);
         }
+    };
+
+    const downloadSchema = () => {
+        if (!rec.generatedSchema) return;
+        const blob = new Blob([rec.generatedSchema], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'schema.json';
+        a.click();
+        URL.revokeObjectURL(url);
     };
 
     const handleUpdateStatus = async (newStatus: 'OPEN' | 'DONE' | 'IGNORED') => {
@@ -230,21 +242,45 @@ const RecommendationCard: React.FC<{ rec: Recommendation, auditId?: string, page
 
                     {/* Schema Generator UI */}
                     {rec.generatedSchema && (
-                        <div className="mt-8 bg-black/40 rounded-2xl border border-white/5 overflow-hidden shadow-Inner">
-                            <div className="flex items-center justify-between px-6 py-4 bg-white/[0.03] border-b border-white/5">
-                                <span className="text-[10px] font-black text-text-muted uppercase tracking-widest flex items-center gap-3">
-                                    <Code className="w-4 h-4 text-primary" /> Vectorized Metadata (JSON-LD)
+                        <div className="mt-6 border border-border rounded-xl overflow-hidden">
+                            <button
+                                onClick={() => setSchemaOpen(o => !o)}
+                                className="w-full flex items-center justify-between px-4 py-3 bg-background hover:bg-slate-50 transition-colors text-left"
+                            >
+                                <span className="text-sm font-semibold text-primary flex items-center gap-2">
+                                    <Code className="w-4 h-4" /> View generated JSON-LD schema
                                 </span>
-                                <button
-                                    onClick={copySchema}
-                                    className="text-[10px] font-black text-primary hover:text-white transition-all uppercase tracking-widest flex items-center gap-2"
-                                >
-                                    {copiedSchema ? <><Check className="w-3 h-3" /> Ready</> : <><RefreshCw className="w-3 h-3" /> Copy Schema</>}
-                                </button>
-                            </div>
-                            <pre className="p-6 text-xs font-mono text-emerald-400/90 overflow-x-auto whitespace-pre-wrap leading-relaxed custom-scrollbar">
-                                {rec.generatedSchema}
-                            </pre>
+                                <ChevronDown className={`w-4 h-4 text-text-muted transition-transform ${schemaOpen ? 'rotate-180' : ''}`} />
+                            </button>
+                            <AnimatePresence>
+                                {schemaOpen && (
+                                    <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: 'auto', opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        transition={{ duration: 0.25 }}
+                                    >
+                                        <pre className="p-4 bg-background text-xs font-mono text-text-primary overflow-x-auto border-t border-border leading-relaxed custom-scrollbar max-h-64">
+                                            {(() => { try { return JSON.stringify(JSON.parse(rec.generatedSchema!), null, 2); } catch { return rec.generatedSchema; } })()}
+                                        </pre>
+                                        <div className="flex items-center gap-3 px-4 py-3 border-t border-border bg-background">
+                                            <button
+                                                onClick={copySchema}
+                                                className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
+                                            >
+                                                {copiedSchema ? <><Check className="w-3 h-3" /> Copied!</> : 'Copy to clipboard'}
+                                            </button>
+                                            <span className="text-text-muted">·</span>
+                                            <button
+                                                onClick={downloadSchema}
+                                                className="text-xs font-semibold text-primary hover:underline"
+                                            >
+                                                Download .json
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
                     )}
                 </div>
@@ -254,15 +290,15 @@ const RecommendationCard: React.FC<{ rec: Recommendation, auditId?: string, page
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
                 {/* Current State */}
-                <div className="bg-black/40 p-8 rounded-2xl border border-white/5 relative">
-                    <div className="text-[10px] text-slate-600 mb-6 font-black uppercase tracking-widest flex justify-between items-center">
-                        <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-rose-500/40"></div> Baseline Content</span>
-                        <span className="text-rose-500/60">Fragmented Signal</span>
+                <div className="bg-background p-8 rounded-2xl border border-border relative">
+                    <div className="text-[10px] text-text-muted mb-6 font-black uppercase tracking-widest flex justify-between items-center">
+                        <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-rose-400"></div> Baseline Content</span>
+                        <span className="text-rose-500">Fragmented Signal</span>
                     </div>
-                    <div className="text-sm font-medium text-text-muted italic bg-white/[0.02] p-4 rounded-xl border-l-2 border-rose-500/40 mb-6 leading-relaxed">
+                    <div className="text-sm font-medium text-text-secondary italic bg-surface p-4 rounded-xl border-l-2 border-rose-400 mb-6 leading-relaxed">
                         "{rec.snippet}"
                     </div>
-                    <div className="text-xs text-slate-500 font-medium leading-loose bg-white/[0.01] p-5 rounded-xl border border-white/5">
+                    <div className="text-xs text-text-secondary font-medium leading-loose bg-surface p-5 rounded-xl border border-border">
                         <span className="text-primary font-black uppercase tracking-widest text-[10px] block mb-2">Neural Analysis</span> {rec.aiReasoning}
                     </div>
                 </div>
@@ -277,7 +313,7 @@ const RecommendationCard: React.FC<{ rec: Recommendation, auditId?: string, page
                             </span>
                         </div>
                         <textarea
-                            className="w-full bg-transparent text-white text-sm font-medium outline-none resize-none border-l-2 border-primary/40 pl-4 py-1 focus:border-primary transition-colors placeholder:text-slate-700 min-h-[120px] leading-relaxed"
+                            className="w-full bg-transparent text-text-primary text-sm font-medium outline-none resize-none border-l-2 border-primary/40 pl-4 py-1 focus:border-primary transition-colors placeholder:text-text-muted min-h-[120px] leading-relaxed"
                             value={draft}
                             onChange={(e) => setDraft(e.target.value)}
                             placeholder="Synthesizing optimized signal..."

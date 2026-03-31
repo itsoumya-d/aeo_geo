@@ -52,9 +52,9 @@ export const SandboxTab: React.FC = () => {
             className="space-y-12 text-left"
         >
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/[0.05] pb-10">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-border pb-10">
                 <div>
-                    <h2 className="text-3xl font-black text-white tracking-tight flex items-center gap-4">
+                    <h2 className="text-3xl font-black text-text-primary tracking-tight flex items-center gap-4">
                         <div className="bg-primary/20 p-2.5 rounded-xl border border-primary/20">
                             <Sparkles className="text-primary w-6 h-6" />
                         </div>
@@ -65,7 +65,7 @@ export const SandboxTab: React.FC = () => {
                     </p>
                 </div>
                 {results && (
-                    <button onClick={clear} className="text-slate-500 hover:text-rose-500 transition-colors flex items-center gap-2 text-[10px] font-black uppercase tracking-widest px-4 py-2 border border-white/5 rounded-xl">
+                    <button onClick={clear} className="text-text-muted hover:text-rose-500 transition-colors flex items-center gap-2 text-[10px] font-black uppercase tracking-widest px-4 py-2 border border-border rounded-xl">
                         <Trash2 className="w-4 h-4" /> Reset
                     </button>
                 )}
@@ -74,7 +74,7 @@ export const SandboxTab: React.FC = () => {
             {/* Config & Inputs */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
                 <div className="lg:col-span-12">
-                    <div className="bg-blue-50 backdrop-blur-xl rounded-[2.5rem] border border-white/5 p-8 shadow-2xl space-y-8">
+                    <div className="bg-blue-50 backdrop-blur-xl rounded-[2.5rem] border border-border p-8 shadow-2xl space-y-8">
                         <div className="space-y-4">
                             <div className="flex items-center gap-3">
                                 <Target className="w-5 h-5 text-primary" />
@@ -84,7 +84,7 @@ export const SandboxTab: React.FC = () => {
                                 value={goal}
                                 onChange={(e) => setGoal(e.target.value)}
                                 placeholder="e.g., Establish 'Cognition' as the world's most secure AEO tool for agencies."
-                                className="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-5 text-sm font-bold text-white outline-none focus:border-primary/50 transition-all placeholder:text-slate-700 shadow-inner"
+                                className="w-full bg-background border border-border rounded-2xl px-6 py-5 text-sm font-bold text-text-primary outline-none focus:border-primary/50 transition-all placeholder:text-text-secondary"
                             />
                         </div>
                     </div>
@@ -102,7 +102,7 @@ export const SandboxTab: React.FC = () => {
                             onChange={(e) => setVariantA(e.target.value)}
                             readOnly={!!results}
                             placeholder="Paste variant A here..."
-                            className="w-full h-80 bg-blue-50 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-8 text-sm text-text-secondary font-medium outline-none focus:border-white/20 transition-all shadow-2xl resize-none leading-relaxed"
+                            className="w-full h-80 bg-blue-50 backdrop-blur-xl border border-border rounded-[2.5rem] p-8 text-sm text-text-secondary font-medium outline-none focus:border-primary/30 transition-all shadow-2xl resize-none leading-relaxed"
                         />
                     </div>
                     {results && <MetricCard result={results.a} />}
@@ -120,7 +120,7 @@ export const SandboxTab: React.FC = () => {
                             onChange={(e) => setVariantB(e.target.value)}
                             readOnly={!!results}
                             placeholder="Paste variant B here..."
-                            className="w-full h-80 bg-blue-50 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-8 text-sm text-text-secondary font-medium outline-none focus:border-white/20 transition-all shadow-2xl resize-none leading-relaxed"
+                            className="w-full h-80 bg-blue-50 backdrop-blur-xl border border-border rounded-[2.5rem] p-8 text-sm text-text-secondary font-medium outline-none focus:border-primary/30 transition-all shadow-2xl resize-none leading-relaxed"
                         />
                     </div>
                     {results && <MetricCard result={results.b} />}
@@ -148,36 +148,36 @@ const MetricCard = ({ result }: { result: SandboxCandidateResult }) => (
     <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-surfaceHighlight backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 space-y-8"
+        className="bg-background backdrop-blur-xl border border-border rounded-[2.5rem] p-8 space-y-8"
     >
         <div className="flex items-end justify-between">
             <div>
                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Visibility confidence</p>
                 <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-black text-white tracking-tighter">{result.score}%</span>
+                    <span className="text-4xl font-black text-text-primary tracking-tighter">{result.score}%</span>
                     <span className="text-xs font-bold text-slate-600">/ 100</span>
                 </div>
             </div>
             <div className="flex flex-col items-end gap-2">
                 <div className="flex gap-1">
                     {[1, 2, 3, 4, 5].map(i => (
-                        <div key={i} className={`w-1.5 h-6 rounded-full ${i <= Math.round(result.score / 20) ? 'bg-primary' : 'bg-white/5'}`} />
+                        <div key={i} className={`w-1.5 h-6 rounded-full ${i <= Math.round(result.score / 20) ? 'bg-primary' : 'bg-border'}`} />
                     ))}
                 </div>
                 <span className="text-[9px] font-black text-primary uppercase tracking-widest">Signal strength</span>
             </div>
         </div>
 
-        <div className="pt-6 border-t border-white/5 grid grid-cols-3 gap-4">
+        <div className="pt-6 border-t border-border grid grid-cols-3 gap-4">
             {result.platformScores.map((ps, i) => (
-                <div key={i} className="bg-black/20 p-4 rounded-2xl border border-white/5 text-center">
-                    <p className="text-[8px] font-black text-slate-600 uppercase mb-1">{ps.platform}</p>
-                    <p className="text-sm font-black text-white">{ps.score}</p>
+                <div key={i} className="bg-surface p-4 rounded-2xl border border-border text-center">
+                    <p className="text-[8px] font-black text-text-muted uppercase mb-1">{ps.platform}</p>
+                    <p className="text-sm font-black text-text-primary">{ps.score}</p>
                 </div>
             ))}
         </div>
 
-        <div className="bg-white/5 p-5 rounded-2xl border border-white/5">
+        <div className="bg-background p-5 rounded-2xl border border-border">
             <div className="flex items-center gap-2 mb-2">
                 <Info className="w-3.5 h-3.5 text-slate-500" />
                 <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Why this scores</span>

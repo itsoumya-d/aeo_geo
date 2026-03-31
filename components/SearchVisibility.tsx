@@ -1,7 +1,26 @@
 import React, { useState } from 'react';
 import { Report, AIPlatform } from '../types';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
-import { CheckCircle, XCircle, Search, Copy, Terminal, Activity, Hash, Zap, RefreshCw, ExternalLink, Info, Target } from 'lucide-react';
+import { CheckCircle, XCircle, Search, Copy, Terminal, Activity, Hash, Zap, RefreshCw, ExternalLink, Info, Target, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+
+function SentimentBadge({ score }: { score: number | null | undefined }) {
+    if (score === null || score === undefined) return null;
+    if (score > 0.3) return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-semibold text-green-700 bg-green-50 border-green-200">
+            <TrendingUp className="w-3 h-3" /> Positive
+        </span>
+    );
+    if (score < -0.3) return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-semibold text-rose-700 bg-rose-50 border-rose-200">
+            <TrendingDown className="w-3 h-3" /> Negative
+        </span>
+    );
+    return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-semibold text-slate-600 bg-slate-50 border-slate-200">
+            <Minus className="w-3 h-3" /> Neutral
+        </span>
+    );
+}
 import { checkVisibility, checkVisibilityBatch } from '../services/geminiService';
 import { useToast } from './Toast';
 import { saveKeywordRanking, getKeywordRankings } from '../services/supabase';
@@ -130,11 +149,12 @@ export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, audi
 
     const getPlatformColor = (platform: AIPlatform) => {
         switch (platform) {
-            case AIPlatform.CHATGPT: return 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20 shadow-[0_0_10px_rgba(52,211,153,0.1)]';
-            case AIPlatform.GEMINI: return 'text-blue-400 bg-blue-400/10 border-blue-400/20 shadow-[0_0_10px_rgba(96,165,250,0.1)]';
-            case AIPlatform.CLAUDE: return 'text-amber-400 bg-amber-400/10 border-amber-400/20 shadow-[0_0_10px_rgba(251,191,36,0.1)]';
-            case AIPlatform.PERPLEXITY: return 'text-purple-400 bg-purple-400/10 border-purple-400/20 shadow-[0_0_10px_rgba(192,132,252,0.1)]';
-            default: return 'text-text-muted';
+            case AIPlatform.CHATGPT: return 'text-emerald-700 bg-emerald-50 border-emerald-200';
+            case AIPlatform.GEMINI: return 'text-blue-700 bg-blue-50 border-blue-200';
+            case AIPlatform.CLAUDE: return 'text-amber-700 bg-amber-50 border-amber-200';
+            case AIPlatform.PERPLEXITY: return 'text-purple-700 bg-purple-50 border-purple-200';
+            case AIPlatform.DEEPSEEK: return 'text-sky-700 bg-sky-50 border-sky-200';
+            default: return 'text-text-muted bg-background border-border';
         }
     };
 
@@ -146,19 +166,19 @@ export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, audi
                 {/* SEO Health Score */}
                 <motion.div
                     whileHover={{ y: -5 }}
-                    className="bg-blue-50 backdrop-blur-xl rounded-3xl p-6 sm:p-8 border border-white/5 shadow-2xl relative overflow-hidden group"
+                    className="bg-blue-50 backdrop-blur-xl rounded-3xl p-6 sm:p-8 border border-border shadow-2xl relative overflow-hidden group"
                 >
                     <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
                         <Activity className="w-32 h-32 text-primary" />
                     </div>
-                    <h3 className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-6">AI Visibility Score</h3>
+                    <h3 className="text-text-muted text-[10px] font-black uppercase tracking-[0.2em] mb-6">AI Visibility Score</h3>
                     <div className="flex items-end gap-3 mb-6">
-                        <span className="text-7xl font-black text-white tracking-tighter">
+                        <span className="text-7xl font-black text-text-primary tracking-tighter">
                             {report.seoAudit?.technicalHealth || 0}
                         </span>
-                        <span className="text-xl text-slate-600 mb-2 font-black opacity-30">/100</span>
+                        <span className="text-xl text-text-secondary mb-2 font-black opacity-50">/100</span>
                     </div>
-                    <div className="w-full bg-white/[0.03] h-2.5 rounded-full overflow-hidden border border-white/[0.05]">
+                    <div className="w-full bg-background h-2.5 rounded-full overflow-hidden border border-border">
                         <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${report.seoAudit?.technicalHealth || 0}%` }}
@@ -175,7 +195,7 @@ export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, audi
                 {/* Platform Comparison Chart */}
                 <motion.div
                     whileHover={{ y: -5 }}
-                    className="lg:col-span-2 bg-blue-50 backdrop-blur-xl rounded-3xl p-6 sm:p-8 border border-white/5 shadow-2xl relative overflow-hidden flex flex-col"
+                    className="lg:col-span-2 bg-blue-50 backdrop-blur-xl rounded-3xl p-6 sm:p-8 border border-border shadow-2xl relative overflow-hidden flex flex-col"
                 >
                     <div className="flex items-center gap-3 mb-6">
                         <div className="bg-primary/20 p-2 rounded-lg">
@@ -225,13 +245,13 @@ export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, audi
             {/* Technical Audit Columns */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Implemented */}
-                <div className="bg-blue-50 backdrop-blur-xl rounded-3xl p-6 sm:p-8 border border-white/5 shadow-2xl">
+                <div className="bg-blue-50 backdrop-blur-xl rounded-3xl p-6 sm:p-8 border border-border shadow-2xl">
                     <div className="flex items-center gap-4 mb-8">
                         <div className="bg-emerald-500/10 p-2.5 rounded-xl">
-                            <CheckCircle className="w-5 h-5 text-emerald-400" />
+                            <CheckCircle className="w-5 h-5 text-emerald-600" />
                         </div>
                         <div>
-                            <h3 className="text-white font-black text-lg tracking-tight">Active Optimizations</h3>
+                            <h3 className="text-text-primary font-black text-lg tracking-tight">Active Optimizations</h3>
                             <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Passed Verification</p>
                         </div>
                     </div>
@@ -250,19 +270,19 @@ export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, audi
                                 </motion.div>
                             ))
                         ) : (
-                            <div className="text-slate-600 font-bold text-xs uppercase tracking-widest py-8 text-center italic border-2 border-dashed border-white/5 rounded-2xl">No active optimizations found</div>
+                            <div className="text-text-muted font-bold text-xs uppercase tracking-widest py-8 text-center italic border-2 border-dashed border-border rounded-2xl">No active optimizations found</div>
                         )}
                     </div>
                 </div>
 
                 {/* Missing */}
-                <div className="bg-blue-50 backdrop-blur-xl rounded-3xl p-8 border border-white/5 shadow-2xl">
+                <div className="bg-blue-50 backdrop-blur-xl rounded-3xl p-8 border border-border shadow-2xl">
                     <div className="flex items-center gap-4 mb-8">
                         <div className="bg-rose-500/10 p-2.5 rounded-xl">
-                            <XCircle className="w-5 h-5 text-rose-400" />
+                            <XCircle className="w-5 h-5 text-rose-600" />
                         </div>
                         <div>
-                            <h3 className="text-white font-black text-lg tracking-tight">Missing Optimizations</h3>
+                            <h3 className="text-text-primary font-black text-lg tracking-tight">Missing Optimizations</h3>
                             <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Action Required</p>
                         </div>
                     </div>
@@ -281,7 +301,7 @@ export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, audi
                                 </motion.div>
                             ))
                         ) : (
-                            <div className="text-slate-600 font-bold text-xs uppercase tracking-widest py-8 text-center italic border-2 border-dashed border-white/5 rounded-2xl">All critical paths optimized</div>
+                            <div className="text-text-muted font-bold text-xs uppercase tracking-widest py-8 text-center italic border-2 border-dashed border-border rounded-2xl">All critical paths optimized</div>
                         )}
                     </div>
                 </div>
@@ -291,7 +311,7 @@ export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, audi
             <div className="space-y-8">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-4">
+                        <h2 className="text-2xl font-black text-text-primary tracking-tight flex items-center gap-4">
                             <div className="bg-primary/20 p-2 rounded-xl">
                                 <Terminal className="w-5 h-5 text-primary" />
                             </div>
@@ -313,22 +333,22 @@ export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, audi
                         <motion.div
                             key={idx}
                             whileHover={{ scale: 1.01 }}
-                            className="bg-blue-50 backdrop-blur-xl border border-white/5 rounded-3xl p-6 sm:p-8 hover:border-white/10 transition-all group shadow-2xl"
+                            className="bg-blue-50 backdrop-blur-xl border border-border rounded-3xl p-6 sm:p-8 hover:border-primary/20 transition-all group shadow-2xl"
                         >
                             <div className="flex justify-between items-start mb-6">
                                 <div className="flex items-center gap-3">
                                     <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${getPlatformColor(sq.platform)}`}>
                                         {sq.platform}
                                     </span>
-                                    <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest bg-white/[0.03] px-3 py-1.5 rounded-lg border border-white/5 shadow-inner">
+                                    <span className="text-[10px] text-text-muted font-black uppercase tracking-widest bg-background px-3 py-1.5 rounded-lg border border-border shadow-inner">
                                         {sq.intent} Intent
                                     </span>
                                 </div>
-                                <div className="w-8 h-8 rounded-full bg-white/[0.02] flex items-center justify-center border border-white/5">
-                                    <Target className="w-3.5 h-3.5 text-slate-600" />
+                                <div className="w-8 h-8 rounded-full bg-background flex items-center justify-center border border-border">
+                                    <Target className="w-3.5 h-3.5 text-text-muted" />
                                 </div>
                             </div>
-                            <div className="bg-black/40 p-6 rounded-2xl font-mono text-xs text-text-muted mb-8 border border-white/5 group-hover:border-primary/30 transition-colors leading-relaxed break-words overflow-hidden">
+                            <div className="bg-background p-6 rounded-2xl font-mono text-xs text-text-secondary mb-8 border border-border group-hover:border-primary/30 transition-colors leading-relaxed break-words overflow-hidden">
                                 <span className="text-primary mr-3 opacity-50">$ cognition test --q</span>
                                 "{sq.query}"
                             </div>
@@ -352,7 +372,7 @@ export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, audi
                                 <motion.button
                                     whileTap={{ scale: 0.95 }}
                                     onClick={() => copyToClipboard(sq.query, idx)}
-                                    className="w-12 h-12 bg-white/[0.03] hover:bg-white/[0.05] text-slate-500 hover:text-white rounded-xl transition-all flex items-center justify-center border border-white/5"
+                                    className="w-12 h-12 bg-background hover:bg-slate-50 text-text-muted hover:text-text-primary rounded-xl transition-all flex items-center justify-center border border-border"
                                     title="Copy Query"
                                 >
                                     {copiedIndex === idx ? <CheckCircle className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
@@ -365,18 +385,21 @@ export const SearchVisibility: React.FC<SearchVisibilityProps> = ({ report, audi
                                     <motion.div
                                         initial={{ height: 0, opacity: 0 }}
                                         animate={{ height: 'auto', opacity: 1 }}
-                                        className="mt-6 p-5 rounded-2xl bg-black/60 border border-white/5 text-[11px] text-slate-500 overflow-hidden"
+                                        className="mt-6 p-5 rounded-2xl bg-background border border-border text-[11px] text-text-secondary overflow-hidden"
                                     >
                                         <div className="font-black text-text-muted mb-3 flex justify-between items-center text-[9px] uppercase tracking-widest">
                                             <span>Response Verified</span>
-                                            {visibilityResults[idx].citationFound && <span className="text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-full border border-emerald-500/10">POSITIVE MATCH</span>}
+                                            <div className="flex items-center gap-2">
+                                                <SentimentBadge score={visibilityResults[idx].sentiment} />
+                                                {visibilityResults[idx].citationFound && <span className="text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-200">POSITIVE MATCH</span>}
+                                            </div>
                                         </div>
-                                        <div className="line-clamp-4 italic font-medium text-text-secondary bg-white/[0.02] p-3 rounded-xl border-l-2 border-primary/30 leading-relaxed mb-4">
+                                        <div className="line-clamp-4 italic font-medium text-text-secondary bg-surface p-3 rounded-xl border-l-2 border-primary/30 leading-relaxed mb-4">
                                             "{visibilityResults[idx].answer}"
                                         </div>
                                         {visibilityResults[idx].rank && (
-                                            <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-tighter pt-3 border-t border-white/5">
-                                                <span className="flex items-center gap-2">Confidence <span className="text-white">High</span></span>
+                                            <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-tighter pt-3 border-t border-border">
+                                                <span className="flex items-center gap-2">Confidence <span className="text-text-primary">High</span></span>
                                                 <span className="flex items-center gap-2">Platform Rank <span className="text-primary">#1</span></span>
                                             </div>
                                         )}

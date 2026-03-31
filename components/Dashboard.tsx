@@ -29,6 +29,8 @@ const OptimizationTab = React.lazy(() => import('./dashboard/OptimizationTab').t
 const BenchmarkTab = React.lazy(() => import('./dashboard/BenchmarkTab').then(m => ({ default: m.BenchmarkTab })));
 const ReportTab = React.lazy(() => import('./dashboard/ReportTab').then(m => ({ default: m.ReportTab })));
 const SandboxTab = React.lazy(() => import('./dashboard/SandboxTab').then(m => ({ default: m.SandboxTab })));
+const SocialTab = React.lazy(() => import('./dashboard/SocialTab').then(m => ({ default: m.SocialTab })));
+const LocalTab = React.lazy(() => import('./dashboard/LocalTab').then(m => ({ default: m.LocalTab })));
 
 interface DashboardProps {
     report: Report | null;
@@ -312,9 +314,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                                     {activeTab === 'sandbox' && <SandboxTab />}
                                                     {activeTab === 'consistency' && report && <ConsistencyTab report={report} />}
                                                     {activeTab === 'optimization' && <OptimizationTab />}
+                                                    {activeTab === 'social' && report && <SocialTab report={report} />}
+                                                    {activeTab === 'local' && report && <LocalTab report={report} />}
 
                                                     {/* Handle Empty State for Tabs requiring report */}
-                                                    {(!report && activeTab !== 'sandbox' && activeTab !== 'optimization') && (
+                                                    {(!report && activeTab !== 'sandbox' && activeTab !== 'optimization' && activeTab !== 'social' && activeTab !== 'local') && (
                                                         <div className="text-center py-20">
                                                             <div className="w-16 h-16 mx-auto rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4">
                                                                 <Loader2 className="w-6 h-6 text-text-muted" />

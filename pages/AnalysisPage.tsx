@@ -6,6 +6,8 @@ import { TopUpModal } from '../components/TopUpModal';
 import { ProgressSteps, ANALYSIS_STEPS, getStepFromStatus } from '../components/ProgressSteps';
 import { FullPageLoader } from '../components/routing/FullPageLoader';
 import { analyzeBrandAssets, discoverSiteStructure } from '../services/geminiService';
+import { analyzeSocialPresence } from '../services/socialService';
+import { analyzeGBP } from '../services/gbpService';
 import { crawlPage } from '../services/crawlService';
 import { createAuditPage, getAudit, updateAudit } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -212,6 +214,33 @@ export const AnalysisPage: React.FC = () => {
                 report: generatedReport as any,
                 completed_at: new Date().toISOString()
             });
+
+            // Run social analysis (non-fatal)
+            const socialUrls: Record<string, string> = {};
+            assets.forEach(a => {
+                if (a.type === AssetType.TWITTER)    socialUrls.twitter   = a.url;
+                if (a.type === AssetType.LINKEDIN)   socialUrls.linkedin  = a.url;
+                if (a.type === AssetType.YOUTUBE)    socialUrls.youtube   = a.url;
+                if (a.type === AssetType.INSTAGRAM)  socialUrls.instagram = a.url;
+                if (a.type === AssetType.FACEBOOK)   socialUrls.facebook  = a.url;
+            });
+            if (Object.keys(socialUrls).length > 0) {
+                setStatusMessage('Analyzing social media presence…');
+                try {
+                    const websiteContent = contentMap[normalizedWebsite] || '';
+                    generatedReport.socialAnalysis = await analyzeSocialPresence(normalizedWebsite, websiteContent, socialUrls);
+                } catch (socialErr) {
+                    console.warn('Social analysis failed (non-fatal):', socialErr);
+                }
+            }
+
+            // Run GBP/local analysis (non-fatal)
+            setStatusMessage('Analyzing local presence…');
+            try {
+                generatedReport.gbpAnalysis = await analyzeGBP(normalizedWebsite, contentMap[normalizedWebsite] || '');
+            } catch (gbpErr) {
+                console.warn('GBP analysis failed (non-fatal):', gbpErr);
+            }
 
             generatedReport.id = auditId;
             setReport(generatedReport);

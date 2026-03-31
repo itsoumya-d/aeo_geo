@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, FileText, Search, ShieldCheck, Zap, Users, History as HistoryIcon, Sparkles, Settings, ChevronLeft, ChevronRight, Link2 } from 'lucide-react';
+import { LayoutDashboard, FileText, Search, ShieldCheck, Zap, Users, History as HistoryIcon, Sparkles, Settings, ChevronLeft, ChevronRight, Link2, Share2, MapPin } from 'lucide-react';
 import { TabType } from './DashboardTypes';
 
 interface MobileBottomNavProps {
@@ -17,6 +17,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, set
         { id: 'overview' as const, label: 'Overview', icon: LayoutDashboard },
         { id: 'pages' as const, label: 'Audit', icon: FileText },
         { id: 'benchmark' as const, label: 'Benchmark', icon: Users },
+        { id: 'social' as const, label: 'Social', icon: Share2 },
+        { id: 'local' as const, label: 'Local', icon: MapPin },
         { id: 'search' as const, label: 'SEO', icon: Search },
         { id: 'reports' as const, label: 'Reports', icon: FileText },
         { id: 'consistency' as const, label: 'Align', icon: ShieldCheck },

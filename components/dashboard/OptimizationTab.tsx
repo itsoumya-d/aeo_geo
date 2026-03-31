@@ -17,7 +17,7 @@ export const OptimizationTab: React.FC = () => {
                 <div className="bg-primary/10 p-4 rounded-2xl mb-4">
                     <Zap className="w-8 h-8 text-primary" />
                 </div>
-                <h3 className="text-lg font-bold text-white mb-2">Optimization data not yet available</h3>
+                <h3 className="text-lg font-bold text-text-primary mb-2">Optimization data not yet available</h3>
                 <p className="text-sm text-slate-400 max-w-sm">
                     Run your first audit to generate vector optimization data for your brand.
                 </p>

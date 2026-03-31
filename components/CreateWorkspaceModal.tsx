@@ -174,7 +174,7 @@ export const CreateWorkspaceModal: React.FC<CreateWorkspaceModalProps> = ({ isOp
                                     <Building className="w-5 h-5 text-primary" />
                                 </div>
                                 <div>
-                                    <h2 id="create-workspace-title" className="text-lg font-semibold text-white">
+                                    <h2 id="create-workspace-title" className="text-lg font-semibold text-text-primary">
                                         Create Workspace
                                     </h2>
                                     <p className="text-xs text-text-muted">
@@ -220,7 +220,7 @@ export const CreateWorkspaceModal: React.FC<CreateWorkspaceModalProps> = ({ isOp
                                     placeholder="e.g., ACME Corp, Client XYZ"
                                     disabled={creating}
                                     maxLength={50}
-                                    className="w-full px-4 py-3 bg-background border border-border rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                                    className="w-full px-4 py-3 bg-background border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
                                     autoFocus
                                 />
                                 <p className="text-xs text-text-muted mt-1">
@@ -240,7 +240,7 @@ export const CreateWorkspaceModal: React.FC<CreateWorkspaceModalProps> = ({ isOp
                                     disabled={creating}
                                     maxLength={200}
                                     rows={3}
-                                    className="w-full px-4 py-3 bg-background border border-border rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 resize-none"
+                                    className="w-full px-4 py-3 bg-background border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 resize-none"
                                 />
                                 <p className="text-xs text-text-muted mt-1">
                                     {description.length}/200 characters

@@ -11,6 +11,8 @@ export enum AssetType {
   YOUTUBE = 'YOUTUBE',
   TWITTER = 'TWITTER',
   LINKEDIN = 'LINKEDIN',
+  INSTAGRAM = 'INSTAGRAM',
+  FACEBOOK = 'FACEBOOK',
   DOCS = 'DOCS',
   BLOG = 'BLOG',
   OTHER = 'OTHER'
@@ -46,7 +48,8 @@ export enum AIPlatform {
   GOOGLE_AI_OVERVIEWS = 'Google AI Overviews',
   MICROSOFT_COPILOT = 'Microsoft Copilot',
   META_AI = 'Meta AI',
-  GROK = 'Grok'
+  GROK = 'Grok',
+  DEEPSEEK = 'DeepSeek'
 }
 
 export interface Workspace {
@@ -119,6 +122,41 @@ export interface SeoAudit {
   technicalHealth: number; // 0-100
 }
 
+export interface SocialPlatformResult {
+  platform: 'Twitter/X' | 'LinkedIn' | 'YouTube' | 'Instagram' | 'Facebook';
+  url: string;
+  present: boolean;
+  activityScore: number; // 0-100
+  brandConsistency: number; // 0-100
+  bio?: string;
+  issues?: string[];
+}
+
+export interface SocialAnalysis {
+  overallPresenceScore: number; // 0-100
+  activityScore: number; // 0-100
+  brandConsistencyScore: number; // 0-100
+  platforms: SocialPlatformResult[];
+  platformCoverage: number; // % of major platforms active (0-100)
+  keyMismatches: string[];
+  recommendations: string[];
+}
+
+export interface GBPAnalysis {
+  businessName: string;
+  address: string;
+  phone: string;
+  rating: number;
+  reviewCount: number;
+  hours?: Record<string, string>;
+  photosCount: number;
+  sentimentSummary: string;
+  napConsistencyScore: number; // 0-100
+  overallScore: number; // 0-100
+  issues: string[];
+  recommendations: string[];
+}
+
 export interface Report {
   id?: string;
   createdAt?: string;
@@ -139,4 +177,11 @@ export interface Report {
     citationFound: boolean;
   }[];
   vectorMap?: VectorMapPoint[];
+  socialAnalysis?: SocialAnalysis;
+  gbpAnalysis?: GBPAnalysis;
+  communitySignal?: {
+    sentiment: 'Positive' | 'Mixed' | 'Negative';
+    themes: string[];
+    recommendation: string;
+  };
 }

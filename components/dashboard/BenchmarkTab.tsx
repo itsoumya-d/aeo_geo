@@ -4,7 +4,7 @@ import { Report, AIPlatform } from '../../types';
 import {
     ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell
 } from 'recharts';
-import { Users, Plus, X, Trash2, Loader2, RefreshCw, BarChart3, ArrowUpRight, ArrowDownRight, ShieldCheck } from 'lucide-react';
+import { Users, Plus, X, Trash2, Loader2, RefreshCw, BarChart3, ArrowUpRight, ArrowDownRight, ShieldCheck, MessageCircle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { addCompetitor, removeCompetitor, getCompetitorBenchmarks, CompetitorSummary } from '../../services/competitorService';
 import { useToast } from '../Toast';
 import { useAuth } from '../../contexts/AuthContext';
@@ -28,7 +28,7 @@ export const BenchmarkTab: React.FC<BenchmarkTabProps> = ({ report }) => {
     const [bulkDomains, setBulkDomains] = useState('');
     const [duplicateError, setDuplicateError] = useState('');
     type Metric = 'Overall' | AIPlatform;
-    const metricOptions: Metric[] = ['Overall', AIPlatform.CHATGPT, AIPlatform.GEMINI, AIPlatform.CLAUDE, AIPlatform.PERPLEXITY];
+    const metricOptions: Metric[] = ['Overall', AIPlatform.CHATGPT, AIPlatform.GEMINI, AIPlatform.CLAUDE, AIPlatform.PERPLEXITY, AIPlatform.DEEPSEEK];
     const [metric, setMetric] = useState<Metric>('Overall');
 
     useEffect(() => {
@@ -291,7 +291,7 @@ export const BenchmarkTab: React.FC<BenchmarkTabProps> = ({ report }) => {
                             <button
                                 key={m}
                                 onClick={() => setMetric(m)}
-                                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${metric === m ? 'bg-surface text-white border-border' : 'border-transparent text-slate-600 hover:text-slate-900'}`}
+                                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${metric === m ? 'bg-primary text-white border-primary' : 'border-transparent text-text-secondary hover:text-text-primary'}`}
                             >
                                 {m === 'Overall' ? 'Overall' : m}
                             </button>
@@ -458,6 +458,43 @@ export const BenchmarkTab: React.FC<BenchmarkTabProps> = ({ report }) => {
                 </div>
             </div>
 
+            {/* Community Signal Card */}
+            {report.communitySignal && (
+                <div className="bg-white backdrop-blur-xl rounded-3xl border border-slate-200 p-8 shadow-xl">
+                    <h3 className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                        <MessageCircle className="w-4 h-4 text-primary" /> Community Signal
+                    </h3>
+                    <div className="flex items-start gap-6">
+                        <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border font-semibold text-sm flex-shrink-0 ${
+                            report.communitySignal.sentiment === 'Positive'
+                                ? 'text-green-700 bg-green-50 border-green-200'
+                                : report.communitySignal.sentiment === 'Negative'
+                                ? 'text-rose-700 bg-rose-50 border-rose-200'
+                                : 'text-slate-600 bg-slate-50 border-slate-200'
+                        }`}>
+                            {report.communitySignal.sentiment === 'Positive' && <TrendingUp className="w-4 h-4" />}
+                            {report.communitySignal.sentiment === 'Negative' && <TrendingDown className="w-4 h-4" />}
+                            {report.communitySignal.sentiment === 'Mixed' && <Minus className="w-4 h-4" />}
+                            {report.communitySignal.sentiment}
+                        </div>
+                        <div className="space-y-3 flex-1 min-w-0">
+                            {report.communitySignal.themes && report.communitySignal.themes.length > 0 && (
+                                <div className="flex flex-wrap gap-2">
+                                    {report.communitySignal.themes.map((theme: string, i: number) => (
+                                        <span key={i} className="text-xs bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-full font-semibold">
+                                            {theme}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+                            {report.communitySignal.recommendation && (
+                                <p className="text-sm text-text-secondary leading-relaxed">{report.communitySignal.recommendation}</p>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Add Competitor Modal */}
             <AnimatePresence>
                 {showAddModal && (
@@ -473,22 +510,22 @@ export const BenchmarkTab: React.FC<BenchmarkTabProps> = ({ report }) => {
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-surface border border-white/10 rounded-3xl p-8 shadow-2xl"
+                            className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-surface border border-border rounded-3xl p-8 shadow-2xl"
                         >
                             <div className="flex items-center justify-between mb-5">
-                                <h3 className="text-xl font-bold text-white">Track Competitors</h3>
-                                <button onClick={() => { setShowAddModal(false); setDuplicateError(''); }} aria-label="Close" className="p-2 text-text-muted hover:text-white">
+                                <h3 className="text-xl font-bold text-text-primary">Track Competitors</h3>
+                                <button onClick={() => { setShowAddModal(false); setDuplicateError(''); }} aria-label="Close" className="p-2 text-text-muted hover:text-text-primary">
                                     <X className="w-5 h-5" />
                                 </button>
                             </div>
 
                             {/* Mode tabs */}
-                            <div className="flex gap-1 bg-black/30 p-1 rounded-xl mb-5">
+                            <div className="flex gap-1 bg-background p-1 rounded-xl mb-5">
                                 {(['single', 'bulk'] as const).map(mode => (
                                     <button
                                         key={mode}
                                         onClick={() => { setAddMode(mode); setDuplicateError(''); }}
-                                        className={`flex-1 text-xs font-bold py-2 rounded-lg transition-colors capitalize ${addMode === mode ? 'bg-primary text-white' : 'text-text-muted hover:text-white'}`}
+                                        className={`flex-1 text-xs font-bold py-2 rounded-lg transition-colors capitalize ${addMode === mode ? 'bg-primary text-white' : 'text-text-muted hover:text-text-primary'}`}
                                     >
                                         {mode === 'single' ? 'Single Domain' : 'Bulk Import'}
                                     </button>
@@ -505,7 +542,7 @@ export const BenchmarkTab: React.FC<BenchmarkTabProps> = ({ report }) => {
                                             onChange={(e) => { setNewDomain(e.target.value); setDuplicateError(''); }}
                                             onKeyDown={(e) => e.key === 'Enter' && handleAddCompetitor()}
                                             placeholder="competitor.com"
-                                            className={`w-full bg-black/40 border rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:border-primary outline-none transition-colors ${duplicateError ? 'border-rose-500/50' : 'border-white/10'}`}
+                                            className={`w-full bg-background border rounded-xl px-4 py-3 text-text-primary placeholder:text-text-secondary focus:border-primary outline-none transition-colors ${duplicateError ? 'border-rose-500/50' : 'border-border'}`}
                                         />
                                         {duplicateError && (
                                             <p className="text-xs text-rose-400 mt-1.5 flex items-center gap-1">
@@ -520,11 +557,11 @@ export const BenchmarkTab: React.FC<BenchmarkTabProps> = ({ report }) => {
                                             value={newName}
                                             onChange={(e) => setNewName(e.target.value)}
                                             placeholder="Competitor Inc."
-                                            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:border-primary outline-none"
+                                            className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text-primary placeholder:text-text-secondary focus:border-primary outline-none"
                                         />
                                     </div>
                                     <div className="flex gap-3 mt-2">
-                                        <button onClick={() => { setShowAddModal(false); setDuplicateError(''); }} className="flex-1 py-3 px-6 bg-white/5 hover:bg-white/10 text-text-secondary rounded-xl font-bold text-sm transition-all">Cancel</button>
+                                        <button onClick={() => { setShowAddModal(false); setDuplicateError(''); }} className="flex-1 py-3 px-6 bg-background hover:bg-slate-50 text-text-secondary border border-border rounded-xl font-bold text-sm transition-all">Cancel</button>
                                         <button
                                             onClick={handleAddCompetitor}
                                             disabled={!newDomain.trim() || isAdding}
@@ -544,12 +581,12 @@ export const BenchmarkTab: React.FC<BenchmarkTabProps> = ({ report }) => {
                                             onChange={(e) => setBulkDomains(e.target.value)}
                                             placeholder={"competitor1.com\ncompetitor2.com\ncompetitor3.com"}
                                             rows={6}
-                                            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:border-primary outline-none font-mono text-sm resize-none"
+                                            className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text-primary placeholder:text-text-secondary focus:border-primary outline-none font-mono text-sm resize-none"
                                         />
                                         <p className="text-xs text-slate-500 mt-1">{bulkDomains.split('\n').filter(l => l.trim()).length} domains</p>
                                     </div>
                                     <div className="flex gap-3">
-                                        <button onClick={() => setShowAddModal(false)} className="flex-1 py-3 px-6 bg-white/5 hover:bg-white/10 text-text-secondary rounded-xl font-bold text-sm transition-all">Cancel</button>
+                                        <button onClick={() => setShowAddModal(false)} className="flex-1 py-3 px-6 bg-background hover:bg-slate-50 text-text-secondary border border-border rounded-xl font-bold text-sm transition-all">Cancel</button>
                                         <button
                                             onClick={handleBulkImport}
                                             disabled={!bulkDomains.trim() || isAdding}

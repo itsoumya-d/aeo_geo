@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Asset, AssetType, AnalysisStatus } from '../types';
-import { Plus, Trash2, Globe, Youtube, Linkedin, FileText, Twitter, Search, Zap, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Plus, Trash2, Globe, Youtube, Linkedin, FileText, Twitter, Search, Zap, Loader2, CheckCircle2, AlertCircle, Instagram, Facebook } from 'lucide-react';
 import { validateUrl, normalizeUrl, isDuplicateUrl } from '../utils/validation';
 import { useToast } from './Toast';
 import { ProgressSteps, ANALYSIS_STEPS, getStepFromStatus } from './ProgressSteps';
@@ -171,6 +171,8 @@ export const InputLayer: React.FC<InputLayerProps> = ({ onStartAnalysis, isAnaly
       case AssetType.LINKEDIN: return <Linkedin className="w-4 h-4" />;
       case AssetType.DOCS: return <FileText className="w-4 h-4" />;
       case AssetType.TWITTER: return <Twitter className="w-4 h-4" />;
+      case AssetType.INSTAGRAM: return <Instagram className="w-4 h-4" />;
+      case AssetType.FACEBOOK: return <Facebook className="w-4 h-4" />;
       default: return <Zap className="w-4 h-4" />;
     }
   };
@@ -250,6 +252,8 @@ export const InputLayer: React.FC<InputLayerProps> = ({ onStartAnalysis, isAnaly
                     <option value={AssetType.YOUTUBE}>YouTube</option>
                     <option value={AssetType.LINKEDIN}>LinkedIn</option>
                     <option value={AssetType.TWITTER}>Twitter / X</option>
+                    <option value={AssetType.INSTAGRAM}>Instagram</option>
+                    <option value={AssetType.FACEBOOK}>Facebook</option>
                     <option value={AssetType.OTHER}>Other URL</option>
                   </select>
                 </div>
