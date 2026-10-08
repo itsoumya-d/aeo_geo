@@ -15,6 +15,31 @@ Cognition is a SaaS platform that helps brands monitor and improve their visibil
 - **Perplexity Verification**: Live checks against Perplexity's online search to confirm citations.
 - **SaaS Ready**: Integrated Billing (Stripe), User Management, and Team Invite flows.
 
+## Try the report builder without credentials
+
+Requires Node.js 22+ and npm. No Supabase project, AI provider, payment account, or `.env` configuration is needed for this isolated demo.
+
+```bash
+npm ci --ignore-scripts
+npm run demo:reports
+# Open http://127.0.0.1:5174/demo/report-templates.html
+```
+
+The demo mounts the same report template editor as `/reports/builder`. Rename the template, add/remove sections, and reorder with a drag handle (keyboard: Space, arrow keys, Space; Escape cancels). **Export JSON** downloads a portable layout; **Import JSON** restores it, replacing the current unsaved layout. Export first if you want to keep that layout.
+
+Files contain only the template name and ordered sections. They do not contain audit results or organization identifiers. Imports validate the format/version, section types, name/title limits, and a 64 KB file limit before replacing anything. Templates need a name and 1–50 sections to save or export.
+
+Demo saves are simulated and cleared on reload; export a JSON backup to keep your work. The demo's failure switch exercises retry without a backend. It makes no auth, provider, analytics, or billing calls, does not bypass the app's authentication, and is not included in the normal production build. In the signed-in app, **Save Template** still creates a new organization template; importing does not update an existing database row. Template exports are layouts, not PDF audit reports.
+
+```bash
+npx vitest run
+npm run build:check
+npx playwright install chromium
+npm run test:e2e:reports
+```
+
+The dedicated Chromium suite executes create/edit/reorder/export/import, invalid-file recovery, failed-save retry, cancelled drag, repeated additions, and mobile controls with no conditional skips. CI runs it after the existing typecheck, unit-test, and build gates. The broader `test:e2e` suite remains separate; this demo does not verify real authentication, Supabase persistence/RLS, PDF generation, AI providers, payments, or live delivery.
+
 ## Setup Instructions
 
 ### 1. Prerequisites

@@ -13,6 +13,8 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './tests',
+  // The isolated report demo has its own server/config and credential-free CI gate.
+  testIgnore: '**/report-template-workflow.spec.ts',
   /* Global per-test timeout (ms). Visual/screenshot tests are slower than
      functional tests, so we bump from 60 s to 90 s. */
   timeout: 90000,

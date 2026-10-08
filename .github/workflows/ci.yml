@@ -25,3 +25,16 @@ jobs:
         run: npx vitest run
       - name: Build
         run: npm run build
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Report template browser workflow (no credentials)
+        run: npm run test:e2e:reports
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-template-browser-evidence
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
