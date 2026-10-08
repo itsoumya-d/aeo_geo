@@ -32,7 +32,7 @@ test('creates, edits, reorders, exports, and restores the actual report layout',
     await page.getByRole('textbox', { name: 'Template name' }).fill('Client Māori report');
     await page.getByRole('button', { name: 'Add Visibility Trends' }).click();
     await page.getByRole('button', { name: 'Remove Score Overview' }).click();
-    const handle = page.getByRole('button', { name: 'Move Visibility Trends' });
+    const handle = page.getByRole('button', { name: 'Move Visibility Trends', exact: true });
     await handle.focus();
     await page.keyboard.press('Space');
     await expect(handle).toHaveAttribute('aria-pressed', 'true');
@@ -108,9 +108,9 @@ test('validates empty names and sections, preserves failed saves, then retries s
 });
 
 test('cancelled keyboard drag keeps section order and rapid duplicate modules remain independent', async ({ page }) => {
-    await page.getByRole('button', { name: 'Move Executive Summary' }).focus();
+    await page.getByRole('button', { name: 'Move Executive Summary', exact: true }).focus();
     await page.keyboard.press('Space');
-    await expect(page.getByRole('button', { name: 'Move Executive Summary' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByRole('button', { name: 'Move Executive Summary', exact: true })).toHaveAttribute('aria-pressed', 'true');
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Escape');
     await expect(page.getByRole('listitem')).toHaveText(['Executive Summary', 'Score Overview', 'Key Recommendations']);
