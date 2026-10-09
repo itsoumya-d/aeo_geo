@@ -26,11 +26,8 @@ type CrawlResult = {
     metadata: Record<string, unknown>;
 };
 
-function parseBody(body: unknown): CrawlRequest {
-    if (!body) return {};
-    if (typeof body === 'string') return JSON.parse(body) as CrawlRequest;
-    if (typeof body === 'object') return body as CrawlRequest;
-    return {};
+function parseBody(body: unknown): unknown {
+    return typeof body === 'string' ? JSON.parse(body) : body;
 }
 
 function normalizeUrl(input: string): string {
@@ -170,15 +167,24 @@ export default async function handler(req: RequestLike, res: ResponseLike) {
         return res.status(405).json({ error: 'Method not allowed.' });
     }
 
-    let body: CrawlRequest;
+    let body: unknown;
     try {
         body = parseBody(req.body);
     } catch {
         return res.status(400).json({ error: 'Request body must be valid JSON.' });
     }
 
-    const action = body.action || 'SCRAPE';
-    const targetUrl = typeof body.url === 'string' ? body.url.trim() : '';
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+        return res.status(400).json({ error: 'Request body must be a JSON object.' });
+    }
+
+    const request = body as CrawlRequest;
+    const action = request.action === undefined ? 'SCRAPE' : request.action;
+    if (action !== 'SCRAPE' && action !== 'MAP') {
+        return res.status(400).json({ error: 'Action must be SCRAPE or MAP.' });
+    }
+
+    const targetUrl = typeof request.url === 'string' ? request.url.trim() : '';
 
     if (!targetUrl) {
         return res.status(400).json({ error: 'A URL is required.' });
