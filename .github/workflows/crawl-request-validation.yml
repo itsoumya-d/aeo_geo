@@ -1,0 +1,32 @@
+name: Crawl request validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'api/crawl-site.ts'
+      - 'tests/crawl-request-validation.test.mjs'
+      - '.github/workflows/crawl-request-validation.yml'
+  pull_request:
+    paths:
+      - 'api/crawl-site.ts'
+      - 'tests/crawl-request-validation.test.mjs'
+      - '.github/workflows/crawl-request-validation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  crawl-request-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Exercise the real handler with isolated fetch fixtures
+        run: node --test tests/crawl-request-validation.test.mjs
